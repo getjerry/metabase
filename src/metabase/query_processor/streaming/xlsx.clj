@@ -10,6 +10,7 @@
   (:import java.io.OutputStream
            [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]
            [org.apache.poi.ss.usermodel BuiltinFormats Cell CellType DateUtil Workbook]
+           org.apache.poi.ss.util.CellRangeAddress
            org.apache.poi.xssf.streaming.SXSSFWorkbook))
 
 (defmethod i/stream-options :xlsx
@@ -24,6 +25,15 @@
   "Holds the CellStyle values used within a spreadsheet so that they can be reused. Excel has a limit
    of 64,000 cell styles in a single workbook."
   nil)
+
+(def ^:private auto-sizing-threshold
+  "The number of rows used for auto-sizing columns. If this number is too large, exports of large datasets
+  will be prohibitively slow."
+  1000)
+
+(def ^:private extra-column-width
+  "The extra width applied to columns after they have been auto-sized, in units of 1/256 of a character width."
+  (* 4 256))
 
 ;; Since we can only have a limited number of styles we'll enumerate the possible styles we'll want to use. Then we'll
 ;; create a bunch of delays for them that will create them if needed and bind this to `*cell-styles*`; we'll use them
@@ -114,6 +124,13 @@
                                (json/parse-string keyword)
                                :v))))
 
+(defn- autosize-columns
+  [sheet col-count]
+  (doseq [i (range col-count)]
+    (.autoSizeColumn sheet i)
+    (.setColumnWidth sheet i (+ (.getColumnWidth sheet i) extra-column-width))
+    (.untrackColumnForAutoSizing sheet i)))
+
 (defmethod i/streaming-results-writer :xlsx
   [_ ^OutputStream os]
   (let [workbook    (SXSSFWorkbook.)
@@ -121,17 +138,25 @@
         sheet       (spreadsheet/add-sheet! workbook (tru "Query result"))]
     (reify i/StreamingResultsWriter
       (begin! [_ {{:keys [ordered-cols]} :data} _]
+        (.trackAllColumnsForAutoSizing sheet)
+        (when (> (count ordered-cols) 0)
+          (.setAutoFilter sheet (new CellRangeAddress 0 0 0 (dec (count ordered-cols))))
+          (.createFreezePane sheet 0 1))
         (spreadsheet/add-row! sheet (map (some-fn :display_name :name) ordered-cols)))
 
-      (write-row! [_ row _ _ {:keys [output-order]}]
+      (write-row! [_ row row-count _ {:keys [output-order]}]
         (binding [*cell-styles* cell-styles]
           (let [ordered-row (if output-order
                               (let [row-v (into [] row)]
                                 (for [i output-order] (row-v i)))
                               row)]
-            (spreadsheet/add-row! sheet ordered-row))))
+            (spreadsheet/add-row! sheet ordered-row)))
+        (when (= row-count auto-sizing-threshold)
+          (autosize-columns sheet (count row))))
 
-      (finish! [_ _]
+      (finish! [_ {:keys [row_count data]}]
+        (when (<= row_count auto-sizing-threshold)
+          (autosize-columns sheet (count (:cols data))))
         (spreadsheet/save-workbook-into-stream! os workbook)
         (.dispose workbook)
         (.close os)))))
