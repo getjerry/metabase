@@ -1,6 +1,6 @@
 import React from "react";
 
-import { PLUGIN_LANDING_PAGE } from "metabase/plugins";
+// import { PLUGIN_LANDING_PAGE } from "metabase/plugins";
 
 import { Route } from "metabase/hoc/Title";
 import { Redirect, IndexRedirect, IndexRoute } from "react-router";
@@ -84,7 +84,7 @@ import DashboardDetailsModal from "metabase/dashboard/components/DashboardDetail
 import { ModalRoute } from "metabase/hoc/ModalRoute";
 
 import CollectionLanding from "metabase/components/CollectionLanding/CollectionLanding";
-import Overworld from "metabase/containers/Overworld";
+// import Overworld from "metabase/containers/Overworld";
 
 import ArchiveApp from "metabase/home/containers/ArchiveApp";
 import SearchApp from "metabase/home/containers/SearchApp";
@@ -175,7 +175,7 @@ export const getRoutes = store => (
       {/* MAIN */}
       <Route component={IsAuthenticated}>
         {/* The global all hands rotues, things in here are for all the folks */}
-        <Route
+        {/* <Route
           path="/"
           component={Overworld}
           onEnter={(nextState, replace) => {
@@ -184,7 +184,12 @@ export const getRoutes = store => (
               replace(page);
             }
           }}
-        />
+        /> */}
+        {/* <Redirect from="/" to="/auto/dashboard/table/2" /> */}
+
+        {/* Use a dashboard page to replace homepage. */}
+        {/* eslint-disable-next-line no-undef */}
+        <Redirect from="/" to={`/dashboard/331`} />
 
         <Route path="/explore" component={PostSetupApp} />
         <Route path="/explore/:databaseId" component={PostSetupApp} />

@@ -27,6 +27,9 @@ const BUILD_PATH = __dirname + "/resources/frontend_client";
 const NODE_ENV = process.env.NODE_ENV || "development";
 const devMode = NODE_ENV !== "production";
 
+// id of the dashboard to be used as homepage.
+const DASHBOARD_ID = process.env["DASHBOARD_ID"] || 323;
+
 // Babel:
 const BABEL_CONFIG = {
   cacheDirectory: process.env.BABEL_DISABLE_CACHE ? false : ".babel_cache",
@@ -269,10 +272,11 @@ if (NODE_ENV !== "production") {
     }),
   );
 } else {
-
   // Don't bother with ESLint for CI/production (we catch linting errors with another CI run)
   config.module.rules = config.module.rules.filter(rule => {
-    return Array.isArray(rule.use) ? rule.use[0].loader != "eslint-loader" : true
+    return Array.isArray(rule.use)
+      ? rule.use[0].loader != "eslint-loader"
+      : true;
   });
 
   config.plugins.push(
