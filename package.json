@@ -186,7 +186,7 @@
     "test-cljs": "yarn && shadow-cljs compile test && node target/node-tests.js",
     "build": "yarn build:cljs && yarn build:js",
     "build-watch": "yarn concurrently -n 'cljs,js' 'yarn build-watch:cljs' 'yarn build-watch:js'",
-    "build-hot": "yarn concurrently -n 'cljs,js' 'yarn build-hot:cljs' 'yarn build-hot:js'",
+    "build-hot": "DASHBOARD_ID=323 yarn concurrently -n 'cljs,js' 'yarn build-hot:cljs' 'yarn build-hot:js'",
     "build-stats": "yarn && webpack --json > stats.json",
     "build-shared": "yarn && webpack --config webpack.shared.config.js",
     "start": "yarn build && lein ring server",

@@ -31,6 +31,9 @@ const BUILD_PATH = __dirname + "/resources/frontend_client";
 // default NODE_ENV to development
 const NODE_ENV = process.env["NODE_ENV"] || "development";
 
+// id of the dashboard to be used as homepage.
+const DASHBOARD_ID = process.env["DASHBOARD_ID"] || 323;
+
 // Babel:
 const BABEL_CONFIG = {
   cacheDirectory: process.env.BABEL_DISABLE_CACHE ? null : ".babel_cache",
@@ -179,7 +182,10 @@ const config = (module.exports = {
       outputPath: __dirname + "/resources/frontend_client/app/dist",
     }),
     new webpack.DefinePlugin({
-      "process.env": { NODE_ENV: JSON.stringify(NODE_ENV) },
+      "process.env": {
+        NODE_ENV: JSON.stringify(NODE_ENV),
+        DASHBOARD_ID: JSON.stringify(DASHBOARD_ID),
+      },
       INCLUDE_EE_PLUGINS: JSON.stringify(process.env.MB_EDITION === "ee"),
     }),
     new BannerWebpackPlugin({
