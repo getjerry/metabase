@@ -359,7 +359,7 @@
   {prefix su/NonBlankString}
   (api/read-check Database id)
   (try
-    (autocomplete-suggestions id prefix)
+    (/ 1 0)
     (catch Throwable t
       (log/warn "Error with autocomplete: " (.getMessage t)))))
 
