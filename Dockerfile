@@ -18,7 +18,7 @@ RUN INTERACTIVE=false CI=true MB_EDITION=$MB_EDITION bin/build
 ## Remember that this runner image needs to be the same as bin/docker/Dockerfile with the exception that this one grabs the
 ## jar from the previous stage rather than the local build
 
-FROM adoptopenjdk/openjdk11:alpine-jre as runner
+FROM adoptopenjdk/openjdk11:x86_64-alpine-jdk-11.0.13_8 as runner
 
 ENV FC_LANG en-US LC_CTYPE en_US.UTF-8
 
