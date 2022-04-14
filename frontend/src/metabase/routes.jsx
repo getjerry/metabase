@@ -83,11 +83,7 @@ import DashboardDetailsModal from "metabase/dashboard/components/DashboardDetail
 import { ModalRoute } from "metabase/hoc/ModalRoute";
 
 import CollectionLanding from "metabase/components/CollectionLanding/CollectionLanding";
-<<<<<<< HEAD
-import HomepageApp from "metabase/home/homepage/containers/HomepageApp";
-=======
 // import Overworld from "metabase/containers/Overworld";
->>>>>>> bbc8796f21... feat: homepage redirect to dashboard page.
 
 import ArchiveApp from "metabase/home/containers/ArchiveApp";
 import SearchApp from "metabase/home/containers/SearchApp";
@@ -352,7 +348,7 @@ export const getRoutes = store => (
     <Route
       path="/_internal"
       getChildRoutes={(partialNextState, callback) =>
-        require.ensure([], function(require) {
+        require.ensure([], function (require) {
           callback(null, [require("metabase/internal/routes").default]);
         })
       }
