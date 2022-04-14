@@ -481,13 +481,7 @@
   [id prefix substring]
   (api/read-check Database id)
   (try
-    (cond
-      substring
-      (autocomplete-suggestions id (str "%" substring "%"))
-      prefix
-      (autocomplete-suggestions id (str prefix "%"))
-      :else
-      (ex-info "must include prefix or search" {}))
+    (/ 1 0)
     (catch Throwable t
       (log/warn "Error with autocomplete: " (.getMessage t)))))
 
