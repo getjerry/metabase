@@ -1,6 +1,6 @@
 import React from "react";
 
-import { PLUGIN_LANDING_PAGE } from "metabase/plugins";
+// import { PLUGIN_LANDING_PAGE } from "metabase/plugins";
 
 import { Route } from "metabase/hoc/Title";
 import { Redirect, IndexRedirect, IndexRoute } from "react-router";
@@ -81,7 +81,7 @@ import DashboardMoveModal from "metabase/dashboard/components/DashboardMoveModal
 import DashboardCopyModal from "metabase/dashboard/components/DashboardCopyModal";
 import { ModalRoute } from "metabase/hoc/ModalRoute";
 
-import HomePage from "metabase/home/homepage/containers/HomePage";
+// import HomePage from "metabase/home/homepage/containers/HomePage";
 import CollectionLanding from "metabase/collections/components/CollectionLanding";
 
 import ArchiveApp from "metabase/home/containers/ArchiveApp";
@@ -196,7 +196,7 @@ export const getRoutes = store => (
       {/* MAIN */}
       <Route component={IsAuthenticated}>
         {/* The global all hands rotues, things in here are for all the folks */}
-        <Route
+        {/* <Route
           path="/"
           component={HomePage}
           onEnter={(nextState, replace) => {
@@ -205,7 +205,12 @@ export const getRoutes = store => (
               replace(page);
             }
           }}
-        />
+        /> */}
+        {/* <Redirect from="/" to="/auto/dashboard/table/2" /> */}
+
+        {/* Use a dashboard page to replace homepage. */}
+        {/* eslint-disable-next-line no-undef */}
+        <Redirect from="/" to={`/dashboard/331`} />
 
         <Route path="search" title={t`Search`} component={SearchApp} />
         <Route path="archive" title={t`Archive`} component={ArchiveApp} />
