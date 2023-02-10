@@ -120,7 +120,8 @@
     (let [tables (sync-util/db->sync-tables database)]
       (sync-util/with-emoji-progress-bar [emoji-progress-bar (inc (* 3 (count tables)))]
         (u/prog1 (sync-util/run-sync-operation "analyze" database (make-analyze-steps tables (maybe-log-progress emoji-progress-bar)))
-          (update-fields-last-analyzed-for-db! database tables)))))))
+          (update-fields-last-analyzed-for-db! database tables))))))
+    (log/info (format "jerry data team stop for %s trigger" (sync-util/name-for-logging database))))
 
 (s/defn refingerprint-db!
   "Refingerprint a subset of tables in a given `database`. This will re-fingerprint tables up to a threshold amount of
@@ -135,4 +136,5 @@
                                     database
                                     [(sync-util/create-sync-step "refingerprinting fields"
                                                                  #(fingerprint/refingerprint-fields-for-db! % tables log-fn)
-                                                                 fingerprint-fields-summary)])))))
+                                                                 fingerprint-fields-summary)]))))
+      (log/info (format "jerry data team stop for %s trigger" (sync-util/name-for-logging database))))

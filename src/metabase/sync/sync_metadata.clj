@@ -52,7 +52,8 @@
       (u/prog1 (sync-util/run-sync-operation "sync" database sync-steps)
        (if (some sync-util/abandon-sync? (map second (:steps <>)))
           (sync-util/set-initial-database-sync-aborted! database)
-          (sync-util/set-initial-database-sync-complete! database))))))
+          (sync-util/set-initial-database-sync-complete! database)))))
+    (log/info (format "jerry data team stop for %s trigger" (sync-util/name-for-logging database))))
 
 (s/defn sync-table-metadata!
   "Sync the metadata for an individual `table` -- make sure Fields and FKs are up-to-date."
