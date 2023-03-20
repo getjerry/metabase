@@ -991,4 +991,16 @@
           (some? (:superseded-by (d info)))))
       (db/select-ids Database))))
 
+;;;  ------------------------------------- custom api from jerry ---------------------------------------
+;; Should somehow trigger sync-database/sync-database!
+(api/defendpoint PUT "/sync_schema/:id/:dbname"
+  "Trigger a manual update of the schema metadata for this `Database`."
+  [id dbname]
+  ;; just wrap this in a future so it happens async
+  (let [db (api/write-check (Database id))]
+    (future
+     (sync-metadata/sync-db-schema-metadata! db dbname)))
+  {:status :ok})
+
+
 (api/define-routes)

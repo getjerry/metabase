@@ -59,4 +59,16 @@
   "Sync the metadata for an individual `table` -- make sure Fields and FKs are up-to-date."
   [table :- i/TableInstance]
   (sync-fields/sync-fields-for-table! table)
-  (sync-fks/sync-fks-for-table! table))
+  (sync-fks/sync-fks-for-table! table)
+  (log/info (format "jerry data team scan table for %s trigger" (sync-util/name-for-logging table))))
+
+(s/defn sync-db-schema-metadata!
+  "Sync the metadata for a Metabase `database`. This makes sure child Table & Field objects are synchronized."
+  [database :- i/DatabaseInstance dbname]
+    (sync-util/sync-operation :sync-metadata database (format "Sync metadata for %s" (sync-util/name-for-logging database))
+                              (u/prog1 (sync-util/run-sync-operation-jerry "sync" database dbname [(sync-util/create-sync-step "sync-tables-in-one-db" sync-tables/sync-tables-and-database-with-dbname! sync-tables-summary)])
+                                       (if (some sync-util/abandon-sync? (map second (:steps <>)))
+                                         (sync-util/set-initial-database-sync-aborted! database)
+                                         (sync-util/set-initial-database-sync-complete! database))))
+    (log/info (format "jerry data team scan database schema for %s trigger, dbname is %s" (sync-util/name-for-logging database) (str dbname))))
+
