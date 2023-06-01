@@ -36,11 +36,15 @@ export default ({ selector, wrapped, refreshMode = "throttle" } = {}) =>
       }
 
       _getElement() {
-        const element = ReactDOM.findDOMNode(this);
-        if (selector) {
-          return element.querySelector(selector) || element;
+        try {
+          const element = ReactDOM.findDOMNode(this);
+          if (selector) {
+            return element.querySelector(selector) || element;
+          }
+          return element;
+        } catch (e) {
+          // console.error(e);
         }
-        return element;
       }
 
       componentDidMount() {

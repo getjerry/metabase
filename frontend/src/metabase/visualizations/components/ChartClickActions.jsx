@@ -235,7 +235,7 @@ class ChartClickActions extends Component {
 
                 <div
                   className={cx(
-                    "flex",
+                    "",
                     {
                       "justify-end": SECTIONS[key].icon === "gear",
                     },
@@ -281,6 +281,8 @@ export const ChartClickAction = ({ action, isLastItem, handleClickAction }) => {
       action.buttonType === "token",
     "token token-filter text-small text-white-hover mr1":
       action.buttonType === "token-filter",
+    "setting-button p1 flex flex-auto align-center bg-brand-hover text-dark text-white-hover":
+      action.buttonType === "setting",
   });
   if (action.url) {
     return (
@@ -324,6 +326,24 @@ export const ChartClickAction = ({ action, isLastItem, handleClickAction }) => {
               name={action.icon}
             />
           )}
+        </div>
+      </Tooltip>
+    );
+  } else if (action.buttonType === "setting") {
+    return (
+      <Tooltip tooltip={action.tooltip} maxWidth={400}>
+        <div
+          className={cx(className, "flex-row align-center")}
+          onClick={() => handleClickAction(action)}
+        >
+          {action.icon && (
+            <Icon
+              className="flex mr1 text-brand text-white-hover"
+              size={action.buttonType === "formatting" ? 16 : 12}
+              name={action.icon}
+            />
+          )}
+          {action.title}
         </div>
       </Tooltip>
     );

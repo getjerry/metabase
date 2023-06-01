@@ -311,7 +311,7 @@ export default class Popover extends Component {
         () => {
           const tetherOptions = {
             element: popoverElement,
-            target: this._getTargetElement(),
+            target: this._getTargetElement() ? this._getTargetElement() : null,
           };
 
           if (!this._best || !this.props.pinInitialAttachment) {

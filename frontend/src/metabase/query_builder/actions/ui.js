@@ -79,3 +79,6 @@ export const closeQbNewbModal = createThunkAction(CLOSE_QB_NEWB_MODAL, () => {
 
 export const SHOW_CHART_SETTINGS = "metabase/query_builder/SHOW_CHART_SETTINGS";
 export const showChartSettings = createAction(SHOW_CHART_SETTINGS);
+
+export const FIX_COLUMN_SETTINGS = "metabase/query_builder/FIX_COLUMN_SETTINGS";
+export const fixColumnSettings = createAction(FIX_COLUMN_SETTINGS);

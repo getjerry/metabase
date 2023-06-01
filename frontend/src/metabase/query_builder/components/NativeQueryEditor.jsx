@@ -336,9 +336,11 @@ class NativeQueryEditor extends Component {
         MIN_HEIGHT_LINES,
       ),
     );
-    if (newHeight > element.offsetHeight) {
-      element.style.height = newHeight + "px";
-      this._editor.resize();
+    if (element !== null && element.offsetHeight !== undefined) {
+      if (newHeight > element.offsetHeight) {
+        element.style.height = newHeight + "px";
+        this._editor.resize();
+      }
     }
   }
 
