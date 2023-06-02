@@ -162,20 +162,20 @@ class TableInteractive extends Component {
     // fixed column
     // const fixedLength = Object.keys(fixedColumn).length;
     // if (fixedLength > 0) {
-    // const { settings, onUpdateVisualizationSettings } = this.props;
-    // this.changeFixedColumn(
-    //   sourceData,
-    //   fixedColumn,
-    //   settings,
-    //   onUpdateVisualizationSettings,
-    // );
-    // this.setState({
-    //   columnPositions: null,
-    //   dragColIndex: null,
-    //   dragColStyle: null,
-    //   dragColNewIndex: null,
-    //   dragColNewLefts: null,
-    // });
+    //   const {settings, onUpdateVisualizationSettings} = this.props;
+    //   this.changeFixedColumn(
+    //     sourceData,
+    //     fixedColumn,
+    //     settings,
+    //     onUpdateVisualizationSettings,
+    //   );
+    //   this.setState({
+    //     columnPositions: null,
+    //     dragColIndex: null,
+    //     dragColStyle: null,
+    //     dragColNewIndex: null,
+    //     dragColNewLefts: null,
+    //   });
     // }
   }
 
@@ -241,12 +241,6 @@ class TableInteractive extends Component {
   fixedColumnClick(column, props) {
     const parentProps = props.parentProps;
     const { settings, onUpdateVisualizationSettings } = parentProps;
-    props.changeFixedColumn(
-      parentProps.sourceData,
-      parentProps.fixedColumn,
-      settings,
-      onUpdateVisualizationSettings,
-    );
     if (column.name in parentProps.fixedColumn) {
       delete parentProps.fixedColumn[column.name];
       console.log("cancel fixed");
@@ -254,6 +248,12 @@ class TableInteractive extends Component {
       parentProps.fixedColumn[column.name] = column;
       console.log("fixed");
     }
+    props.changeFixedColumn(
+      parentProps.sourceData,
+      parentProps.fixedColumn,
+      settings,
+      onUpdateVisualizationSettings,
+    );
   }
 
   _findIDColumn = (data, isPivoted = false) => {
@@ -314,7 +314,6 @@ class TableInteractive extends Component {
       !this.state.contentWidths ||
       prevProps.renderTableHeaderWrapper !== this.props.renderTableHeaderWrapper
     ) {
-      console.log("mesaure");
       this._measure();
     } else if (this.props.onContentWidthChange) {
       const total = this.state.columnWidths.reduce((sum, width) => sum + width);
