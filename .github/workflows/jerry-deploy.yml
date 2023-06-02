@@ -1,0 +1,55 @@
+name: Deploy Data Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      git-ref:
+        description: Git Ref (Optional)
+        default: 'jerry/*'
+        required: true
+
+concurrency: deploy-jerry-metabase
+
+jobs:
+
+  build:
+    name: Build Image and Deploy Metabase
+    runs-on: self-hosted
+
+    steps:
+      - name: Job Start
+        run: echo "Starting Deploy ..."
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.git-ref }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+
+      - name: Build and Push the Service Image
+        run: metabase/jerry/deploy/deploy_image.sh
+        env:
+          GIT_CREDENTIALS: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Config EKS Cluster
+        run: |
+          aws eks --region us-west-2 update-kubeconfig --name jerry-cluster
+
+
+      - name: Update the Metabase
+        run: |
+          cd metabase
+          ls -al
+          echo "kubectl apply -f jerry/eks/deployment.yaml  -n data-infra"
+          echo "kubectl rollout restart  deployment metabase-server -n data-infra"
