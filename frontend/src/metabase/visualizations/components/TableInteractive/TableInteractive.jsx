@@ -137,7 +137,7 @@ class TableInteractive extends Component {
   }
 
   UNSAFE_componentWillReceiveProps(newProps) {
-    const { card, data, fixedColumn, sourceData } = this.props;
+    const { card, data } = this.props;
     const { card: nextCard, data: nextData } = newProps;
     const isDataChange =
       data && nextData && !_.isEqual(data.cols, nextData.cols);
@@ -160,23 +160,23 @@ class TableInteractive extends Component {
       this._showDetailShortcut(this.props.query, this.props.isPivoted);
     }
     // fixed column
-    const fixedLength = Object.keys(fixedColumn).length;
-    if (fixedLength > 0) {
-      const { settings, onUpdateVisualizationSettings } = this.props;
-      this.changeFixedColumn(
-        sourceData,
-        fixedColumn,
-        settings,
-        onUpdateVisualizationSettings,
-      );
-      this.setState({
-        columnPositions: null,
-        dragColIndex: null,
-        dragColStyle: null,
-        dragColNewIndex: null,
-        dragColNewLefts: null,
-      });
-    }
+    // const fixedLength = Object.keys(fixedColumn).length;
+    // if (fixedLength > 0) {
+    // const { settings, onUpdateVisualizationSettings } = this.props;
+    // this.changeFixedColumn(
+    //   sourceData,
+    //   fixedColumn,
+    //   settings,
+    //   onUpdateVisualizationSettings,
+    // );
+    // this.setState({
+    //   columnPositions: null,
+    //   dragColIndex: null,
+    //   dragColStyle: null,
+    //   dragColNewIndex: null,
+    //   dragColNewLefts: null,
+    // });
+    // }
   }
 
   changeFixedColumn(
@@ -240,18 +240,16 @@ class TableInteractive extends Component {
 
   fixedColumnClick(column, props) {
     const parentProps = props.parentProps;
+    const { settings, onUpdateVisualizationSettings } = parentProps;
+    props.changeFixedColumn(
+      parentProps.sourceData,
+      parentProps.fixedColumn,
+      settings,
+      onUpdateVisualizationSettings,
+    );
     if (column.name in parentProps.fixedColumn) {
       delete parentProps.fixedColumn[column.name];
       console.log("cancel fixed");
-      if (Object.keys(parentProps.fixedColumn).length === 0) {
-        const { settings, onUpdateVisualizationSettings } = parentProps;
-        props.changeFixedColumn(
-          parentProps.sourceData,
-          parentProps.fixedColumn,
-          settings,
-          onUpdateVisualizationSettings,
-        );
-      }
     } else {
       parentProps.fixedColumn[column.name] = column;
       console.log("fixed");
