@@ -1,4 +1,4 @@
-name: Deploy Data Pipeline
+name: A Jerry Deploy
 
 on:
   workflow_dispatch:
