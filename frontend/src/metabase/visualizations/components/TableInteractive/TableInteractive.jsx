@@ -223,6 +223,11 @@ class TableInteractive extends Component {
       const index = columnsSetting.findIndex(item => item.name === col.name);
       newColumnSetting.push(columnsSetting[index]);
     });
+    console.log("----");
+    console.log(newCols);
+    console.log(sourceData);
+    console.log(newColumnSetting);
+    console.log("----");
     if (!_.isEqual(columnsSetting, newColumnSetting)) {
       onUpdateVisualizationSettings({
         "table.columns": newColumnSetting,
