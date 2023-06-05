@@ -224,6 +224,7 @@ class TableInteractive extends Component {
       newColumnSetting.push(columnsSetting[index]);
     });
     console.log("----");
+    console.log(fixedColumn);
     console.log(newCols);
     console.log(sourceData);
     console.log(newColumnSetting);
