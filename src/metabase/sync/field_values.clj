@@ -106,9 +106,9 @@
   "Update the advanced FieldValues (distinct values for categories and certain other fields that are shown
    in widgets like filters) for the Tables in DATABASE (as needed)."
   [database :- i/DatabaseInstance]
-  (if (and (not= 8 (:id database)) (not= 29 (:id database)))
+  (if (not= "clickhouse" (name (:engine database)))
     (sync-util/sync-operation :cache-field-values database (format "Cache field values in %s"
                                                                    (sync-util/name-for-logging database))
       (let [tables (sync-util/db->sync-tables database)]
-       (sync-util/run-sync-operation "field values scanning" database (make-sync-field-values-steps tables)))))
-    (log/info (format "jerry data team stop for %s trigger" (sync-util/name-for-logging database))))
+       (sync-util/run-sync-operation "field values scanning" database (make-sync-field-values-steps tables))))
+    (log/info (format "jerry data team stop update-field-values for %s trigger" (sync-util/name-for-logging database)))))

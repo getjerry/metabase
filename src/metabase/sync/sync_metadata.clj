@@ -47,13 +47,13 @@
 (s/defn sync-db-metadata!
   "Sync the metadata for a Metabase `database`. This makes sure child Table & Field objects are synchronized."
   [database :- i/DatabaseInstance]
-  (if (and (not= 8 (:id database)) (not= 29 (:id database)))
+  (if (not= "clickhouse" (name (:engine database)))
     (sync-util/sync-operation :sync-metadata database (format "Sync metadata for %s" (sync-util/name-for-logging database))
       (u/prog1 (sync-util/run-sync-operation "sync" database sync-steps)
        (if (some sync-util/abandon-sync? (map second (:steps <>)))
           (sync-util/set-initial-database-sync-aborted! database)
-          (sync-util/set-initial-database-sync-complete! database)))))
-    (log/info (format "jerry data team stop for %s trigger" (sync-util/name-for-logging database))))
+          (sync-util/set-initial-database-sync-complete! database))))
+    (log/info (format "jerry data team stop sync-db-metadata for %s trigger" (sync-util/name-for-logging database)))))
 
 (s/defn sync-table-metadata!
   "Sync the metadata for an individual `table` -- make sure Fields and FKs are up-to-date."

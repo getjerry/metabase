@@ -115,19 +115,19 @@
   driver supports, but includes things like cardinality testing and table row counting. This also updates the
   `:last_analyzed` value for each affected Field."
   [database :- i/DatabaseInstance]
-  (if (and (not= 8 (:id database)) (not= 29 (:id database)))
+  (if (not= "clickhouse" (name (:engine database)))
     (sync-util/sync-operation :analyze database (format "Analyze data for %s" (sync-util/name-for-logging database))
     (let [tables (sync-util/db->sync-tables database)]
       (sync-util/with-emoji-progress-bar [emoji-progress-bar (inc (* 3 (count tables)))]
         (u/prog1 (sync-util/run-sync-operation "analyze" database (make-analyze-steps tables (maybe-log-progress emoji-progress-bar)))
-          (update-fields-last-analyzed-for-db! database tables))))))
-    (log/info (format "jerry data team stop for %s trigger" (sync-util/name-for-logging database))))
+          (update-fields-last-analyzed-for-db! database tables)))))
+    (log/info (format "jerry data team stop analyze-db for %s trigger" (sync-util/name-for-logging database)))))
 
 (s/defn refingerprint-db!
   "Refingerprint a subset of tables in a given `database`. This will re-fingerprint tables up to a threshold amount of
   [[fingerprint/max-refingerprint-field-count]]."
   [database :- i/DatabaseInstance]
-  (if (and (not= 8 (:id database)) (not= 29 (:id database)))
+  (if (not= "clickhouse" (name (:engine database)))
     (sync-util/sync-operation :refingerprint database (format "Refingerprinting tables for %s" (sync-util/name-for-logging database))
     (let [tables (sync-util/db->sync-tables database)
           log-fn (fn [step table]
@@ -136,5 +136,5 @@
                                     database
                                     [(sync-util/create-sync-step "refingerprinting fields"
                                                                  #(fingerprint/refingerprint-fields-for-db! % tables log-fn)
-                                                                 fingerprint-fields-summary)]))))
-      (log/info (format "jerry data team stop for %s trigger" (sync-util/name-for-logging database))))
+                                                                 fingerprint-fields-summary)])))
+      (log/info (format "jerry data team stop refingerprint-db for %s trigger" (sync-util/name-for-logging database)))))
