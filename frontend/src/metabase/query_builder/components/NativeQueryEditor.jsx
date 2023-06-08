@@ -15,6 +15,7 @@ import "ace/snippets/mysql";
 import "ace/snippets/pgsql";
 import "ace/snippets/sqlserver";
 import "ace/snippets/json";
+import "ace-builds/src-noconflict/ext-searchbox";
 import _ from "underscore";
 import { ResizableBox } from "react-resizable";
 
@@ -250,7 +251,7 @@ class NativeQueryEditor extends Component {
       enableSnippets: false,
       enableLiveAutocompletion: true,
       showPrintMargin: false,
-      highlightActiveLine: false,
+      highlightActiveLine: true,
       highlightGutterLine: false,
       showLineNumbers: true,
     });
