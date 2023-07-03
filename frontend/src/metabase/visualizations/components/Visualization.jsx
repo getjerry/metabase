@@ -163,27 +163,29 @@ class Visualization extends React.PureComponent {
     if ("table.columns" in settings) {
       const tableColumn = settings["table.columns"];
       if (tableColumn !== undefined && tableColumn.length > 0) {
-        const needSetPercentColumnName = tableColumn
-          .filter(column => {
-            let isFloat = false;
-            if (
-              column.fieldRef !== undefined &&
-              column.fieldRef.length > 2 &&
-              "base-type" in column.fieldRef[2]
-            ) {
-              if (
-                column.fieldRef[2]["base-type"].includes("Float") ||
-                column.fieldRef[2]["base-type"].includes("Double") ||
-                column.fieldRef[2]["base-type"].includes("Integer")
-              ) {
-                isFloat = true;
-              }
-            }
-            return column.name.includes("%") && isFloat === true;
-          })
-          .map(column => {
-            return column.name;
-          });
+        console.log(tableColumn);
+        const needSetPercentColumnName = [];
+        // const needSetPercentColumnName = tableColumn
+        //   .filter(column => {
+        //     let isFloat = false;
+        //     if (
+        //       column.fieldRef !== undefined &&
+        //       column.fieldRef.length > 2 &&
+        //       "base-type" in column.fieldRef[2]
+        //     ) {
+        //       if (
+        //         column.fieldRef[2]["base-type"].includes("Float") ||
+        //         column.fieldRef[2]["base-type"].includes("Double") ||
+        //         column.fieldRef[2]["base-type"].includes("Integer")
+        //       ) {
+        //         isFloat = true;
+        //       }
+        //     }
+        //     return column.name.includes("%") && isFloat === true;
+        //   })
+        //   .map(column => {
+        //     return column.name;
+        //   });
 
         const columnSettings = settings["column_settings"];
         needSetPercentColumnName.forEach(name => {
