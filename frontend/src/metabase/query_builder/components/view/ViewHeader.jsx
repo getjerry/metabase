@@ -34,6 +34,7 @@ import QuestionFilters, {
 import { QuestionSummarizeWidget } from "./QuestionSummaries";
 import QuestionActions from "../QuestionActions";
 import NativeQueryButton from "./NativeQueryButton";
+import QueryEditHideButton from "metabase/query_builder/components/view/QueryEditHideButton";
 import {
   AdHocViewHeading,
   SaveButton,
@@ -478,6 +479,7 @@ function ViewTitleHeaderRightSide(props) {
         </ViewHeaderIconButtonContainer>
       )}
       {hasExploreResultsLink && <ExploreResultsLink question={question} />}
+      <QueryEditHideButton />
       {hasRunButton && !isShowingNotebook && (
         <ViewHeaderIconButtonContainer>
           <RunButtonWithTooltip

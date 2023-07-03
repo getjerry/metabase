@@ -447,11 +447,13 @@ class NativeQueryEditor extends Component {
               />
             </div>
             {hasParametersList && (
-              <ResponsiveParametersList
-                parameters={parameters}
-                setParameterValue={setParameterValue}
-                setParameterIndex={this.setParameterIndex}
-              />
+              <div className="query_filters" style={{ display: "block" }}>
+                <ResponsiveParametersList
+                  parameters={parameters}
+                  setParameterValue={setParameterValue}
+                  setParameterIndex={this.setParameterIndex}
+                />
+              </div>
             )}
             {query.hasWritePermission() && (
               <VisibilityToggler
