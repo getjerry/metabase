@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Button from "metabase/core/components/Button/Button";
+import Tooltip from "metabase/components/Tooltip";
+import { t } from "ttag";
 
 QueryEditHideButton.propTypes = {};
 
@@ -19,11 +21,13 @@ function HideOrShow(setIsStar, isStar) {
 export default function QueryEditHideButton() {
   const [isStar, setIsStar] = useState(true);
   return (
-    <Button
-      onClick={event => HideOrShow(setIsStar, isStar)}
-      icon={isStar ? "eye" : "eye_crossed_out"}
-      onlyIcon
-      iconSize={20}
-    ></Button>
+    <Tooltip tooltip={isStar ? t`Hide Filters` : t`Display Filters`}>
+      <Button
+        onClick={event => HideOrShow(setIsStar, isStar)}
+        icon={isStar ? "eye" : "eye_crossed_out"}
+        onlyIcon
+        iconSize={20}
+      ></Button>
+    </Tooltip>
   );
 }
