@@ -188,6 +188,7 @@ class Visualization extends React.PureComponent {
           });
 
         const columnSettings = settings["column_settings"];
+        console.log(columnSettings);
         needSetPercentColumnName.forEach(name => {
           const columnName = `["name","${name}"]`;
           if (!(columnName in columnSettings)) {
