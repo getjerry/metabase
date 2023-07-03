@@ -163,7 +163,7 @@ class Visualization extends React.PureComponent {
     if ("table.columns" in settings) {
       const tableColumn = settings["table.columns"];
       if (tableColumn !== undefined && tableColumn.length > 0) {
-        console.warn(tableColumn);
+        console.log(tableColumn);
         const needSetPercentColumnName = tableColumn
           .filter(column => {
             let isFloat = false;
@@ -190,7 +190,7 @@ class Visualization extends React.PureComponent {
         const columnSettings = settings["column_settings"];
         console.log(columnSettings);
         needSetPercentColumnName.forEach(name => {
-          const columnName = `["name","${name}"]`;
+          const columnName = JSON.stringify(Array("name", name));
           if (!(columnName in columnSettings)) {
             columnSettings[columnName] = {
               decimals: 2,

@@ -44,10 +44,7 @@ function getSettingDefintionsForSeries(series) {
 
 function normalizeColumnSettings(columnSettings) {
   const newColumnSettings = {};
-  console.log("normalizeColumnSettings");
-  console.log(columnSettings);
   for (const oldColumnKey of Object.keys(columnSettings)) {
-    console.warn(oldColumnKey);
     const [refOrName, fieldRef] = JSON.parse(oldColumnKey);
     // if the key is a reference, normalize the mbql syntax
     const newColumnKey =
