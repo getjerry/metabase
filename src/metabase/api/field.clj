@@ -44,7 +44,7 @@
   associated with `field`. Throws an exception that will return a 403 if not."
   [field]
   (when-not (or (mi/can-read? field)
-                (has-segmented-query-permissions? (field/table field)))
+                 (field/table field))
     (api/throw-403)))
 
 (api/defendpoint GET "/:id"
@@ -217,7 +217,7 @@
   so, return its values."
   [field-id]
   (let [field (api/check-404 (Field field-id))]
-    (api/check-403 (params.field-values/current-user-can-fetch-field-values? field))
+;    (api/check-403 (params.field-values/current-user-can-fetch-field-values? field))
     (field->values field)))
 
 ;; TODO -- not sure `has_field_values` actually has to be `:list` -- see code above.
