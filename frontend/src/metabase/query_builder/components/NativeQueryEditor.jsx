@@ -434,10 +434,16 @@ class NativeQueryEditor extends Component {
     );
 
     return (
-      <div className="NativeQueryEditor bg-light full">
+      <div
+        className="NativeQueryEditor bg-light full"
+        id="nativeQueryEditor-full"
+      >
         {hasTopBar && (
           <div className="flex align-center" data-testid="native-query-top-bar">
-            <div className={!isNativeEditorOpen ? "hide sm-show" : ""}>
+            <div
+              className={!isNativeEditorOpen ? "hide sm-show" : ""}
+              id={"native-query-bar"}
+            >
               <DataSourceSelectors
                 isNativeEditorOpen={isNativeEditorOpen}
                 query={query}
@@ -458,6 +464,7 @@ class NativeQueryEditor extends Component {
             {query.hasWritePermission() && (
               <VisibilityToggler
                 className={!isNativeEditorOpen ? "hide sm-show" : ""}
+                id={"visibility-toggler"}
                 isOpen={isNativeEditorOpen}
                 readOnly={!!readOnly}
                 toggleEditor={this.toggleEditor}

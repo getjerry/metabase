@@ -11,6 +11,7 @@ const propTypes = {
   readOnly: PropTypes.bool.isRequired,
   toggleEditor: PropTypes.func.isRequired,
   className: PropTypes.string,
+  id: PropTypes.string,
 };
 
 const VisibilityToggler = ({
@@ -18,6 +19,7 @@ const VisibilityToggler = ({
   readOnly,
   toggleEditor,
   className = "",
+  id = "",
 }) => {
   const text = isOpen ? null : t`Open Editor`;
   const icon = isOpen ? "contract" : "expand";
@@ -29,7 +31,7 @@ const VisibilityToggler = ({
   );
 
   return (
-    <Container>
+    <Container id={id}>
       <a className={classNames} onClick={toggleEditor}>
         <Span>{text}</Span>
         <Icon name={icon} size={18} />
