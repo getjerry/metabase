@@ -22,6 +22,7 @@ import QuestionEmbedWidget from "metabase/query_builder/containers/QuestionEmbed
 
 import QuestionHistoryModal from "metabase/query_builder/containers/QuestionHistoryModal";
 import { CreateAlertModalContent } from "metabase/query_builder/components/AlertModals";
+import { CreateExportModalContent } from "metabase/query_builder/components/ExportTableModals";
 import { ImpossibleToCreateModelModal } from "metabase/query_builder/components/ImpossibleToCreateModelModal";
 import NewDatasetModal from "metabase/query_builder/components/NewDatasetModal";
 import EntityCopyModal from "metabase/entities/containers/EntityCopyModal";
@@ -124,6 +125,13 @@ class QueryModals extends React.Component {
         <CreateAlertModalContent
           onCancel={onCloseModal}
           onAlertCreated={onCloseModal}
+        />
+      </Modal>
+    ) : modal === MODAL_TYPES.EXPORT_TABLE ? (
+      <Modal full onClose={onCloseModal}>
+        <CreateExportModalContent
+          onCancel={onCloseModal}
+          onExportCreated={onCloseModal}
         />
       </Modal>
     ) : modal === MODAL_TYPES.SAVE_QUESTION_BEFORE_ALERT ? (

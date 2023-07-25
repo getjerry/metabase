@@ -91,4 +91,7 @@ const QuestionRowCount = ({
 QuestionRowCount.shouldRender = ({ question, result, isObjectDetail }) =>
   result && result.data && !isObjectDetail && question.display() === "table";
 
+QuestionRowCount.shouldExport = ({ question, result }) =>
+  result && result.data && question.display() === "table";
+
 export default QuestionRowCount;

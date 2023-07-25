@@ -18,6 +18,7 @@ import QueryDownloadWidget from "metabase/query_builder/components/QueryDownload
 import QuestionEmbedWidget, {
   QuestionEmbedWidgetTrigger,
 } from "metabase/query_builder/containers/QuestionEmbedWidget";
+import QuestionExportWidget from "./QuestionExportWidget";
 
 import QuestionRowCount from "./QuestionRowCount";
 import QuestionLastUpdated from "./QuestionLastUpdated";
@@ -128,6 +129,16 @@ const ViewFooter = ({
               key="last-updated"
               className="mx1 hide sm-show"
               result={result}
+            />
+          ),
+          QuestionRowCount.shouldExport({
+            question,
+            result,
+          }) && (
+            <QuestionExportWidget
+              key="export"
+              className="question-export"
+              onExportClick={() => onOpenModal("export-table")}
             />
           ),
           QueryDownloadWidget.shouldRender({ result, isResultDirty }) && (

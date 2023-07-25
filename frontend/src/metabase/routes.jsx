@@ -49,6 +49,9 @@ import CreateDashboardModal from "metabase/components/CreateDashboardModal";
 import { Unauthorized } from "metabase/containers/ErrorPages";
 import NotFoundFallbackPage from "metabase/containers/NotFoundFallbackPage";
 
+// Metric
+import MetricApp from "metabase/metric/containers/MetricApp";
+
 // Reference Metrics
 import MetricListContainer from "metabase/reference/metrics/MetricListContainer";
 import MetricDetailContainer from "metabase/reference/metrics/MetricDetailContainer";
@@ -229,6 +232,12 @@ export const getRoutes = store => (
         </Route>
 
         <Route path="activity" component={ActivityApp} />
+
+        <Route
+          path="metric/:slug"
+          title={t`Metric`}
+          component={MetricApp}
+        ></Route>
 
         <Route
           path="dashboard/:slug"
