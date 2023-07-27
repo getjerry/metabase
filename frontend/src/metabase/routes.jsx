@@ -5,7 +5,6 @@ import { UserAuthWrapper } from "redux-auth-wrapper";
 import { t } from "ttag";
 
 import { Route } from "metabase/hoc/Title";
-import { PLUGIN_LANDING_PAGE } from "metabase/plugins";
 
 import { loadCurrentUser } from "metabase/redux/user";
 import MetabaseSettings from "metabase/lib/settings";
@@ -77,7 +76,7 @@ import DashboardMoveModal from "metabase/dashboard/components/DashboardMoveModal
 import DashboardCopyModal from "metabase/dashboard/components/DashboardCopyModal";
 import { ModalRoute } from "metabase/hoc/ModalRoute";
 
-import HomePage from "metabase/home/homepage/containers/HomePage";
+// import HomePage from "metabase/home/homepage/containers/HomePage";
 import CollectionLanding from "metabase/collections/components/CollectionLanding";
 
 import ArchiveApp from "metabase/home/containers/ArchiveApp";
@@ -194,8 +193,8 @@ export const getRoutes = store => (
 
       {/* MAIN */}
       <Route component={IsAuthenticated}>
-        {/* The global all hands routes, things in here are for all the folks */}
-        <Route
+        {/* The global all hands rotues, things in here are for all the folks */}
+        {/* <Route
           path="/"
           component={HomePage}
           onEnter={(nextState, replace) => {
@@ -204,7 +203,12 @@ export const getRoutes = store => (
               replace(page);
             }
           }}
-        />
+        /> */}
+        {/* <Redirect from="/" to="/auto/dashboard/table/2" /> */}
+
+        {/* Use a dashboard page to replace homepage. */}
+        {/* eslint-disable-next-line no-undef */}
+        <Redirect from="/" to={`/dashboard/331`} />
 
         <Route path="search" title={t`Search`} component={SearchApp} />
         <Route path="archive" title={t`Archive`} component={ArchiveApp} />

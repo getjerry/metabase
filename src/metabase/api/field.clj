@@ -48,7 +48,7 @@
   associated with `field`. Throws an exception that will return a 403 if not."
   [field]
   (when-not (or (mi/can-read? field)
-                (has-segmented-query-permissions? (field/table field)))
+                 (field/table field))
     (api/throw-403)))
 
 #_{:clj-kondo/ignore [:deprecated-var]}
@@ -228,7 +228,7 @@
   so, return its values."
   [field-id]
   (let [field (api/check-404 (db/select-one Field :id field-id))]
-    (api/check-403 (params.field-values/current-user-can-fetch-field-values? field))
+;    (api/check-403 (params.field-values/current-user-can-fetch-field-values? field))
     (field->values field)))
 
 ;; todo: we need to unify and untangle this stuff

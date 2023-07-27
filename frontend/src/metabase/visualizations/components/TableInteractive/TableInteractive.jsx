@@ -7,7 +7,7 @@ import { connect } from "react-redux";
 import _ from "underscore";
 import cx from "classnames";
 import Draggable from "react-draggable";
-import { Grid, ScrollSync } from "react-virtualized";
+import { ScrollSync, MultiGrid } from "react-virtualized";
 
 import "./TableInteractive.css";
 
@@ -143,7 +143,6 @@ class TableInteractive extends Component {
   UNSAFE_componentWillReceiveProps(newProps) {
     const { card, data } = this.props;
     const { card: nextCard, data: nextData } = newProps;
-
     const isDataChange =
       data && nextData && !_.isEqual(data.cols, nextData.cols);
     const isDatasetStatusChange =
@@ -153,7 +152,6 @@ class TableInteractive extends Component {
     if (isDataChange && !isDatasetStatusChange) {
       this.resetColumnWidths();
     }
-
     // remeasure columns if the column settings change, e.x. turning on/off mini bar charts
     const oldColSettings = this._getColumnSettings(this.props);
     const newColSettings = this._getColumnSettings(newProps);
@@ -165,6 +163,107 @@ class TableInteractive extends Component {
       this._findIDColumn(nextData, newProps.isPivoted);
       this._showDetailShortcut(this.props.query, this.props.isPivoted);
     }
+    // fixed column
+    // const fixedLength = Object.keys(fixedColumn).length;
+    // if (fixedLength > 0) {
+    //   const {settings, onUpdateVisualizationSettings} = this.props;
+    //   this.changeFixedColumn(
+    //     sourceData,
+    //     fixedColumn,
+    //     settings,
+    //     onUpdateVisualizationSettings,
+    //   );
+    //   this.setState({
+    //     columnPositions: null,
+    //     dragColIndex: null,
+    //     dragColStyle: null,
+    //     dragColNewIndex: null,
+    //     dragColNewLefts: null,
+    //   });
+    // }
+  }
+
+  changeFixedColumn(
+    sourceData,
+    fixedColumn,
+    settings,
+    onUpdateVisualizationSettings,
+  ) {
+    const columnsSetting = settings["table.columns"].slice(); // copy since splice mutates
+    const fixedIndex = [];
+    // fixed column
+    sourceData.cols.forEach((value, index) => {
+      if (value.name in fixedColumn) {
+        fixedIndex.push(index);
+      }
+    });
+    const newCols = [];
+    fixedIndex.forEach(index => {
+      newCols.push(sourceData.cols[index]);
+    });
+    sourceData.cols.forEach((value, index) => {
+      if (!fixedIndex.includes(index)) {
+        newCols.push(value);
+      }
+    });
+    // nextData.cols = newCols;  // modify column name
+
+    // fixed data
+    // let newRows = [];
+    // sourceData.rows.forEach((row, rowIdex) => {
+    //   let oneRow = [];
+    //   fixedIndex.forEach(index => oneRow.push(row[index]));
+    //   row.forEach((value, idx) => {
+    //     if (!fixedIndex.includes(idx)) {
+    //       oneRow.push(value);
+    //     }
+    //   })
+    //   newRows.push(oneRow);
+    // })
+    // nextData.rows = newRows; // modify cell data
+
+    const newColumnSetting = [];
+    newCols.forEach(col => {
+      const index = columnsSetting.findIndex(item => item.name === col.name);
+      newColumnSetting.push(columnsSetting[index]);
+    });
+    console.log("----");
+    console.log(fixedColumn);
+    console.log(newCols);
+    console.log(sourceData);
+    console.log(newColumnSetting);
+    console.log("----");
+    if (!_.isEqual(columnsSetting, newColumnSetting)) {
+      onUpdateVisualizationSettings({
+        "table.columns": newColumnSetting,
+      });
+    }
+  }
+
+  _clearFixedColumn(fixedColumn) {
+    const keys = Object.keys(fixedColumn);
+    for (const index in keys) {
+      const key = keys[index];
+      delete fixedColumn[key];
+    }
+  }
+
+  fixedColumnClick(column, props) {
+    const parentProps = props.parentProps;
+    const { settings, onUpdateVisualizationSettings } = parentProps;
+    if (column.name in parentProps.fixedColumn) {
+      delete parentProps.fixedColumn[column.name];
+      console.log("cancel fixed");
+    } else {
+      parentProps.fixedColumn[column.name] = column;
+      console.log("fixed");
+    }
+    props.changeFixedColumn(
+      parentProps.sourceData,
+      parentProps.fixedColumn,
+      settings,
+      onUpdateVisualizationSettings,
+    );
   }
 
   _findIDColumn = (data, isPivoted = false) => {
@@ -220,7 +319,7 @@ class TableInteractive extends Component {
     );
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (
       !this.state.contentWidths ||
       prevProps.renderTableHeaderWrapper !== this.props.renderTableHeaderWrapper
@@ -232,6 +331,8 @@ class TableInteractive extends Component {
         this.props.onContentWidthChange(total, this.state.columnWidths);
         this._totalContentWidth = total;
       }
+    } else {
+      this.recomputeGridSize();
     }
   }
 
@@ -255,7 +356,6 @@ class TableInteractive extends Component {
     const {
       data: { cols, rows },
     } = this.props;
-
     ReactDOM.render(
       <div style={{ display: "flex" }}>
         {cols.map((column, columnIndex) => (
@@ -284,7 +384,6 @@ class TableInteractive extends Component {
           this._div.getElementsByClassName("fake-column"),
           columnElement => columnElement.offsetWidth,
         );
-
         const columnWidths = cols.map((col, index) => {
           if (this.columnNeedsResize) {
             if (
@@ -302,14 +401,12 @@ class TableInteractive extends Component {
             return contentWidths[index] + 1;
           }
         });
-
         // Doing this on next tick makes sure it actually gets removed on initial measure
         setTimeout(() => {
           ReactDOM.unmountComponentAtNode(this._div);
         }, 0);
 
         delete this.columnNeedsResize;
-
         this.setState({ contentWidths, columnWidths }, this.recomputeGridSize);
       },
     );
@@ -341,7 +438,7 @@ class TableInteractive extends Component {
     this.props.onUpdateVisualizationSettings({
       "table.column_widths": columnWidthsSetting,
     });
-    setTimeout(() => this.recomputeGridSize(), 1);
+    setTimeout(() => this.recomputeGridSize(), 10);
   }
 
   onColumnReorder(columnIndex, newColumnIndex) {
@@ -356,6 +453,7 @@ class TableInteractive extends Component {
   onVisualizationClick(clicked, element) {
     const { onVisualizationClick } = this.props;
     if (this.visualizationIsClickable(clicked)) {
+      clicked.parentProps = this.props;
       onVisualizationClick({ ...clicked, element });
     }
   }
@@ -374,6 +472,7 @@ class TableInteractive extends Component {
       console.error(e);
     }
   }
+
   // NOTE: all arguments must be passed to the memoized method, not taken from this.props etc
   _getCellClickedObjectCached(
     data,
@@ -413,8 +512,14 @@ class TableInteractive extends Component {
       console.error(e);
     }
   }
+
   // NOTE: all arguments must be passed to the memoized method, not taken from this.props etc
   _getHeaderClickedObjectCached(data, columnIndex, isPivoted, query) {
+    if (!("dimensionForColumn" in query)) {
+      query.dimensionForColumn = function (column) {
+        return null;
+      };
+    }
     return getTableHeaderClickedObject(data, columnIndex, isPivoted, query);
   }
 
@@ -438,6 +543,7 @@ class TableInteractive extends Component {
       console.error(e);
     }
   }
+
   // NOTE: all arguments must be passed to the memoized method, not taken from this.props etc
   _visualizationIsClickableCached(visualizationIsClickable, clicked) {
     return visualizationIsClickable(clicked);
@@ -692,7 +798,6 @@ class TableInteractive extends Component {
     const isClickable = this.visualizationIsClickable(clicked);
     const isSortable = isClickable && column.source && !isPivoted;
     const isRightAligned = isColumnRightAligned(column);
-
     // TODO MBQL: use query lib to get the sort field
     const fieldRef = fieldRefForColumn(column);
     const sortIndex = _.findIndex(
@@ -701,7 +806,6 @@ class TableInteractive extends Component {
     );
     const isSorted = sortIndex >= 0;
     const isAscending = isSorted && sort[sortIndex][0] === "asc";
-
     return (
       <Draggable
         /* needs to be index+name+counter so Draggable resets after each drag */
@@ -738,6 +842,8 @@ class TableInteractive extends Component {
           } else if (Math.abs(d.x) + Math.abs(d.y) < HEADER_DRAG_THRESHOLD) {
             // in setTimeout since headers will be rerendered due to DRAG_COUNTER changing
             setTimeout(() => {
+              clicked.fixedColumnClick = this.fixedColumnClick;
+              clicked.changeFixedColumn = this.changeFixedColumn;
               this.onVisualizationClick(clicked, this.headerRefs[columnIndex]);
             });
           }
@@ -778,6 +884,8 @@ class TableInteractive extends Component {
             // only use the onClick if not draggable since it's also handled in Draggable's onStop
             isClickable && !isDraggable
               ? e => {
+                  clicked.fixedColumnClick = this.fixedColumnClick;
+                  clicked.changeFixedColumn = this.changeFixedColumn;
                   this.onVisualizationClick(clicked, e.currentTarget);
                 }
               : undefined
@@ -860,7 +968,6 @@ class TableInteractive extends Component {
     const dataIndex = this.state.showDetailShortcut
       ? displayIndex - 1
       : displayIndex;
-
     return this.getColumnWidth({ index: dataIndex });
   };
 
@@ -875,7 +982,7 @@ class TableInteractive extends Component {
     return explicitWidth || calculatedWidth;
   };
 
-  handleExpandColumn = index =>
+  handleExpandColumn = index => {
     this.setState(
       prevState => {
         const columnIsExpanded = prevState.columnIsExpanded.slice();
@@ -884,6 +991,7 @@ class TableInteractive extends Component {
       },
       () => this.recomputeGridSize(),
     );
+  };
 
   isColumnWidthTruncated = index => {
     const { columnIsExpanded } = this.state;
@@ -897,7 +1005,6 @@ class TableInteractive extends Component {
   getColumnWidth = ({ index }) => {
     const { columnIsExpanded } = this.state;
     const fullWidth = this._getColumnFullWidth(index);
-
     return columnIsExpanded[index]
       ? fullWidth
       : Math.min(fullWidth, TRUNCATE_WIDTH);
@@ -950,6 +1057,10 @@ class TableInteractive extends Component {
     document.body.style.overscrollBehaviorX = this._previousOverscrollBehaviorX;
   };
 
+  getFreezeColNo() {
+    return Object.keys(this.props.fixedColumn).length + 1;
+  }
+
   render() {
     const {
       width,
@@ -962,7 +1073,6 @@ class TableInteractive extends Component {
     if (!width || !height) {
       return <div className={className} />;
     }
-
     const headerHeight = this.props.tableHeaderHeight || HEADER_HEIGHT;
     const gutterColumn = this.state.showDetailShortcut ? 1 : 0;
 
@@ -1027,7 +1137,7 @@ class TableInteractive extends Component {
                   </div>
                 </>
               )}
-              <Grid
+              <MultiGrid
                 ref={ref => (this.header = ref)}
                 style={{
                   top: 0,
@@ -1038,6 +1148,10 @@ class TableInteractive extends Component {
                   overflow: "hidden",
                   paddingRight: getScrollBarSize(),
                 }}
+                styleBottomRightGrid={{
+                  overflowY: "hidden",
+                  overflowX: "hidden",
+                }}
                 className="TableInteractive-header scroll-hide-all"
                 width={width || 0}
                 height={headerHeight}
@@ -1045,6 +1159,7 @@ class TableInteractive extends Component {
                 rowHeight={headerHeight}
                 columnCount={cols.length + gutterColumn}
                 columnWidth={this.getDisplayColumnWidth}
+                fixedColumnCount={this.getFreezeColNo()}
                 cellRenderer={props =>
                   gutterColumn && props.columnIndex === 0
                     ? () => null // we need a phantom cell to properly offset columns
@@ -1058,7 +1173,7 @@ class TableInteractive extends Component {
                 tabIndex={null}
                 scrollToColumn={scrollToColumn}
               />
-              <Grid
+              <MultiGrid
                 id="main-data-grid"
                 ref={ref => (this.grid = ref)}
                 style={{
@@ -1074,6 +1189,7 @@ class TableInteractive extends Component {
                 columnWidth={this.getDisplayColumnWidth}
                 rowCount={rows.length}
                 rowHeight={ROW_HEIGHT}
+                fixedColumnCount={this.getFreezeColNo()}
                 cellRenderer={props =>
                   gutterColumn && props.columnIndex === 0
                     ? () => null // we need a phantom cell to properly offset columns
@@ -1103,6 +1219,7 @@ class TableInteractive extends Component {
     const height = grid.scrollHeight;
     let top = 0;
     let start = Date.now();
+
     // console.profile();
     function next() {
       grid.scrollTop = top;
@@ -1120,6 +1237,7 @@ class TableInteractive extends Component {
         }
       }, 40);
     }
+
     next();
   }
 }

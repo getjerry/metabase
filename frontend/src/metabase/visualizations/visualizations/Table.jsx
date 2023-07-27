@@ -296,6 +296,8 @@ export default class Table extends Component {
     this.state = {
       data: null,
     };
+    this.sourceData = null;
+    this.fixedColumn = {};
   }
 
   UNSAFE_componentWillMount() {
@@ -355,6 +357,29 @@ export default class Table extends Component {
           rows: rows.map(row => columnIndexes.map(i => row[i])),
         },
       });
+      if (this.sourceData === null) {
+        this.sourceData = {
+          cols: columnIndexes.map(i => cols[i]),
+          // rows: rows.map(row => columnIndexes.map(i => row[i])),
+        };
+        this.fixedColumn = {};
+      } else {
+        // check sourceData is equal data, if not equal, clean
+        const columnIndexesLen = columnIndexes.length;
+        const sourceDataLen = this.sourceData.cols.length;
+        const columnName = [];
+        cols.forEach(item => columnName.push(item.name));
+        const colDiff = this.sourceData.cols.filter(
+          item => !columnName.includes(item.name),
+        );
+        if (columnIndexesLen !== sourceDataLen || colDiff.length > 0) {
+          this.sourceData = {
+            cols: columnIndexes.map(i => cols[i]),
+            // rows: rows.map(row => columnIndexes.map(i => row[i])),
+          };
+          this.fixedColumn = {};
+        }
+      }
     }
   }
 
@@ -372,6 +397,8 @@ export default class Table extends Component {
   render() {
     const { series, isDashboard, settings } = this.props;
     const { data } = this.state;
+    const sourceData = this.sourceData;
+    const fixedColumn = this.fixedColumn;
     const [{ card }] = series;
     const sort = getIn(card, ["dataset_query", "query", "order-by"]) || null;
     const isPivoted = Table.isPivoted(series, settings);
@@ -381,7 +408,6 @@ export default class Table extends Component {
     if (!data) {
       return null;
     }
-
     if (areAllColumnsHidden) {
       return (
         <div
@@ -408,6 +434,8 @@ export default class Table extends Component {
       <TableComponent
         {...this.props}
         data={data}
+        sourceData={sourceData}
+        fixedColumn={fixedColumn}
         isPivoted={isPivoted}
         sort={sort}
         getColumnTitle={this.getColumnTitle}

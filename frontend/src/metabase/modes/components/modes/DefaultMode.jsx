@@ -9,6 +9,7 @@ import CompareToRestDrill from "../drill/CompareToRestDrill";
 import ZoomDrill from "../drill/ZoomDrill";
 import FormatDrill from "../drill/FormatDrill";
 import DashboardClickDrill from "../drill/DashboardClickDrill";
+import FreezeColumnDrill from "../drill/FreezeColumnDrill";
 
 const DefaultMode = {
   name: "default",
@@ -23,6 +24,7 @@ const DefaultMode = {
     AutomaticDashboardDrill,
     CompareToRestDrill,
     FormatDrill,
+    FreezeColumnDrill,
     DashboardClickDrill,
   ],
 };
