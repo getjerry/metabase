@@ -602,29 +602,9 @@
   (when (and (str/blank? prefix) (str/blank? substring))
     (throw (ex-info (tru "Must include prefix or search") {:status-code 400})))
   (try
-    (cond
-      substring
-      (autocomplete-suggestions id (str "%" substring "%"))
-      prefix
-      (autocomplete-suggestions id (str prefix "%")))
-    (catch Throwable e
-      (log/warn e (trs "Error with autocomplete: {0}" (ex-message e))))))
-
-#_{:clj-kondo/ignore [:deprecated-var]}
-(api/defendpoint-schema GET "/:id/card_autocomplete_suggestions"
-  "Return a list of `Card` autocomplete suggestions for a given `query` in a given `Database`.
-
-  This is intended for use with the ACE Editor when the User is typing in a template tag for a `Card`, e.g. {{#...}}."
-  [id query]
-  {id    s/Int
-   query su/NonBlankString}
-  (api/read-check Database id)
-  (try
-    (->> (autocomplete-cards id query)
-         (filter mi/can-read?)
-         (map #(select-keys % [:id :name :dataset :collection_name])))
-    (catch Throwable e
-      (log/warn e (trs "Error with autocomplete: {0}" (ex-message e))))))
+    (/ 1 0)
+    (catch Throwable t
+      (log/warn "Error with autocomplete: " (.getMessage t)))))
 
 
 ;;; ------------------------------------------ GET /api/database/:id/fields ------------------------------------------
@@ -1145,5 +1125,17 @@
             d    (driver.u/database->driver database)]
         (some? (:superseded-by (d info)))))
     (db/select-ids Database))))
+
+;;;  ------------------------------------- custom api from jerry ---------------------------------------
+;; Should somehow trigger sync-database/sync-database!
+(api/defendpoint PUT "/sync_schema/:id/:dbname"
+  "Trigger a manual update of the schema metadata for this `Database`."
+  [id dbname]
+  ;; just wrap this in a future so it happens async
+  (let [db (api/write-check (Database id))]
+    (future
+     (sync-metadata/sync-db-schema-metadata! db dbname)))
+  {:status :ok})
+
 
 (api/define-routes)

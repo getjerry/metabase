@@ -86,6 +86,13 @@
   [table :- i/DatabaseMetadataTable]
   (= "_metabase_metadata" (u/lower-case-en (:name table))))
 
+(s/defn is-equal-schema? :- s/Bool
+  "Is this TABLE the schema euqal input args?"
+  [table :- i/DatabaseMetadataTable schema]
+;  (log/info (format "table %s" (str/blank? (:schema table))))
+  (or (and (= "null" (str/lower-case schema)) (str/blank? (:schema table)))
+      (= (str/lower-case schema) (str/lower-case (:schema table)))))
+
 (s/defn sync-metabase-metadata!
   "Sync the `_metabase_metadata` table, a special table with Metabase metadata, if present.
    This table contains information about type information, descriptions, and other properties that

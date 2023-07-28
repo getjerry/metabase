@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 eclipse-temurin:11-jre-alpine
+FROM adoptopenjdk/openjdk11:x86_64-alpine-jdk-11.0.13_8
 
 ENV FC_LANG=en-US LC_CTYPE=en_US.UTF-8
 

@@ -142,7 +142,8 @@ class Visualization extends React.PureComponent {
     const visualization = transformed && transformed.visualization;
     const computedSettings = !this.isLoading(series)
       ? getComputedSettingsForSeries(series)
-      : {};
+      : null;
+    this.defaultPercentValue(computedSettings);
     this.setState({
       hovered: null,
       error: null,
@@ -152,6 +153,48 @@ class Visualization extends React.PureComponent {
       visualization: visualization,
       computedSettings: computedSettings,
     });
+  }
+
+  defaultPercentValue(settings) {
+    if (settings !== null && "table.columns" in settings) {
+      const tableColumn = settings["table.columns"];
+      if (tableColumn !== undefined && tableColumn.length > 0) {
+        const needSetPercentColumnName = tableColumn
+          .filter(column => {
+            let isFloat = false;
+            if (
+              column.fieldRef !== undefined &&
+              column.fieldRef.length > 2 &&
+              column.fieldRef[2] instanceof Object &&
+              "base-type" in column.fieldRef[2]
+            ) {
+              if (
+                column.fieldRef[2]["base-type"].includes("Float") ||
+                column.fieldRef[2]["base-type"].includes("Double") ||
+                column.fieldRef[2]["base-type"].includes("Integer")
+              ) {
+                isFloat = true;
+              }
+            }
+            return column.name.includes("%") && isFloat === true;
+          })
+          .map(column => {
+            return column.name;
+          });
+
+        const columnSettings = settings["column_settings"];
+        console.log(columnSettings);
+        needSetPercentColumnName.forEach(name => {
+          const columnName = JSON.stringify(Array("name", name));
+          if (!(columnName in columnSettings)) {
+            columnSettings[columnName] = {
+              decimals: 2,
+              number_style: "percent",
+            };
+          }
+        });
+      }
+    }
   }
 
   isLoading = series => {

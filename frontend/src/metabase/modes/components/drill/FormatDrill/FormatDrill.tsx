@@ -63,9 +63,10 @@ const FormatDrill: Drill = ({ question, clicked }) => {
       name: "formatting",
       title: t`Column formatting`,
       section: "sort",
-      buttonType: "formatting",
+      buttonType: "setting",
       icon: "gear",
       tooltip: t`Column formatting`,
+      defaultAlways: true,
       popoverProps: {
         placement: "right-end",
         offset: [0, 20],

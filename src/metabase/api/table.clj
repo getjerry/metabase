@@ -14,6 +14,7 @@
    [metabase.models.table :as table :refer [Table]]
    [metabase.related :as related]
    [metabase.sync :as sync]
+   [metabase.sync.sync-metadata :as sync-metadata]
    [metabase.sync.concurrent :as sync.concurrent]
    #_:clj-kondo/ignore
    [metabase.sync.field-values :as sync.field-values]
@@ -487,5 +488,16 @@
   [id :as {field_order :body}]
   {field_order [su/IntGreaterThanZero]}
   (-> (db/select-one Table :id id) api/write-check (table/custom-order-fields! field_order)))
+
+;;;  ------------------------------------- custom api from jerry ---------------------------------------
+;; Should somehow trigger sync-database/sync-database!
+(api/defendpoint PUT "/sync_table_field/:id"
+  "Trigger a manual update of the schema metadata for this `table`."
+  [id]
+  ;; just wrap this in a future so it happens async
+  (let [table (api/write-check (Table id))]
+    (future
+     (sync-metadata/sync-table-metadata! table)))
+  {:status :ok})
 
 (api/define-routes)

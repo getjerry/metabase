@@ -389,6 +389,28 @@
                       :end-time end-time
                       :log-summary-fn log-summary-fn)]))
 
+(s/defn run-step-with-metadata-filter-dbname :- StepNameWithMetadata
+  "Runs `step` on `database` returning metadata from the run"
+  [database :- i/DatabaseInstance
+   dbname :- s/Str
+   {:keys [step-name sync-fn log-summary-fn] :as _step} :- StepDefinition]
+  (let [start-time (t/zoned-date-time)
+        results    (with-start-and-finish-debug-logging (trs "step ''{0}'' for {1}"
+                                                             step-name
+                                                             (name-for-logging database))
+                                                        (fn [& args]
+                                                          (try
+                                                            (apply sync-fn database dbname args)
+                                                            (catch Throwable e
+                                                              (if *log-exceptions-and-continue?*
+                                                                {:throwable e}
+                                                                (throw (ex-info (format "Error in sync step %s: %s" step-name (ex-message e)) {} e)))))))
+        end-time   (t/zoned-date-time)]
+    [step-name (assoc results
+                      :start-time start-time
+                      :end-time end-time
+                      :log-summary-fn log-summary-fn)]))
+
 (s/defn ^:private make-log-sync-summary-str
   "The logging logic from `log-sync-summary`. Separated for testing purposes as the `log/debug` macro won't invoke
   this function unless the logging level is at debug (or higher)."
@@ -484,6 +506,28 @@
         step-metadata (loop [[step-defn & rest-defns] sync-steps
                              result                   []]
                         (let [[step-name r] (run-step-with-metadata database step-defn)
+                              new-result    (conj result [step-name r])]
+                          (cond (abandon-sync? r) new-result
+                                (not (seq rest-defns)) new-result
+                                :else (recur rest-defns new-result))))
+        end-time      (t/zoned-date-time)
+        sync-metadata {:start-time start-time
+                       :end-time   end-time
+                       :steps      step-metadata}]
+    (store-sync-summary! operation database sync-metadata)
+    (log-sync-summary operation database sync-metadata)
+    sync-metadata))
+
+(s/defn run-sync-operation-jerry
+  "Run `sync-steps` and log a summary message(jerry version)"
+  [operation :- s/Str
+   database :- i/DatabaseInstance
+   dbname :- s/Str
+   sync-steps :- [StepDefinition]]
+  (let [start-time    (t/zoned-date-time)
+        step-metadata (loop [[step-defn & rest-defns] sync-steps
+                             result                   []]
+                        (let [[step-name r] (run-step-with-metadata-filter-dbname database dbname step-defn)
                               new-result    (conj result [step-name r])]
                           (cond (abandon-sync? r) new-result
                                 (not (seq rest-defns)) new-result

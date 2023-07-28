@@ -17,6 +17,7 @@ import "ace/snippets/mysql";
 import "ace/snippets/pgsql";
 import "ace/snippets/sqlserver";
 import "ace/snippets/json";
+import "ace-builds/src-noconflict/ext-searchbox";
 import _ from "underscore";
 import { ResizableBox } from "react-resizable";
 import { connect } from "react-redux";
@@ -284,7 +285,7 @@ export class NativeQueryEditor extends Component {
       enableSnippets: false,
       enableLiveAutocompletion: true,
       showPrintMargin: false,
-      highlightActiveLine: false,
+      highlightActiveLine: true,
       highlightGutterLine: false,
       showLineNumbers: true,
     });
@@ -439,9 +440,11 @@ export class NativeQueryEditor extends Component {
         MIN_HEIGHT_LINES,
       ),
     );
-    if (newHeight > element.offsetHeight) {
-      element.style.height = newHeight + "px";
-      this._editor.resize();
+    if (element !== null && element.offsetHeight !== undefined) {
+      if (newHeight > element.offsetHeight) {
+        element.style.height = newHeight + "px";
+        this._editor.resize();
+      }
     }
   }
 
@@ -535,12 +538,16 @@ export class NativeQueryEditor extends Component {
 
     return (
       <NativeQueryEditorRoot
+        id="nativeQueryEditor-full"
         className="NativeQueryEditor bg-light full"
         data-testid="native-query-editor-container"
       >
         {hasTopBar && (
           <div className="flex align-center" data-testid="native-query-top-bar">
-            <div className={!isNativeEditorOpen ? "hide sm-show" : ""}>
+            <div
+              className={!isNativeEditorOpen ? "hide sm-show" : ""}
+              id={"native-query-bar"}
+            >
               <DataSourceSelectors
                 isNativeEditorOpen={isNativeEditorOpen}
                 query={query}
@@ -551,12 +558,14 @@ export class NativeQueryEditor extends Component {
               />
             </div>
             {hasParametersList && (
-              <ResponsiveParametersList
-                question={question}
-                parameters={parameters}
-                setParameterValue={setParameterValue}
-                setParameterIndex={this.setParameterIndex}
-              />
+              <div className="query_filters" style={{ display: "block" }}>
+                <ResponsiveParametersList
+                  question={question}
+                  parameters={parameters}
+                  setParameterValue={setParameterValue}
+                  setParameterIndex={this.setParameterIndex}
+                />
+              </div>
             )}
             {query.hasWritePermission() && this.props.setIsNativeEditorOpen && (
               <VisibilityToggler
