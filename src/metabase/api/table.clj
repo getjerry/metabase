@@ -495,7 +495,7 @@
   "Trigger a manual update of the schema metadata for this `table`."
   [id]
   ;; just wrap this in a future so it happens async
-  (let [table (api/write-check (Table id))]
+  (let [table (api/write-check (db/select-one Table :id id))]
     (future
      (sync-metadata/sync-table-metadata! table)))
   {:status :ok})

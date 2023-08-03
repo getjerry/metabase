@@ -1128,11 +1128,13 @@
 
 ;;;  ------------------------------------- custom api from jerry ---------------------------------------
 ;; Should somehow trigger sync-database/sync-database!
+#_{:clj-kondo/ignore [:deprecated-var]}
 (api/defendpoint PUT "/sync_schema/:id/:dbname"
   "Trigger a manual update of the schema metadata for this `Database`."
   [id dbname]
+  (log/info (tru "sync_schema"))
   ;; just wrap this in a future so it happens async
-  (let [db (api/write-check (Database id))]
+  (let [db (api/write-check (db/select-one Database :id id))]
     (future
      (sync-metadata/sync-db-schema-metadata! db dbname)))
   {:status :ok})
