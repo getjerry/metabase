@@ -461,6 +461,7 @@ function ViewTitleHeaderRightSide(props) {
         <ConvertQueryButton question={question} onOpenModal={onOpenModal} />
       )}
       {hasExploreResultsLink && <ExploreResultsLink question={question} />}
+      {/*<QueryEditHideButton />*/}
       {hasRunButton && !isShowingNotebook && (
         <ViewHeaderIconButtonContainer>
           <RunButtonWithTooltip

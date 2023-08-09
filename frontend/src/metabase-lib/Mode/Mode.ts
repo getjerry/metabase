@@ -31,7 +31,6 @@ export default class Mode {
     const question = this._question;
     const props = { question, settings, clicked, extraData };
     const actions = mode.drills.flatMap(drill => drill(props));
-
     if (!actions.length && mode.fallback) {
       return mode.fallback(props);
     } else {

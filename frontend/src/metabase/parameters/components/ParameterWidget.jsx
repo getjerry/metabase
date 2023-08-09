@@ -71,6 +71,7 @@ export default class ParameterWidget extends Component {
       setValue,
       children,
       dragHandle,
+      display,
     } = this.props;
 
     const isEditingParameter =
@@ -81,22 +82,29 @@ export default class ParameterWidget extends Component {
         parameter.value != null || this.state.isFocused;
       const legend = fieldHasValueOrFocus ? parameter.name : "";
 
+      const fieldSetClassName = "field_set";
       return (
-        <FieldSet
-          legend={legend}
-          noPadding={true}
-          className={cx(className, S.container, {
-            "border-brand": fieldHasValueOrFocus,
-          })}
+        <div
+          className={fieldSetClassName}
+          id={parameter.name}
+          style={{ display: display }}
         >
-          {this.renderPopover(
-            parameter.value,
-            value => setValue(value),
-            parameter.name,
-            isFullscreen,
-          )}
-          {children}
-        </FieldSet>
+          <FieldSet
+            legend={legend}
+            noPadding={true}
+            className={cx(className, S.container, {
+              "border-brand": fieldHasValueOrFocus,
+            })}
+          >
+            {this.renderPopover(
+              parameter.value,
+              value => setValue(value),
+              parameter.name,
+              isFullscreen,
+            )}
+            {children}
+          </FieldSet>
+        </div>
       );
     };
 

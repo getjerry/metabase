@@ -29,7 +29,7 @@ const VisibilityToggler = ({
   );
 
   return (
-    <Container>
+    <Container id="visibility-toggler">
       <a
         className={classNames}
         onClick={toggleEditor}

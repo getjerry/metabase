@@ -15,6 +15,7 @@ type DimensionValue = {
 };
 
 export type ClickObject = {
+  parentProps: object;
   value?: RowValue;
   column?: DatasetColumn;
   dimensions?: DimensionValue[];
@@ -27,6 +28,10 @@ export type ClickObject = {
   };
   event?: MouseEvent;
   element?: HTMLElement;
+  fixedColumnClick(
+    column: DatasetColumn | undefined,
+    clicked: ClickObject,
+  ): any;
 };
 
 type Dispatcher = (dispatch: Dispatch) => void;
