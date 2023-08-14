@@ -254,6 +254,7 @@
         [changed-tables]        (data/diff db-tables our-metadata)]
     ;; update database metadata from database
     (log/info (format "my test output"))
+    (log/info (trs "Found new version for DB: {0}" (:version db-metadata)))
     (log/info (trs "db tables:")
               (for [table db-tables]
                 (sync-util/name-for-logging (mi/instance Table table))))

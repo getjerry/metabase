@@ -89,7 +89,7 @@
 (s/defn is-equal-schema? :- s/Bool
   "Is this TABLE the schema euqal input args?"
   [table :- i/DatabaseMetadataTable schema]
-;  (log/info (format "table %s" (str/blank? (:schema table))))
+;  (log/info (format "table %s %s %s" (:schema table) (:name table) (:description table)))
   (or (and (= "null" (str/lower-case schema)) (str/blank? (:schema table)))
       (= (str/lower-case schema) (str/lower-case (:schema table)))))
 
