@@ -30,6 +30,8 @@ import QuestionFilters, {
   QuestionFilterWidget,
 } from "./QuestionFilters";
 import { QuestionSummarizeWidget } from "./QuestionSummaries";
+import { OpenChatAi } from "./OpenChatAi";
+
 import {
   AdHocViewHeading,
   SaveButton,
@@ -317,6 +319,7 @@ function DatasetCollectionBadge({ dataset }) {
 }
 
 ViewTitleHeaderRightSide.propTypes = {
+  user: PropTypes.object,
   question: PropTypes.object.isRequired,
   result: PropTypes.object,
   queryBuilderMode: PropTypes.oneOf(["view", "notebook"]),
@@ -352,6 +355,7 @@ ViewTitleHeaderRightSide.propTypes = {
 
 function ViewTitleHeaderRightSide(props) {
   const {
+    user,
     question,
     result,
     queryBuilderMode,
@@ -460,8 +464,10 @@ function ViewTitleHeaderRightSide(props) {
       {ConvertQueryButton.shouldRender(props) && (
         <ConvertQueryButton question={question} onOpenModal={onOpenModal} />
       )}
+      {hasRunButton && !isShowingNotebook && !hasSaveButton && (
+        <OpenChatAi question={question} user={user} />
+      )}
       {hasExploreResultsLink && <ExploreResultsLink question={question} />}
-      {/*<QueryEditHideButton />*/}
       {hasRunButton && !isShowingNotebook && (
         <ViewHeaderIconButtonContainer>
           <RunButtonWithTooltip

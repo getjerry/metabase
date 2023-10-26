@@ -69,7 +69,7 @@
                                     (map (partial format "'sha256-%s'") inline-js-hashes)))
                   :child-src    ["'self'"
                                  ;; TODO - double check that we actually need this for Google Auth
-                                 "https://accounts.google.com"]
+                                 "https://accounts.google.com https://en.wikipedia.org https://streamlit.ing.getjerry.com https://chatdata.ing.getjerry.com"]
                   :style-src    ["'self'"
                                  "'unsafe-inline'"
                                  "https://accounts.google.com"]
@@ -78,9 +78,12 @@
                                  "'self' data:"]
                   :connect-src  ["'self'"
                                  ;; Google Identity Services
+;                                 "http://127.0.0.1:5000"
                                  "https://accounts.google.com"
                                  ;; MailChimp. So people can sign up for the Metabase mailing list in the sign up process
                                  "metabase.us10.list-manage.com"
+                                 ;; Metabase Integration
+                                 "metabase-proxy.getjerry.com"
                                  ;; Google analytics
                                  (when (public-settings/anon-tracking-enabled)
                                    "www.google-analytics.com")

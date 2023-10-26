@@ -1,3 +1,4 @@
+import axios from "axios";
 import { t } from "ttag";
 import { createAction } from "redux-actions";
 
@@ -132,7 +133,7 @@ export const runQuestionQuery = ({
         ignoreCache: ignoreCache,
         isDirty: cardIsDirty,
       })
-      .then(queryResults => {
+      .then(async queryResults => {
         queryTimer(duration =>
           MetabaseAnalytics.trackStructEvent(
             "QueryBuilder",
@@ -141,6 +142,24 @@ export const runQuestionQuery = ({
             duration,
           ),
         );
+        // write in jfs (only jerry)
+        const card_id = question.card().id;
+        if (card_id !== undefined && queryResults.length > 0) {
+          try {
+            const userId = getState().currentUser.id;
+            const fileName = "report_" + card_id + "_user_" + userId;
+            const ans = await axios.post(
+              "https://metabase-proxy.getjerry.com/chatdata/write",
+              {
+                filename: fileName,
+                data: queryResults[0],
+              },
+            );
+            console.log(ans);
+          } catch (e) {
+            console.log(e);
+          }
+        }
         return dispatch(queryCompleted(question, queryResults));
       })
       .catch(error => dispatch(queryErrored(startTime, error)));
