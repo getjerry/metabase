@@ -89,6 +89,16 @@ export function OpenChatAi({ question, user }) {
       const email = user.email;
       // eslint-disable-next-line react/prop-types
       const common_name = user.common_name;
+      const crypto = require("crypto");
+      const md5Hash = crypto.createHash("md5");
+      const token =
+        questionId.toString() +
+        common_name +
+        email +
+        userId.toString() +
+        "jerry_data_team";
+      md5Hash.update(token, "utf8");
+      const md5Digest = md5Hash.digest("hex");
       const openUrl = encodeURI(
         "https://chatdata.ing.getjerry.com?context_id=report_" +
           questionId +
@@ -99,9 +109,11 @@ export function OpenChatAi({ question, user }) {
           "&common_name=" +
           common_name +
           "&report_name=" +
-          questionName,
+          questionName +
+          "&token=" +
+          md5Digest,
       );
-      console.log("open chat ai", openUrl);
+      // console.log("open chat ai", openUrl);
       return openUrl;
     } else {
       return "";
