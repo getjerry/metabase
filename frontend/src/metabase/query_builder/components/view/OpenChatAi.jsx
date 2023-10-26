@@ -29,6 +29,8 @@ const loadingSpinnerStyle = {
 
 // eslint-disable-next-line react/prop-types
 export function OpenChatAi({ question, user }) {
+  // eslint-disable-next-line react/prop-types
+  const questionName = question._card.name;
   // 监听键盘事件
   useEffect(() => {
     const handleKeyPress = event => {
@@ -95,7 +97,9 @@ export function OpenChatAi({ question, user }) {
           "&email=" +
           email +
           "&common_name=" +
-          common_name,
+          common_name +
+          "&report_name=" +
+          questionName,
       );
       console.log("open chat ai", openUrl);
       return openUrl;
@@ -105,7 +109,7 @@ export function OpenChatAi({ question, user }) {
   }
 
   return (
-    <Tooltip tooltip="Chat Ai">
+    <Tooltip tooltip="AI Data Monkey">
       {/*<Button*/}
       {/*  onClick={() => showModal()}*/}
       {/*  icon="bot"*/}
@@ -113,11 +117,11 @@ export function OpenChatAi({ question, user }) {
       {/*  iconSize={20}*/}
       {/*></Button>*/}
       <Modal
-        title="Chat Ai"
+        title={"ChatData - AI Data Monkey Just for You:  " + questionName}
         centered
         open={loadIframe.open}
         onCancel={() => close()}
-        width="60%"
+        width="80%"
         footer={[]}
         bodyStyle={{ height: "80vh", overflowY: "auto" }}
       >
