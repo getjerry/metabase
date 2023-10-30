@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "antd";
-import Button from "metabase/core/components/Button/Button";
+// import Button from "metabase/core/components/Button/Button";
 import Tooltip from "metabase/core/components/Tooltip";
 
 OpenChatAi.propTypes = {};
@@ -122,12 +122,12 @@ export function OpenChatAi({ question, user }) {
 
   return (
     <Tooltip tooltip="AI Data Monkey">
-      <Button
-        onClick={() => showModal()}
-        icon="bot"
-        onlyIcon
-        iconSize={20}
-      ></Button>
+      {/*<Button*/}
+      {/*  onClick={() => showModal()}*/}
+      {/*  icon="bot"*/}
+      {/*  onlyIcon*/}
+      {/*  iconSize={20}*/}
+      {/*></Button>*/}
       <Modal
         title={"ChatData - AI Data Monkey Just for You:  " + questionName}
         centered
