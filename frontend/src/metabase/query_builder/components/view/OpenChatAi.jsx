@@ -100,7 +100,7 @@ export function OpenChatAi({ question, user }) {
       md5Hash.update(token, "utf8");
       const md5Digest = md5Hash.digest("hex");
       const openUrl = encodeURI(
-        "https://chatdata.ing.getjerry.com?context_id=report_" +
+        "https://chatdata-prod.ing.getjerry.com/?context_id=report_" +
           questionId +
           "&user_id=" +
           userId +

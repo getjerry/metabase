@@ -69,7 +69,7 @@
                                     (map (partial format "'sha256-%s'") inline-js-hashes)))
                   :child-src    ["'self'"
                                  ;; TODO - double check that we actually need this for Google Auth
-                                 "https://accounts.google.com https://en.wikipedia.org https://streamlit.ing.getjerry.com https://chatdata.ing.getjerry.com"]
+                                 "https://accounts.google.com https://en.wikipedia.org https://streamlit.ing.getjerry.com https://chatdata.ing.getjerry.com https://chatdata-prod.ing.getjerry.com/"]
                   :style-src    ["'self'"
                                  "'unsafe-inline'"
                                  "https://accounts.google.com"]
