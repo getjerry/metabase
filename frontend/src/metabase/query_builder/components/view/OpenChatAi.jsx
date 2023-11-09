@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "antd";
+import Cookies from "js-cookie";
 import Button from "metabase/core/components/Button/Button";
 import Tooltip from "metabase/core/components/Tooltip";
 
@@ -67,7 +68,7 @@ export function OpenChatAi({ question, user }) {
     setLoadIframe(prevState => ({
       open: false,
       isLoading: false,
-      iframeKey: prevState.iframeKey + 1,
+      iframeKey: prevState.iframeKey,
     }));
   };
 
@@ -79,7 +80,16 @@ export function OpenChatAi({ question, user }) {
     }));
   };
 
-  function getChatUrl() {
+  function chatDataEnv() {
+    try {
+      return Cookies.get("chatdata.dev") || false;
+    } catch (e) {
+      console.error("get chatdata dev error:", e);
+      return false;
+    }
+  }
+
+  function getChatUrl(iframeKey) {
     if (loadIframe.open) {
       // eslint-disable-next-line react/prop-types
       const questionId = question.id();
@@ -99,8 +109,15 @@ export function OpenChatAi({ question, user }) {
         "jerry_data_team";
       md5Hash.update(token, "utf8");
       const md5Digest = md5Hash.digest("hex");
-      const openUrl = encodeURI(
-        "https://chatdata-prod.ing.getjerry.com/?context_id=report_" +
+      const isDev = chatDataEnv();
+      let baseUrl = "https://chatdata-prod.ing.getjerry.com/";
+      if (isDev === true || isDev === "true") {
+        baseUrl = "https://chatdata.ing.getjerry.com/";
+      }
+      // console.log("open chat ai", openUrl, iframeKey);
+      return encodeURI(
+        baseUrl +
+          "?context_id=report_" +
           questionId +
           "&user_id=" +
           userId +
@@ -113,8 +130,6 @@ export function OpenChatAi({ question, user }) {
           "&token=" +
           md5Digest,
       );
-      // console.log("open chat ai", openUrl);
-      return openUrl;
     } else {
       return "";
     }
@@ -149,7 +164,7 @@ export function OpenChatAi({ question, user }) {
             style={{ height: "98.5%" }}
             scrolling="true"
             onLoad={() => handleIframeLoad()}
-            src={getChatUrl()}
+            src={getChatUrl(loadIframe.iframeKey)}
             frameBorder="0"
           ></iframe>
         </div>
