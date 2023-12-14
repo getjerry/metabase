@@ -90,6 +90,7 @@ export function OpenChatAi({ question, user }) {
   }
 
   function getChatUrl(iframeKey) {
+    console.log(user);
     if (loadIframe.open) {
       // eslint-disable-next-line react/prop-types
       const questionId = question.id();
@@ -112,7 +113,7 @@ export function OpenChatAi({ question, user }) {
       const isDev = chatDataEnv();
       let baseUrl = "https://chatdata-prod.ing.getjerry.com/";
       if (isDev === true || isDev === "true") {
-        baseUrl = "https://chatdata.ing.getjerry.com/";
+        baseUrl = "https://chatdata.ing.getjerry.com/chat";
       }
       // console.log("open chat ai", openUrl, iframeKey);
       return encodeURI(
