@@ -129,7 +129,8 @@ export function OpenChatAi({ question, user }) {
           "&report_name=" +
           questionName +
           "&token=" +
-          md5Digest,
+          md5Digest +
+          "&from_metabase=true",
       );
     } else {
       return "";
