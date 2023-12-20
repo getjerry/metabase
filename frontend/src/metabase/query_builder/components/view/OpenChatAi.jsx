@@ -168,6 +168,7 @@ export function OpenChatAi({ question, user }) {
             onLoad={() => handleIframeLoad()}
             src={getChatUrl(loadIframe.iframeKey)}
             frameBorder="0"
+            allow="clipboard-read; clipboard-write"
           ></iframe>
         </div>
       </Modal>
