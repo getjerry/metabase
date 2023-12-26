@@ -90,7 +90,6 @@ export function OpenChatAi({ question, user }) {
   }
 
   function getChatUrl(iframeKey) {
-    console.log(user);
     if (loadIframe.open) {
       // eslint-disable-next-line react/prop-types
       const questionId = question.id();

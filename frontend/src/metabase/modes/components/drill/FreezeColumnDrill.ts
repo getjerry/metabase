@@ -6,12 +6,10 @@ const FreezeColumnDrill: Drill = ({ question, clicked = {} }) => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     return require("metabase/query_builder/actions").fixColumnSettings(...args);
   }
-
   if (
     !clicked ||
     clicked.value !== undefined ||
     !clicked.column ||
-    !question.query().isEditable() ||
     question._card.display !== "table"
   ) {
     return [];
@@ -37,7 +35,7 @@ const FreezeColumnDrill: Drill = ({ question, clicked = {} }) => {
       section: "sort",
       buttonType: "setting",
       icon: "gear",
-      defaultAlways: true,
+      defaultAlways: false,
       tooltip: tooltip,
       action: () =>
         fixColumnSettings({
