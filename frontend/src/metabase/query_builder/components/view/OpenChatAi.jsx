@@ -110,7 +110,7 @@ export function OpenChatAi({ question, user }) {
       md5Hash.update(token, "utf8");
       const md5Digest = md5Hash.digest("hex");
       const isDev = chatDataEnv();
-      let baseUrl = "https://chatdata-prod.ing.getjerry.com/";
+      let baseUrl = "https://chatdata-prod.ing.getjerry.com/chat";
       if (isDev === true || isDev === "true") {
         baseUrl = "https://chatdata.ing.getjerry.com/chat";
       }
