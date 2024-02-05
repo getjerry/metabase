@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "antd";
 import Cookies from "js-cookie";
+import { t } from "ttag";
 import Button from "metabase/core/components/Button/Button";
 import Tooltip from "metabase/core/components/Tooltip";
 
@@ -110,9 +111,10 @@ export function OpenChatAi({ question, user }) {
       md5Hash.update(token, "utf8");
       const md5Digest = md5Hash.digest("hex");
       const isDev = chatDataEnv();
+      console.log("isDev", isDev);
       let baseUrl = "https://chatdata-prod.ing.getjerry.com/chat";
       if (isDev === true || isDev === "true") {
-        baseUrl = "https://chatdata.ing.getjerry.com/chat";
+        baseUrl = Cookies.get("chatdata.dev.domain") + "/chat";
       }
       // console.log("open chat ai", openUrl, iframeKey);
       return encodeURI(
@@ -137,13 +139,14 @@ export function OpenChatAi({ question, user }) {
   }
 
   return (
-    <Tooltip tooltip="AI Data Monkey">
+    <Tooltip tooltip="Ask AI to Explore the Result (Visualizations, Pivot, Insights etc)">
       <Button
+        success
+        small
         onClick={() => showModal()}
-        icon="bot"
-        onlyIcon
-        iconSize={20}
-      ></Button>
+        icon="insight"
+        iconSize={16}
+      >{t`Ask AI`}</Button>
       <Modal
         title={"ChatData - AI Data Monkey Just for You:  " + questionName}
         centered

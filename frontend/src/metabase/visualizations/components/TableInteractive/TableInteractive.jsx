@@ -11,6 +11,7 @@ import { ScrollSync, MultiGrid } from "react-virtualized";
 
 import "./TableInteractive.css";
 
+import Cookies from "js-cookie";
 import Icon from "metabase/components/Icon";
 import ExternalLink from "metabase/core/components/ExternalLink";
 import Button from "metabase/core/components/Button";
@@ -32,6 +33,7 @@ import ExplicitSize from "metabase/components/ExplicitSize";
 
 import Ellipsified from "metabase/core/components/Ellipsified";
 import DimensionInfoPopover from "metabase/components/MetadataInfo/DimensionInfoPopover";
+import { ChatAiSample } from "metabase/query_builder/components/view/ChatdataModal/ChatAiSample";
 import { isID, isPK, isFK } from "metabase-lib/types/utils/isa";
 import { fieldRefForColumn } from "metabase-lib/queries/utils/dataset";
 import Dimension from "metabase-lib/Dimension";
@@ -43,7 +45,6 @@ import {
   HeaderCell,
   ResizeHandle,
 } from "./TableInteractive.styled";
-
 // approximately 120 chars
 const TRUNCATE_WIDTH = 780;
 
@@ -91,6 +92,9 @@ class TableInteractive extends Component {
       columnWidths: [],
       contentWidths: null,
       showDetailShortcut: true,
+      tableWidth: 0,
+      chatAiWidth: 0,
+      chatAiStyle: "maximize",
     };
     this.columnHasResized = {};
     this.headerRefs = [];
@@ -1068,6 +1072,8 @@ class TableInteractive extends Component {
       data: { cols, rows },
       className,
       scrollToColumn,
+      card,
+      user,
     } = this.props;
 
     if (!width || !height) {
@@ -1076,141 +1082,183 @@ class TableInteractive extends Component {
     const headerHeight = this.props.tableHeaderHeight || HEADER_HEIGHT;
     const gutterColumn = this.state.showDetailShortcut ? 1 : 0;
 
+    const minChatDataWidth = 0;
+    const minChatDataWidthRate = 0;
+    let tableWidth = width,
+      chatAiWidth = 0;
+    let isChatData = false;
+    let isMinimized = false;
+    if (width > 300 && card.id !== undefined) {
+      chatAiWidth = Math.max(width * minChatDataWidthRate, minChatDataWidth);
+      tableWidth = width - chatAiWidth;
+      isChatData = true;
+    }
+
+    if (Cookies.get("chatdata.win.style") === "minimized") {
+      this.setState({ tableWidth: width });
+      this.setState({ chatAiWidth: 0 });
+      isMinimized = true;
+    } else {
+      this.setState({ chatAiWidth: chatAiWidth });
+      this.setState({ tableWidth: tableWidth });
+    }
+
+    function changeTableWidth(tableComponent, chatAiStyle) {
+      tableComponent.setState({ chatAiStyle: chatAiStyle });
+    }
+
     return (
-      <ScrollSync>
-        {({ onScroll, scrollLeft, scrollTop }) => {
-          // Grid's doc says scrollToColumn takes precedence over scrollLeft
-          // (https://github.com/bvaughn/react-virtualized/blob/master/docs/Grid.md#prop-types)
-          // For some reason, for TableInteractive's main grid scrollLeft appears to be more prior
-          const mainGridProps = {};
-          if (scrollToColumn >= 0) {
-            mainGridProps.scrollToColumn = scrollToColumn;
-          } else {
-            mainGridProps.scrollLeft = scrollLeft;
-          }
-          return (
-            <div
-              className={cx(className, "TableInteractive relative", {
-                "TableInteractive--pivot": this.props.isPivoted,
-                "TableInteractive--ready": this.state.contentWidths,
-                // no hover if we're dragging a column
-                "TableInteractive--noHover": this.state.dragColIndex != null,
-              })}
-              onMouseEnter={this.handleOnMouseEnter}
-              onMouseLeave={this.handleOnMouseLeave}
-              data-testid="TableInteractive-root"
-            >
-              <canvas
-                className="spread"
-                style={{ pointerEvents: "none", zIndex: 999 }}
-                width={width}
-                height={height}
-              />
-              {!!gutterColumn && (
-                <>
-                  <div
-                    className="TableInteractive-header TableInteractive--noHover"
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: SIDEBAR_WIDTH,
-                      height: headerHeight,
-                      zIndex: 4,
-                    }}
-                  />
-                  <div
-                    id="gutter-column"
-                    className="TableInteractive-gutter"
-                    style={{
-                      position: "absolute",
-                      top: headerHeight,
-                      left: 0,
-                      height: height - headerHeight - getScrollBarSize(),
-                      width: SIDEBAR_WIDTH,
-                      zIndex: 3,
-                    }}
-                    onMouseMove={this.handleHoverRow}
-                    onMouseLeave={this.handleLeaveRow}
-                  >
-                    <DetailShortcut ref={this.detailShortcutRef} />
-                  </div>
-                </>
-              )}
-              <MultiGrid
-                ref={ref => (this.header = ref)}
-                style={{
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: headerHeight,
-                  position: "absolute",
-                  overflow: "hidden",
-                  paddingRight: getScrollBarSize(),
-                }}
-                styleBottomRightGrid={{
-                  overflowY: "hidden",
-                  overflowX: "hidden",
-                }}
-                className="TableInteractive-header scroll-hide-all"
-                width={width || 0}
-                height={headerHeight}
-                rowCount={1}
-                rowHeight={headerHeight}
-                columnCount={cols.length + gutterColumn}
-                columnWidth={this.getDisplayColumnWidth}
-                fixedColumnCount={this.getFreezeColNo()}
-                cellRenderer={props =>
-                  gutterColumn && props.columnIndex === 0
-                    ? () => null // we need a phantom cell to properly offset columns
-                    : this.tableHeaderRenderer({
-                        ...props,
-                        columnIndex: props.columnIndex - gutterColumn,
-                      })
-                }
-                onScroll={({ scrollLeft }) => onScroll({ scrollLeft })}
-                scrollLeft={scrollLeft}
-                tabIndex={null}
-                scrollToColumn={scrollToColumn}
-              />
-              <MultiGrid
-                id="main-data-grid"
-                ref={ref => (this.grid = ref)}
-                style={{
-                  top: headerHeight,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  position: "absolute",
-                }}
-                width={width}
-                height={height - headerHeight}
-                columnCount={cols.length + gutterColumn}
-                columnWidth={this.getDisplayColumnWidth}
-                rowCount={rows.length}
-                rowHeight={ROW_HEIGHT}
-                fixedColumnCount={this.getFreezeColNo()}
-                cellRenderer={props =>
-                  gutterColumn && props.columnIndex === 0
-                    ? () => null // we need a phantom cell to properly offset columns
-                    : this.cellRenderer({
-                        ...props,
-                        columnIndex: props.columnIndex - gutterColumn,
-                      })
-                }
-                scrollTop={scrollTop}
-                onScroll={({ scrollLeft, scrollTop }) => {
-                  this.props.onActionDismissal();
-                  return onScroll({ scrollLeft, scrollTop });
-                }}
-                {...mainGridProps}
-                tabIndex={null}
-                overscanRowCount={20}
-              />
-            </div>
-          );
-        }}
-      </ScrollSync>
+      <div className="flex flex-row flex-full">
+        <ScrollSync>
+          {({ onScroll, scrollLeft, scrollTop }) => {
+            // Grid's doc says scrollToColumn takes precedence over scrollLeft
+            // (https://github.com/bvaughn/react-virtualized/blob/master/docs/Grid.md#prop-types)
+            // For some reason, for TableInteractive's main grid scrollLeft appears to be more prior
+            const mainGridProps = {};
+            if (scrollToColumn >= 0) {
+              mainGridProps.scrollToColumn = scrollToColumn;
+            } else {
+              mainGridProps.scrollLeft = scrollLeft;
+            }
+            return (
+              <div
+                className={cx(className, "TableInteractive relative", {
+                  "TableInteractive--pivot": this.props.isPivoted,
+                  "TableInteractive--ready": this.state.contentWidths,
+                  // no hover if we're dragging a column
+                  "TableInteractive--noHover": this.state.dragColIndex != null,
+                })}
+                onMouseEnter={this.handleOnMouseEnter}
+                onMouseLeave={this.handleOnMouseLeave}
+                data-testid="TableInteractive-root"
+              >
+                <canvas
+                  className="spread"
+                  style={{ pointerEvents: "none", zIndex: 999 }}
+                  width={width}
+                  height={height}
+                />
+                {!!gutterColumn && (
+                  <>
+                    <div
+                      className="TableInteractive-header TableInteractive--noHover"
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: SIDEBAR_WIDTH,
+                        height: headerHeight,
+                        zIndex: 4,
+                      }}
+                    />
+                    <div
+                      id="gutter-column"
+                      className="TableInteractive-gutter"
+                      style={{
+                        position: "absolute",
+                        top: headerHeight,
+                        left: 0,
+                        height: height - headerHeight - getScrollBarSize(),
+                        width: SIDEBAR_WIDTH,
+                        zIndex: 3,
+                      }}
+                      onMouseMove={this.handleHoverRow}
+                      onMouseLeave={this.handleLeaveRow}
+                    >
+                      <DetailShortcut ref={this.detailShortcutRef} />
+                    </div>
+                  </>
+                )}
+                <MultiGrid
+                  ref={ref => (this.header = ref)}
+                  style={{
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: headerHeight,
+                    position: "absolute",
+                    overflow: "hidden",
+                    paddingRight: getScrollBarSize(),
+                  }}
+                  styleBottomRightGrid={{
+                    overflowY: "hidden",
+                    overflowX: "hidden",
+                  }}
+                  className="TableInteractive-header scroll-hide-all"
+                  width={this.state.tableWidth || 0}
+                  height={headerHeight}
+                  rowCount={1}
+                  rowHeight={headerHeight}
+                  columnCount={cols.length + gutterColumn}
+                  columnWidth={this.getDisplayColumnWidth}
+                  fixedColumnCount={this.getFreezeColNo()}
+                  cellRenderer={props =>
+                    gutterColumn && props.columnIndex === 0
+                      ? () => null // we need a phantom cell to properly offset columns
+                      : this.tableHeaderRenderer({
+                          ...props,
+                          columnIndex: props.columnIndex - gutterColumn,
+                        })
+                  }
+                  onScroll={({ scrollLeft }) => onScroll({ scrollLeft })}
+                  scrollLeft={scrollLeft}
+                  tabIndex={null}
+                  scrollToColumn={scrollToColumn}
+                />
+                <MultiGrid
+                  id="main-data-grid"
+                  ref={ref => (this.grid = ref)}
+                  style={{
+                    top: headerHeight,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    position: "absolute",
+                  }}
+                  width={this.state.tableWidth}
+                  height={height - headerHeight}
+                  columnCount={cols.length + gutterColumn}
+                  columnWidth={this.getDisplayColumnWidth}
+                  rowCount={rows.length}
+                  rowHeight={ROW_HEIGHT}
+                  fixedColumnCount={this.getFreezeColNo()}
+                  cellRenderer={props =>
+                    gutterColumn && props.columnIndex === 0
+                      ? () => null // we need a phantom cell to properly offset columns
+                      : this.cellRenderer({
+                          ...props,
+                          columnIndex: props.columnIndex - gutterColumn,
+                        })
+                  }
+                  scrollTop={scrollTop}
+                  onScroll={({ scrollLeft, scrollTop }) => {
+                    this.props.onActionDismissal();
+                    return onScroll({ scrollLeft, scrollTop });
+                  }}
+                  {...mainGridProps}
+                  tabIndex={null}
+                  overscanRowCount={20}
+                />
+              </div>
+            );
+          }}
+        </ScrollSync>
+
+        {isChatData && (
+          <div
+            className="ChatAiSample"
+            style={{ width: this.state.chatAiWidth, height: height }}
+          >
+            <ChatAiSample
+              card={card}
+              user={user}
+              isMinimized={isMinimized}
+              tableFunc={changeTableWidth}
+              tableComponent={this}
+            />
+          </div>
+        )}
+      </div>
     );
   }
 

@@ -16,6 +16,7 @@ import { useToggle } from "metabase/hooks/use-toggle";
 import { MODAL_TYPES } from "metabase/query_builder/constants";
 import SavedQuestionHeaderButton from "metabase/query_builder/components/SavedQuestionHeaderButton/SavedQuestionHeaderButton";
 
+import { ChatAiDev } from "metabase/query_builder/components/view/ChatdataModal/ChatAiDev";
 import RunButtonWithTooltip from "../RunButtonWithTooltip";
 
 import QuestionActions from "../QuestionActions";
@@ -30,7 +31,7 @@ import QuestionFilters, {
   QuestionFilterWidget,
 } from "./QuestionFilters";
 import { QuestionSummarizeWidget } from "./QuestionSummaries";
-import { OpenChatAi } from "./OpenChatAi";
+import { OpenChatAi } from "./ChatdataModal/OpenChatAi";
 
 import {
   AdHocViewHeading,
@@ -419,6 +420,11 @@ function ViewTitleHeaderRightSide(props) {
     }
   }, [isShowingQuestionInfoSidebar, onOpenQuestionInfo, onCloseQuestionInfo]);
 
+  let hasChatAiDev = false;
+  if (user.group_ids.includes(24)) {
+    hasChatAiDev = true;
+  }
+
   return (
     <ViewHeaderActionPanel data-testid="qb-header-action-panel">
       {QuestionFilters.shouldRender(props) && (
@@ -463,6 +469,9 @@ function ViewTitleHeaderRightSide(props) {
       )}
       {ConvertQueryButton.shouldRender(props) && (
         <ConvertQueryButton question={question} onOpenModal={onOpenModal} />
+      )}
+      {hasChatAiDev && hasRunButton && !isShowingNotebook && !hasSaveButton && (
+        <ChatAiDev question={question} user={user} />
       )}
       {hasRunButton && !isShowingNotebook && !hasSaveButton && (
         <OpenChatAi question={question} user={user} />
