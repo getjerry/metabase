@@ -25,7 +25,7 @@ export function ChatAiDev() {
   const [dev, setDev] = useState({
     openChatdataDebug: false,
     openDev: false,
-    chatDataDomain: "https://chatdata.ing.getjerry.com",
+    chatDataDomain: "https://chatdata-dev.ing.getjerry.com",
   });
 
   const onOpenDev = checked => {
