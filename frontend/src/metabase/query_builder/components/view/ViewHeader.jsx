@@ -84,7 +84,6 @@ const viewTitleHeaderPropTypes = {
 
 export function ViewTitleHeader(props) {
   const { question, className, style, isNavBarOpen, updateQuestion } = props;
-
   const [
     areFiltersExpanded,
     { turnOn: expandFilters, turnOff: collapseFilters },
@@ -420,6 +419,7 @@ function ViewTitleHeaderRightSide(props) {
     }
   }, [isShowingQuestionInfoSidebar, onOpenQuestionInfo, onCloseQuestionInfo]);
 
+  const hasChatdataButton = isNative && result !== null && !isRunning;
   let hasChatAiDev = false;
   if (user.group_ids.includes(24)) {
     hasChatAiDev = true;
@@ -470,12 +470,10 @@ function ViewTitleHeaderRightSide(props) {
       {ConvertQueryButton.shouldRender(props) && (
         <ConvertQueryButton question={question} onOpenModal={onOpenModal} />
       )}
-      {hasChatAiDev && hasRunButton && !isShowingNotebook && !hasSaveButton && (
+      {hasChatAiDev && hasChatdataButton && (
         <ChatAiDev question={question} user={user} />
       )}
-      {hasRunButton && !isShowingNotebook && !hasSaveButton && (
-        <OpenChatAi question={question} user={user} />
-      )}
+      {hasChatdataButton && <OpenChatAi question={question} user={user} />}
       {hasExploreResultsLink && <ExploreResultsLink question={question} />}
       {hasRunButton && !isShowingNotebook && (
         <ViewHeaderIconButtonContainer>

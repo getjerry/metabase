@@ -29,10 +29,25 @@ const loadingSpinnerStyle = {
   animation: "spin 1s linear infinite",
 };
 
+function get_question_name(question) {
+  if (question._card.name !== undefined) {
+    return question._card.name;
+  } else {
+    return question._card.original_card_name;
+  }
+}
+
+function get_question_id(question) {
+  if (question._card.id !== undefined) {
+    return question._card.id;
+  } else {
+    return question._card.original_card_id;
+  }
+}
+
 // eslint-disable-next-line react/prop-types
 export function OpenChatAi({ question, user }) {
-  // eslint-disable-next-line react/prop-types
-  const questionName = question._card.name;
+  const questionName = get_question_name(question);
   // 监听键盘事件
   useEffect(() => {
     const handleKeyPress = event => {
@@ -92,8 +107,7 @@ export function OpenChatAi({ question, user }) {
 
   function getChatUrl(iframeKey) {
     if (loadIframe.open) {
-      // eslint-disable-next-line react/prop-types
-      const questionId = question.id();
+      const questionId = get_question_id(question);
       // eslint-disable-next-line react/prop-types
       const userId = user.id;
       // eslint-disable-next-line react/prop-types
