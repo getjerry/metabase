@@ -21,10 +21,9 @@ export function ChatAiDev() {
       chatDataDomain: prevState.chatDataDomain,
     }));
   };
-
   const [dev, setDev] = useState({
     openChatdataDebug: false,
-    openDev: false,
+    openDev: Cookies.get("chatdata.dev") === "true",
     chatDataDomain: "https://chatdata-dev.ing.getjerry.com",
   });
 
