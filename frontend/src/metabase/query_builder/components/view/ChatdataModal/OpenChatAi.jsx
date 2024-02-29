@@ -29,25 +29,33 @@ const loadingSpinnerStyle = {
   animation: "spin 1s linear infinite",
 };
 
-function get_question_name(question) {
-  if (question._card.name !== undefined) {
-    return question._card.name;
+function get_report_name(report, type) {
+  if (type === "question") {
+    if (report._card.name !== undefined) {
+      return report._card.name;
+    } else {
+      return report._card.original_card_name;
+    }
   } else {
-    return question._card.original_card_name;
+    return report.name;
   }
 }
 
-function get_question_id(question) {
-  if (question._card.id !== undefined) {
-    return question._card.id;
+function get_report_id(report, type) {
+  if (type === "question") {
+    if (report._card.id !== undefined) {
+      return report._card.id;
+    } else {
+      return report._card.original_card_id;
+    }
   } else {
-    return question._card.original_card_id;
+    return report.id;
   }
 }
 
 // eslint-disable-next-line react/prop-types
-export function OpenChatAi({ question, user }) {
-  const questionName = get_question_name(question);
+export function OpenChatAi({ report, type, user, uuid }) {
+  const reportName = get_report_name(report, type);
   // 监听键盘事件
   useEffect(() => {
     const handleKeyPress = event => {
@@ -107,7 +115,7 @@ export function OpenChatAi({ question, user }) {
 
   function getChatUrl(iframeKey) {
     if (loadIframe.open) {
-      const questionId = get_question_id(question);
+      const reportId = get_report_id(report, type);
       // eslint-disable-next-line react/prop-types
       const userId = user.id;
       // eslint-disable-next-line react/prop-types
@@ -117,7 +125,7 @@ export function OpenChatAi({ question, user }) {
       const crypto = require("crypto");
       const md5Hash = crypto.createHash("md5");
       const token =
-        questionId.toString() +
+        reportId.toString() +
         common_name +
         email +
         userId.toString() +
@@ -126,43 +134,71 @@ export function OpenChatAi({ question, user }) {
       const md5Digest = md5Hash.digest("hex");
       const isDev = chatDataEnv();
       console.log("isDev", isDev);
-      let baseUrl = "https://chatdata-prod.ing.getjerry.com/chat";
+      let baseUrl = "https://chatdata-prod.ing.getjerry.com/";
       if (isDev === true || isDev === "true") {
-        baseUrl = Cookies.get("chatdata.dev.domain") + "/chat";
+        baseUrl = Cookies.get("chatdata.dev.domain") + "/";
       }
-      // console.log("open chat ai", openUrl, iframeKey);
-      return encodeURI(
-        baseUrl +
-          "?context_id=report_" +
-          questionId +
-          "&user_id=" +
-          userId +
-          "&email=" +
-          email +
-          "&common_name=" +
-          common_name +
-          "&report_name=" +
-          questionName +
-          "&token=" +
-          md5Digest +
-          "&from_metabase=true",
-      );
+      let route = "chat";
+      if (type === "dashboard") {
+        route = "chat_v2";
+        return encodeURI(
+          baseUrl +
+            route +
+            "?converation_id=dashboard_" +
+            reportId +
+            "&user_id=" +
+            userId +
+            "&email=" +
+            email +
+            "&common_name=" +
+            common_name +
+            "&converation_name=" +
+            reportName +
+            "&data_ids=" +
+            uuid +
+            "&token=" +
+            md5Digest +
+            "&from_metabase=true",
+        );
+      } else {
+        return encodeURI(
+          baseUrl +
+            route +
+            "?context_id=report_" +
+            reportId +
+            "&user_id=" +
+            userId +
+            "&email=" +
+            email +
+            "&common_name=" +
+            common_name +
+            "&report_name=" +
+            reportName +
+            "&token=" +
+            md5Digest +
+            "&from_metabase=true",
+        );
+      }
     } else {
       return "";
     }
   }
 
+  const canButtonShow = type === "question";
+
   return (
     <Tooltip tooltip="Ask AI to Explore the Result (Visualizations, Pivot, Insights etc)">
-      <Button
-        success
-        small
-        onClick={() => showModal()}
-        icon="insight"
-        iconSize={16}
-      >{t`Ask AI`}</Button>
+      {canButtonShow && (
+        <Button
+          success
+          small
+          onClick={() => showModal()}
+          icon="insight"
+          iconSize={16}
+        >{t`Ask AI`}</Button>
+      )}
       <Modal
-        title={"ChatData - AI Data Monkey Just for You:  " + questionName}
+        title={"ChatData - AI Data Monkey Just for You:  " + reportName}
         centered
         open={loadIframe.open}
         onCancel={() => close()}

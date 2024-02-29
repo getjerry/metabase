@@ -22,6 +22,7 @@ import { getIsNavbarOpen, closeNavbar, setErrorPage } from "metabase/redux/app";
 
 import { getDatabases, getMetadata } from "metabase/selectors/metadata";
 import {
+  getUser,
   getUserIsAdmin,
   canManageSubscriptions,
 } from "metabase/selectors/user";
@@ -67,6 +68,7 @@ function getDashboardId({ dashboardId, params }) {
 
 const mapStateToProps = (state, props) => {
   return {
+    user: getUser(state, props),
     dashboardId: getDashboardId(props),
     canManageSubscriptions: canManageSubscriptions(state, props),
     isAdmin: getUserIsAdmin(state, props),
@@ -157,7 +159,6 @@ const DashboardApp = props => {
   const onDismissToast = useCallback(() => {
     setIsShowingToaster(false);
   }, []);
-
   return (
     <div className="shrink-below-content-size full-height">
       <Dashboard

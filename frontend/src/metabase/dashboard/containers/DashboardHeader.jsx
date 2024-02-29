@@ -30,6 +30,8 @@ import {
   toggleSidebar,
 } from "metabase/dashboard/actions";
 
+import { ChatAiDev } from "metabase/query_builder/components/view/ChatdataModal/ChatAiDev";
+import { OpenChatAi } from "metabase/query_builder/components/view/ChatdataModal/OpenChatAi";
 import Header from "../components/DashboardHeader";
 import { SIDEBAR_NAME } from "../constants";
 import {
@@ -42,6 +44,7 @@ const mapStateToProps = (state, props) => {
     isBookmarked: getIsBookmarked(state, props),
     isNavBarOpen: getIsNavbarOpen(state),
     isShowingDashboardInfoSidebar: getIsShowDashboardInfoSidebar(state),
+    queryUuid: state.dashboard.queryUuid,
   };
 };
 
@@ -68,6 +71,7 @@ class DashboardHeader extends Component {
   };
 
   static propTypes = {
+    user: PropTypes.object,
     dashboard: PropTypes.object.isRequired,
     isEditable: PropTypes.bool.isRequired,
     isEditing: PropTypes.oneOfType([PropTypes.bool, PropTypes.object])
@@ -194,6 +198,7 @@ class DashboardHeader extends Component {
 
   getHeaderButtons() {
     const {
+      user,
       dashboard,
       parametersWidget,
       isBookmarked,
@@ -209,17 +214,15 @@ class DashboardHeader extends Component {
       toggleSidebar,
       isShowingDashboardInfoSidebar,
       closeSidebar,
+      queryUuid,
     } = this.props;
-
     const canEdit = dashboard.can_write && isEditable && !!dashboard;
-
     const buttons = [];
     const extraButtons = [];
 
     if (isFullscreen && parametersWidget) {
       buttons.push(parametersWidget);
     }
-
     if (isEditing) {
       const activeSidebarName = sidebar.name;
       const addQuestionButtonHint =
@@ -320,6 +323,26 @@ class DashboardHeader extends Component {
         link: `${location.pathname}/history`,
         event: "Dashboard;Revisions",
       });
+    }
+
+    const hasChatdataButton = !isEditing;
+    if (hasChatdataButton) {
+      let hasChatAiDev = false;
+      if (user.group_ids.includes(24)) {
+        hasChatAiDev = true;
+      }
+      if (hasChatAiDev) {
+        buttons.push(<ChatAiDev />);
+      }
+      // open chatdata button
+      buttons.push(
+        <OpenChatAi
+          report={dashboard}
+          type="dashboard"
+          user={user}
+          uuid={queryUuid}
+        />,
+      );
     }
 
     if (!isFullscreen && !isEditing && canEdit) {

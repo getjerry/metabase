@@ -470,10 +470,10 @@ function ViewTitleHeaderRightSide(props) {
       {ConvertQueryButton.shouldRender(props) && (
         <ConvertQueryButton question={question} onOpenModal={onOpenModal} />
       )}
-      {hasChatAiDev && hasChatdataButton && (
-        <ChatAiDev question={question} user={user} />
+      {hasChatAiDev && hasChatdataButton && <ChatAiDev />}
+      {hasChatdataButton && (
+        <OpenChatAi report={question} type={"question"} user={user} />
       )}
-      {hasChatdataButton && <OpenChatAi question={question} user={user} />}
       {hasExploreResultsLink && <ExploreResultsLink question={question} />}
       {hasRunButton && !isShowingNotebook && (
         <ViewHeaderIconButtonContainer>

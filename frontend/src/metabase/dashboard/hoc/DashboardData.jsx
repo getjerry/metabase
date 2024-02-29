@@ -49,7 +49,6 @@ export default ComposedComponent =>
           location,
           dashboardId,
         } = props;
-
         initialize();
         try {
           await fetchDashboard(dashboardId, location && location.query);

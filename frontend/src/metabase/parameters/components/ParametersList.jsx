@@ -156,7 +156,6 @@ function ParametersList({
   const handleVisibleChange = newVisible => {
     setVisible(newVisible);
   };
-
   return visibleValuePopulatedParameters.length > 0 ? (
     <ParameterWidgetList
       className={cx(
@@ -194,7 +193,7 @@ function ParametersList({
           }
         />
       ))}
-      {lineMaxNum < parameterSize && (
+      {lineMaxNum < parameterSize && question !== undefined && (
         <Tooltip
           title={isDisplay ? "Fold Filters" : "Expand Filters"}
           visible={visible}

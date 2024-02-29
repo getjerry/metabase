@@ -229,7 +229,6 @@ class Dashboard extends Component {
       isHeaderVisible,
       embedOptions,
     } = this.props;
-
     const { error, isParametersWidgetSticky } = this.state;
 
     const shouldRenderAsNightMode = isNightMode && isFullscreen;

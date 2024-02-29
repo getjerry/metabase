@@ -1,7 +1,7 @@
 import { assoc, dissoc, assocIn, updateIn, chain, merge } from "icepick";
+import { v4 as uuidv4 } from "uuid";
 import { handleActions, combineReducers } from "metabase/lib/redux";
 import Dashboards from "metabase/entities/dashboards";
-
 import {
   INITIALIZE,
   FETCH_DASHBOARD,
@@ -399,6 +399,8 @@ const missingActionParameters = handleActions(
   null,
 );
 
+const queryUuid = handleActions({}, uuidv4());
+
 export default combineReducers({
   dashboardId,
   isEditing,
@@ -412,4 +414,5 @@ export default combineReducers({
   isAddParameterPopoverOpen,
   sidebar,
   missingActionParameters,
+  queryUuid,
 });
