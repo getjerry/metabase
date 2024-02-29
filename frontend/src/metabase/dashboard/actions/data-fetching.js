@@ -180,6 +180,7 @@ export const fetchDashboard = createThunkAction(
             user_name: getState().currentUser.common_name,
             email: getState().currentUser.email,
           };
+          // console.log("meta", getState().dashboard.queryUuid);
           await axios.post(
             "https://metabase-proxy.getjerry.com/chatdata/write",
             {
@@ -386,6 +387,7 @@ export const fetchCardData = createThunkAction(
         if (endpoint === DashboardApi.cardQuery && result !== null) {
           try {
             const fileName = "report_" + card.id;
+            // console.log("report", getState().dashboard.queryUuid);
             await axios.post(
               "https://metabase-proxy.getjerry.com/chatdata/write",
               {

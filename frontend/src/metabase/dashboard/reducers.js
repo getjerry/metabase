@@ -399,7 +399,16 @@ const missingActionParameters = handleActions(
   null,
 );
 
-const queryUuid = handleActions({}, uuidv4());
+const queryUuid = handleActions(
+  {
+    [INITIALIZE]: {
+      next: state => {
+        return uuidv4();
+      },
+    },
+  },
+  uuidv4(),
+);
 
 export default combineReducers({
   dashboardId,
