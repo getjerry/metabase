@@ -154,7 +154,7 @@ export function OpenChatAi({ report, type, user, uuid }) {
             common_name +
             "&converation_name=" +
             reportName +
-            "&data_ids=" +
+            "&data_ids=metabase_dashboard/" +
             uuid +
             "&token=" +
             md5Digest +
