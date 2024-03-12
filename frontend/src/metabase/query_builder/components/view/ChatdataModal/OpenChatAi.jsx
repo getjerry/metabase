@@ -144,7 +144,7 @@ export function OpenChatAi({ report, type, user, uuid }) {
         return encodeURI(
           baseUrl +
             route +
-            "?converation_id=dashboard_" +
+            "?conversation_id=dashboard_" +
             reportId +
             "&user_id=" +
             userId +
@@ -152,7 +152,7 @@ export function OpenChatAi({ report, type, user, uuid }) {
             email +
             "&common_name=" +
             common_name +
-            "&converation_name=" +
+            "&conversation_name=" +
             reportName +
             "&data_ids=metabase_dashboard/" +
             uuid +
