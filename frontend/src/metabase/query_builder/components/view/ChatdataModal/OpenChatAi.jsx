@@ -184,7 +184,7 @@ export function OpenChatAi({ report, type, user, uuid }) {
     }
   }
 
-  const canButtonShow = type === "question";
+  const canButtonShow = type === "question" || type === "dashboard";
 
   return (
     <Tooltip tooltip="Ask AI to Explore the Result (Visualizations, Pivot, Insights etc)">
