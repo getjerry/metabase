@@ -181,15 +181,12 @@ export const fetchDashboard = createThunkAction(
             email: getState().currentUser.email,
           };
           // console.log("meta", getState().dashboard.queryUuid);
-          await axios.post(
-            "https://metabase-proxy.getjerry.com/chatdata/write",
-            {
-              id: getState().dashboard.queryUuid,
-              type: "metabase_dashboard",
-              filename: "meta",
-              data: meta_data,
-            },
-          );
+          axios.post("https://metabase-proxy.getjerry.com/chatdata/write", {
+            id: getState().dashboard.queryUuid,
+            type: "metabase_dashboard",
+            filename: "meta",
+            data: meta_data,
+          });
         } catch (e) {
           console.log(e);
         }
@@ -388,15 +385,12 @@ export const fetchCardData = createThunkAction(
           try {
             const fileName = "report_" + card.id;
             // console.log("report", getState().dashboard.queryUuid);
-            await axios.post(
-              "https://metabase-proxy.getjerry.com/chatdata/write",
-              {
-                id: getState().dashboard.queryUuid,
-                type: "metabase_dashboard",
-                filename: fileName,
-                data: result,
-              },
-            );
+            axios.post("https://metabase-proxy.getjerry.com/chatdata/write", {
+              id: getState().dashboard.queryUuid,
+              type: "metabase_dashboard",
+              filename: fileName,
+              data: result,
+            });
           } catch (e) {
             console.log(e);
           }
