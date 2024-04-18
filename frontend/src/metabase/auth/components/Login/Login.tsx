@@ -21,6 +21,9 @@ const Login = ({
   redirectUrl,
 }: LoginProps): JSX.Element => {
   const selection = getSelectedProvider(providers, providerName);
+  const hasGoogleProvider = providers.some(
+    provider => provider.name === "google",
+  );
 
   return (
     <AuthLayout>
@@ -32,11 +35,17 @@ const Login = ({
       )}
       {!selection && (
         <ActionList>
-          {providers.map(provider => (
-            <ActionListItem key={provider.name}>
-              <provider.Button isCard={true} redirectUrl={redirectUrl} />
-            </ActionListItem>
-          ))}
+          {providers.map(provider => {
+            if (hasGoogleProvider && provider.name === "password") {
+              // If hasGoogleProvider is true and provider.name is 'password', skip rendering
+              return null;
+            }
+            return (
+              <ActionListItem key={provider.name}>
+                <provider.Button isCard={true} redirectUrl={redirectUrl} />
+              </ActionListItem>
+            );
+          })}
         </ActionList>
       )}
     </AuthLayout>
