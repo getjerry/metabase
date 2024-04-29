@@ -15,6 +15,7 @@ import QuestionEmbedWidget, {
   QuestionEmbedWidgetTrigger,
 } from "metabase/query_builder/containers/QuestionEmbedWidget";
 import { getIconForVisualizationType } from "metabase/visualizations";
+import { SmartFreeze } from "metabase/query_builder/components/view/ViewFooter/SmartFreeze";
 import ViewButton from "./ViewButton";
 
 import QuestionAlertWidget from "./QuestionAlertWidget";
@@ -61,7 +62,6 @@ const ViewFooter = ({
   if (!result) {
     return null;
   }
-
   const hasDataPermission = question.query().isEditable();
   const hideChartSettings = result.error && !hasDataPermission;
 
@@ -102,6 +102,7 @@ const ViewFooter = ({
                     : () => onOpenChartSettings()
                 }
               />
+              <SmartFreeze />
             </FooterButtonGroup>
           ),
         ]}

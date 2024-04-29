@@ -12,6 +12,7 @@ import { ScrollSync, MultiGrid } from "react-virtualized";
 import "./TableInteractive.css";
 
 // import Cookies from "js-cookie";
+import Cookies from "js-cookie";
 import Icon from "metabase/components/Icon";
 import ExternalLink from "metabase/core/components/ExternalLink";
 import Button from "metabase/core/components/Button";
@@ -121,6 +122,33 @@ class TableInteractive extends Component {
       </div>
     ),
   };
+
+  componentDidMount() {
+    this.smartFreezeColumn();
+  }
+
+  smartFreezeColumn() {
+    const isOpenSmartFreeze =
+      Cookies.get("metabase.smart.freeze") === "true" ||
+      Cookies.get("metabase.smart.freeze") === undefined;
+    if (isOpenSmartFreeze) {
+      // auto freeze first column if first column type is date/datetime type
+      const { sourceData } = this.props;
+      if (sourceData.cols.length > 0) {
+        const firstCol = sourceData.cols[0];
+        const baseType = firstCol.base_type;
+        if (baseType.includes("Date")) {
+          const smartProp = {
+            fixedColumnClick: this.fixedColumnClick,
+            changeFixedColumn: this.changeFixedColumn,
+            parentProps: this.props,
+          };
+          this.fixedColumnClick(firstCol, smartProp);
+          console.log("testestetset");
+        }
+      }
+    }
+  }
 
   UNSAFE_componentWillMount() {
     // for measuring cells:
