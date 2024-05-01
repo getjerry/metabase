@@ -9,6 +9,7 @@ import { color, darken } from "metabase/lib/colors";
 import Icon from "metabase/components/Icon";
 
 import ButtonBar from "metabase/components/ButtonBar";
+import Button from "metabase/core/components/Button";
 
 import QueryDownloadWidget from "metabase/query_builder/components/QueryDownloadWidget";
 import QuestionEmbedWidget, {
@@ -61,6 +62,32 @@ const ViewFooter = ({
     [updateQuestion],
   );
 
+  const copyToClipboard = str => {
+    navigator.clipboard.writeText(str).then(
+      () => {
+        console.log("Data copied to clipboard successfully!");
+      },
+      err => {
+        console.error("Failed to copy data: ", err);
+      },
+    );
+  };
+
+  const handleCopyDataButtonClick = () => {
+    // extract headers
+    const cols = { result }.result.data.cols;
+    const headers = cols.map(col => col.display_name);
+    const formattedHeaders = headers.join("\t");
+
+    // extract rows
+    const rows = { result }.result.data.rows;
+    const formattedRows = rows.map(row => row.join("\t")).join("\n");
+
+    // combine headers and rows
+    const formattedData = `${formattedHeaders}\n${formattedRows}`;
+    copyToClipboard(formattedData);
+  };
+
   if (!result) {
     return null;
   }
@@ -100,6 +127,12 @@ const ViewFooter = ({
               }
             />
           ),
+          <Button
+            key="copy-data-to-clipboard-button"
+            onClick={handleCopyDataButtonClick}
+          >
+            Copy Data
+          </Button>,
         ]}
         center={
           isVisualized && (
