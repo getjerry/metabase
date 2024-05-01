@@ -133,19 +133,22 @@ class TableInteractive extends Component {
       Cookies.get("metabase.smart.freeze") === undefined;
     if (isOpenSmartFreeze) {
       // auto freeze first column if first column type is date/datetime type
-      const { sourceData } = this.props;
-      if (sourceData.cols.length > 0) {
-        const firstCol = sourceData.cols[0];
-        const baseType = firstCol.base_type;
-        if (baseType.includes("Date")) {
-          const smartProp = {
-            fixedColumnClick: this.fixedColumnClick,
-            changeFixedColumn: this.changeFixedColumn,
-            parentProps: this.props,
-          };
-          this.fixedColumnClick(firstCol, smartProp);
-          console.log("testestetset");
+      const { sourceData, card } = this.props;
+      try {
+        if (sourceData.cols.length > 0 && card.display === "table") {
+          const firstCol = sourceData.cols[0];
+          const baseType = firstCol.base_type;
+          if (baseType.includes("Date")) {
+            const smartProp = {
+              fixedColumnClick: this.fixedColumnClick,
+              changeFixedColumn: this.changeFixedColumn,
+              parentProps: this.props,
+            };
+            this.fixedColumnClick(firstCol, smartProp);
+          }
         }
+      } catch (e) {
+        console.error(e);
       }
     }
   }
