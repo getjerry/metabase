@@ -9,7 +9,6 @@ import { color, darken } from "metabase/lib/colors";
 import Icon from "metabase/components/Icon";
 
 import ButtonBar from "metabase/components/ButtonBar";
-import Button from "metabase/core/components/Button";
 
 import QueryDownloadWidget from "metabase/query_builder/components/QueryDownloadWidget";
 import QuestionEmbedWidget, {
@@ -161,12 +160,13 @@ const ViewFooter = ({
               onQueryChange={onQueryChange}
             />
           ),
-          <Button
-            key="copy-data-to-clipboard-button"
+          <Icon
+            name="copy"
+            key="copy-data-to-clipboard-icon"
+            tooltip={t`Copy data to clipboard`}
+            className={cx(className, "text-brand-hover cursor-pointer")}
             onClick={handleCopyDataButtonClick}
-          >
-            Copy Data
-          </Button>,
+          />,
           QuestionLastUpdated.shouldRender({ result }) && (
             <QuestionLastUpdated
               key="last-updated"
