@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useCallback } from "react";
+import React, { useState, useCallback } from "react";
 
 import { t } from "ttag";
 import cx from "classnames";
@@ -51,6 +51,8 @@ const ViewFooter = ({
   onCloseTimelines,
   updateQuestion,
 }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
   const onQueryChange = useCallback(
     query => {
       const newQuestion = query.question();
@@ -70,7 +72,7 @@ const ViewFooter = ({
     );
   };
 
-  const handleCopyDataButtonClick = () => {
+  const handleCopyDataIconClick = () => {
     // extract headers
     const cols = { result }.result.data.cols;
     const headers = cols.map(col => col.display_name);
@@ -83,6 +85,10 @@ const ViewFooter = ({
     // combine headers and rows
     const formattedData = `${formattedHeaders}\n${formattedRows}`;
     copyToClipboard(formattedData);
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000);
   };
 
   if (!result) {
@@ -161,11 +167,11 @@ const ViewFooter = ({
             />
           ),
           <Icon
-            name="copy"
+            name={isCopied ? "check" : "copy"}
             key="copy-data-to-clipboard-icon"
             tooltip={t`Copy data to clipboard`}
             className={cx(className, "text-brand-hover cursor-pointer")}
-            onClick={handleCopyDataButtonClick}
+            onClick={handleCopyDataIconClick}
           />,
           QuestionLastUpdated.shouldRender({ result }) && (
             <QuestionLastUpdated
