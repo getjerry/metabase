@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useCallback } from "react";
+import React, { useState, useCallback } from "react";
 
 import { t } from "ttag";
 import cx from "classnames";
@@ -51,6 +51,8 @@ const ViewFooter = ({
   onCloseTimelines,
   updateQuestion,
 }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
   const onQueryChange = useCallback(
     query => {
       const newQuestion = query.question();
@@ -58,6 +60,36 @@ const ViewFooter = ({
     },
     [updateQuestion],
   );
+
+  const copyToClipboard = str => {
+    navigator.clipboard.writeText(str).then(
+      () => {
+        console.log("Data copied to clipboard successfully!");
+      },
+      err => {
+        console.error("Failed to copy data: ", err);
+      },
+    );
+  };
+
+  const handleCopyDataIconClick = () => {
+    // extract headers
+    const cols = { result }.result.data.cols;
+    const headers = cols.map(col => col.display_name);
+    const formattedHeaders = headers.join("\t");
+
+    // extract rows
+    const rows = { result }.result.data.rows;
+    const formattedRows = rows.map(row => row.join("\t")).join("\n");
+
+    // combine headers and rows
+    const formattedData = `${formattedHeaders}\n${formattedRows}`;
+    copyToClipboard(formattedData);
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000);
+  };
 
   if (!result) {
     return null;
@@ -134,6 +166,13 @@ const ViewFooter = ({
               onQueryChange={onQueryChange}
             />
           ),
+          <Icon
+            name={isCopied ? "check" : "copy"}
+            key="copy-data-to-clipboard-icon"
+            tooltip={t`Copy data to clipboard`}
+            className={cx(className, "text-brand-hover cursor-pointer")}
+            onClick={handleCopyDataIconClick}
+          />,
           QuestionLastUpdated.shouldRender({ result }) && (
             <QuestionLastUpdated
               key="last-updated"
