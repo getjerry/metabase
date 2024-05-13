@@ -7,6 +7,7 @@
    [metabase.mbql.schema :as mbql.s]
    [metabase.public-settings :as public-settings]
    [metabase.query-processor.streaming.common :as common]
+   [metabase.query-processor.streaming.pii-masking :as masking]
    [metabase.query-processor.streaming.interface :as qp.si]
    [metabase.shared.models.visualization-settings :as mb.viz]
    [metabase.shared.util.currency :as currency]
@@ -491,9 +492,13 @@
     (.createFreezePane ^SXSSFSheet sheet 0 1)))
 
 (defmethod qp.si/streaming-results-writer :xlsx
-  [_ ^OutputStream os]
+  [_ ^OutputStream os current-user]
   (let [workbook            (SXSSFWorkbook.)
-        sheet               (spreadsheet/add-sheet! workbook (tru "Query result"))]
+        sheet               (spreadsheet/add-sheet! workbook (tru "Query result"))
+        val-col-settings (volatile! nil)
+        val-ordered-cols (volatile! nil)
+        val-output-order (volatile! nil)
+        val-rows (volatile! [])]
     (reify qp.si/StreamingResultsWriter
       (begin! [_ {{:keys [ordered-cols]} :data} {col-settings ::mb.viz/column-settings}]
         (doseq [i (range (count ordered-cols))]
@@ -502,18 +507,30 @@
         (spreadsheet/add-row! sheet (column-titles ordered-cols col-settings)))
 
       (write-row! [_ row row-num ordered-cols {:keys [output-order] :as viz-settings}]
-        (let [ordered-row  (if output-order
-                             (let [row-v (into [] row)]
-                               (for [i output-order] (row-v i)))
-                             row)
-              col-settings (::mb.viz/column-settings viz-settings)
-              cell-styles  (cell-style-delays workbook ordered-cols col-settings)]
-          (binding [*cell-styles* cell-styles]
-            (add-row! sheet ordered-row ordered-cols col-settings))
-          (when (= (inc row-num) *auto-sizing-threshold*)
-            (autosize-columns! sheet))))
+                  (vreset! val-col-settings viz-settings)
+                  (vreset! val-output-order output-order)
+                  (vreset! val-ordered-cols ordered-cols)
+                  (vswap! val-rows conj row))
 
-      (finish! [_ {:keys [row_count]}]
+      (finish! [_ {:keys [row_count data]}]
+        (let [new-rows (deref val-rows)
+              viz-settings (deref val-col-settings)
+              ordered-cols (deref val-ordered-cols)
+              output-order (deref val-output-order)
+              pii-masked-data (masking/send-results-to-pii-marking data new-rows current-user)]
+          (let [new-rows (:rows pii-masked-data)]
+            (doseq [[idx row] (map-indexed vector new-rows)]
+              (let [row-num (inc idx)
+                    ordered-row  (if output-order
+                                 (let [row-v (into [] row)]
+                                   (for [i output-order] (row-v i)))
+                                 row)
+                    col-settings (::mb.viz/column-settings viz-settings)
+                    cell-styles  (cell-style-delays workbook ordered-cols col-settings)]
+                (binding [*cell-styles* cell-styles]
+                         (add-row! sheet ordered-row ordered-cols col-settings))
+                (when (= row-num *auto-sizing-threshold*)
+                      (autosize-columns! sheet))))))
         (when (or (nil? row_count) (< row_count *auto-sizing-threshold*))
           ;; Auto-size columns if we never hit the row threshold, or a final row count was not provided
           (autosize-columns! sheet))

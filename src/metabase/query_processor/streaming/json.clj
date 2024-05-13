@@ -5,6 +5,7 @@
    [cheshire.core :as json]
    [java-time :as t]
    [metabase.query-processor.streaming.common :as common]
+   [metabase.query-processor.streaming.pii-masking :as masking]
    [metabase.query-processor.streaming.interface :as qp.si]
    [metabase.util.date-2 :as u.date])
   (:import
@@ -24,9 +25,11 @@
                                                  (u.date/format (t/zoned-date-time)))}}))
 
 (defmethod qp.si/streaming-results-writer :json
-  [_ ^OutputStream os]
+  [_ ^OutputStream os current-user]
   (let [writer    (BufferedWriter. (OutputStreamWriter. os StandardCharsets/UTF_8))
-        col-names (volatile! nil)]
+        col-names (volatile! nil)
+        val-output-order (volatile! nil)
+        rows (volatile! [])]
     (reify qp.si/StreamingResultsWriter
       (begin! [_ {{:keys [ordered-cols]} :data} _]
         ;; TODO -- wouldn't it make more sense if the JSON downloads used `:name` preferentially? Seeing how JSON is
@@ -35,21 +38,27 @@
         (.write writer "[\n"))
 
       (write-row! [_ row row-num _ {:keys [output-order]}]
-        (let [ordered-row (if output-order
-                            (let [row-v (into [] row)]
-                              (for [i output-order] (row-v i)))
-                            row)]
-          (when-not (zero? row-num)
-            (.write writer ",\n"))
-          (json/generate-stream (zipmap @col-names (map common/format-value ordered-row))
-                                writer)
-          (.flush writer)))
+                  (vreset! val-output-order output-order)
+                  (vswap! rows conj row))
 
-      (finish! [_ _]
-        (.write writer "\n]")
-        (.flush writer)
-        (.flush os)
-        (.close writer)))))
+      (finish! [_ {:keys [data]}]
+         (let [new-rows (deref rows)
+               output-order (deref val-output-order)
+               pii-masked-data (masking/send-results-to-pii-marking data new-rows current-user)]
+           (let [new-rows (:rows pii-masked-data)]
+             (doseq [row new-rows]
+               (let [ordered-row (if output-order
+                                   (let [row-v (into [] row)]
+                                     (for [i output-order] (row-v i)))
+                                   row)]
+                 (json/generate-stream (zipmap @col-names (map common/format-value ordered-row))
+                                       writer)
+                 (when-not (= row (last new-rows))
+                           (.write writer ",\n")))))
+           (.write writer "\n]")
+           (.flush writer)
+           (.flush os)
+           (.close writer))))))
 
 (defmethod qp.si/stream-options :api
   ([_]   (qp.si/stream-options :api nil))
@@ -63,35 +72,41 @@
       (.substring s 1 (dec (count s))))))
 
 (defmethod qp.si/streaming-results-writer :api
-  [_ ^OutputStream os]
-  (let [writer (BufferedWriter. (OutputStreamWriter. os StandardCharsets/UTF_8))]
-    (reify qp.si/StreamingResultsWriter
-      (begin! [_ _ _]
-        (.write writer "{\"data\":{\"rows\":[\n"))
+   [_ ^OutputStream os current-user]
+   (let [writer (BufferedWriter. (OutputStreamWriter. os StandardCharsets/UTF_8))
+         rows (volatile! [])]
+     (reify qp.si/StreamingResultsWriter
+        (begin! [_ _ _]
+                (.write writer "{\"data\":{\"rows\":[\n"))
 
-      (write-row! [_ row row-num _ _]
-        (when-not (zero? row-num)
-          (.write writer ",\n"))
-        (json/generate-stream row writer)
-        (.flush writer))
+        (write-row! [_ row row-num cols _]
+                    (vswap! rows conj row))
 
-      (finish! [_ {:keys [data], :as metadata}]
-        (let [data-kvs-str           (map->serialized-json-kvs data)
-              other-metadata-kvs-str (map->serialized-json-kvs (dissoc metadata :data))]
-          ;; close data.rows
-          (.write writer "\n]")
-          ;; write any remaining keys in data
-          (when (seq data-kvs-str)
-            (.write writer ",\n")
-            (.write writer data-kvs-str))
-          ;; close data
-          (.write writer "}")
-          ;; write any remaining top-level keys
-          (when (seq other-metadata-kvs-str)
-            (.write writer ",\n")
-            (.write writer other-metadata-kvs-str))
-          ;; close top-level map
-          (.write writer "}"))
-        (.flush writer)
-        (.flush os)
-        (.close writer)))))
+        (finish! [_ {:keys [data], :as metadata}]
+           (let [deref-rows (deref rows)
+                 pii-masked-data (masking/send-results-to-pii-marking data deref-rows current-user)]
+             (let [new-data (:data pii-masked-data)
+                   new-rows (:rows pii-masked-data)]
+               ;; write rows
+               (doseq [row new-rows]
+                 (json/generate-stream row writer)
+                 (when-not (= row (last new-rows))
+                           (.write writer ",\n")))
+               (.write writer "\n]")
+               (let [data-kvs-str           (map->serialized-json-kvs new-data)
+                     other-metadata-kvs-str (map->serialized-json-kvs (dissoc metadata :data))]
+                 ;; write any remaining keys in data
+                 (when (seq data-kvs-str)
+                       (.write writer ",\n")
+                       (.write writer data-kvs-str))
+                 ;; close data
+                 (.write writer "}")
+                 ;; write any remaining top-level keys
+                 (when (seq other-metadata-kvs-str)
+                       (.write writer ",\n")
+                       (.write writer other-metadata-kvs-str))
+                 ;; close top-level map
+                 (.write writer "}")))
+             (.flush writer)
+             (.flush os)
+             (.close writer))))))
