@@ -10,8 +10,8 @@
 (defn send-results-to-pii-marking [metadata rows current-user]
   (let [data {:data (assoc metadata :rows rows) :user_info current-user}
         json-str (json/generate-string data)
-        api-url (or (config/config-str :jerry_pii_masking_api) "http://127.0.0.1:5500/api/mask")
-        api-timeout-ms (or (config/config-int :jerry_pii_masking_api_timeout) 10000)
+        api-url (or (config/config-str :jerry-pii-masking-api) "http://127.0.0.1:5500/api/mask")
+        api-timeout-ms (or (config/config-int :jerry-pii-masking-api-timeout) 10000)
         start-time (System/currentTimeMillis)
         response (try
                    (http/post api-url {:form-params data, :content-type :json, :timeout api-timeout-ms})
@@ -26,10 +26,10 @@
           (let [body-json (json/parse-string body true)
                 body-cols (:cols body-json)
                 body-rows (:rows body-json)]
-            (log/info (trs "Jerry Pii Masking Successful. Response Time: {0}" response-time)) ;; Add response time parameter to the log
+            (log/info (trs "Jerry Pii Masking {0} Successful. Response Time: {1}" api-url response-time)) ;; Add response time parameter to the log
             {:data metadata :rows body-rows})
           (do
-            (log/error (trs "Jerry Pii Masking API returned non-2xx status: {0}" status))
+            (log/error (trs "Jerry Pii Masking {0} returned non-2xx status: {1}" api-url status))
             {:data metadata :rows rows})))
       (catch Exception e
         (log/error e (trs "Error while calling Jerry Pii Masking API"))
