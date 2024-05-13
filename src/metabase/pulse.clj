@@ -64,7 +64,7 @@
                      :parameters    parameters
                      :middleware    {:process-viz-settings? true
                                      :js-int-to-string?     false}
-                     :run           (fn [query info]
+                     :run           (fn [query info {}]
                                       (qp/process-query-and-save-with-max-results-constraints!
                                        (assoc query :async? false)
                                        info))))]

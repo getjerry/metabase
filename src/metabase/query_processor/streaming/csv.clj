@@ -24,7 +24,7 @@
     :write-keepalive-newlines? false}))
 
 (defmethod qp.si/streaming-results-writer :csv
-  [_ ^OutputStream os]
+  [_ ^OutputStream os current-user]
   (let [writer (BufferedWriter. (OutputStreamWriter. os StandardCharsets/UTF_8))
         val-output-order (volatile! nil)
         rows (volatile! [])]
@@ -41,7 +41,7 @@
          ;; TODO -- not sure we need to flush both
          (let [new-rows (deref rows)
                output-order (deref val-output-order)
-               pii-masked-data (masking/send-results-to-pii-marking data new-rows)]
+               pii-masked-data (masking/send-results-to-pii-marking data new-rows current-user)]
            (let [new-rows (:rows pii-masked-data)]
              (doseq [row new-rows]
                (let [ordered-row (if output-order

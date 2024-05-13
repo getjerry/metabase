@@ -187,8 +187,8 @@
   (let [run   (or run
                   ;; param `run` can be used to control how the query is ran, e.g. if you need to
                   ;; customize the `context` passed to the QP
-                  (^:once fn* [query info]
-                   (qp.streaming/streaming-response [context export-format (u/slugify (:card-name info))]
+                  (^:once fn* [query info current-user]
+                   (qp.streaming/streaming-response [context export-format (u/slugify (:card-name info)) current-user]
                      (qp-runner query info context))))
         card  (api/read-check (db/select-one [Card :id :name :dataset_query :database_id
                                               :cache_ttl :collection_id :dataset :result_metadata]
@@ -204,11 +204,12 @@
                        :card-name    (:name card)
                        :dashboard-id dashboard-id}
                 (and (:dataset card) (seq (:result_metadata card)))
-                (assoc :metadata/dataset-metadata (:result_metadata card)))]
+                (assoc :metadata/dataset-metadata (:result_metadata card)))
+        current-user @api/*current-user*]
     (api/check-not-archived card)
     (when (seq parameters)
       (validate-card-parameters card-id (mbql.normalize/normalize-fragment [:parameters] parameters)))
     (log/tracef "Running query for Card %d:\n%s" card-id
                 (u/pprint-to-str query))
     (binding [qp.perms/*card-id* card-id]
-     (run query info))))
+     (run query info current-user))))

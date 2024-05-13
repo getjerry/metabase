@@ -137,9 +137,9 @@
 (defn- run-query-for-card-with-id-async-run-fn
   "Create the `:run` function used for [[run-query-for-card-with-id-async]] and [[public-dashcard-results-async]]."
   [qp-runner export-format]
-  (fn [query info]
+  (fn [query info current-user]
     (qp.streaming/streaming-response
-     [{:keys [reducedf], :as context} export-format (u/slugify (:card-name info))]
+     [{:keys [reducedf], :as context} export-format (u/slugify (:card-name info)) current-user]
      (let [context  (assoc context :reducedf (public-reducedf reducedf))
            in-chan  (mw.session/as-admin
                      (qp-runner query info context))

@@ -25,7 +25,7 @@
                                                  (u.date/format (t/zoned-date-time)))}}))
 
 (defmethod qp.si/streaming-results-writer :json
-  [_ ^OutputStream os]
+  [_ ^OutputStream os current-user]
   (let [writer    (BufferedWriter. (OutputStreamWriter. os StandardCharsets/UTF_8))
         col-names (volatile! nil)
         val-output-order (volatile! nil)
@@ -44,7 +44,7 @@
       (finish! [_ {:keys [data]}]
          (let [new-rows (deref rows)
                output-order (deref val-output-order)
-               pii-masked-data (masking/send-results-to-pii-marking data new-rows)]
+               pii-masked-data (masking/send-results-to-pii-marking data new-rows current-user)]
            (let [new-rows (:rows pii-masked-data)]
              (doseq [row new-rows]
                (let [ordered-row (if output-order
@@ -72,7 +72,7 @@
       (.substring s 1 (dec (count s))))))
 
 (defmethod qp.si/streaming-results-writer :api
-   [_ ^OutputStream os]
+   [_ ^OutputStream os current-user]
    (let [writer (BufferedWriter. (OutputStreamWriter. os StandardCharsets/UTF_8))
          rows (volatile! [])]
      (reify qp.si/StreamingResultsWriter
@@ -84,7 +84,7 @@
 
         (finish! [_ {:keys [data], :as metadata}]
            (let [deref-rows (deref rows)
-                 pii-masked-data (masking/send-results-to-pii-marking data deref-rows)]
+                 pii-masked-data (masking/send-results-to-pii-marking data deref-rows current-user)]
              (let [new-data (:data pii-masked-data)
                    new-rows (:rows pii-masked-data)]
                ;; write rows

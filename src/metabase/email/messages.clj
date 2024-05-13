@@ -375,7 +375,7 @@
     (qp.store/with-store
       (qp.store/fetch-and-store-database! database-id)
       (binding [qp.xlsx/*parse-temporal-string-values* true]
-        (let [w                           (qp.si/streaming-results-writer export-format os)
+        (let [w                           (qp.si/streaming-results-writer export-format os {})
               cols                        (-> results :data :cols)
               viz-settings                (-> results :data :viz-settings)
               [ordered-cols output-order] (qp.streaming/order-cols cols viz-settings)

@@ -492,7 +492,7 @@
     (.createFreezePane ^SXSSFSheet sheet 0 1)))
 
 (defmethod qp.si/streaming-results-writer :xlsx
-  [_ ^OutputStream os]
+  [_ ^OutputStream os current-user]
   (let [workbook            (SXSSFWorkbook.)
         sheet               (spreadsheet/add-sheet! workbook (tru "Query result"))
         val-col-settings (volatile! nil)
@@ -517,7 +517,7 @@
               viz-settings (deref val-col-settings)
               ordered-cols (deref val-ordered-cols)
               output-order (deref val-output-order)
-              pii-masked-data (masking/send-results-to-pii-marking data new-rows)]
+              pii-masked-data (masking/send-results-to-pii-marking data new-rows current-user)]
           (let [new-rows (:rows pii-masked-data)]
             (doseq [[idx row] (map-indexed vector new-rows)]
               (let [row-num (inc idx)
