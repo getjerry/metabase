@@ -1,8 +1,10 @@
 import styled from "@emotion/styled";
 import { color } from "metabase/lib/colors";
 import Icon from "metabase/components/Icon";
+import Button from "metabase/core/components/Button";
 import SelectButton from "metabase/core/components/SelectButton";
 import Triggerable from "metabase/components/Triggerable";
+import ChartSettingColorPicker from "./ChartSettingColorPicker";
 
 interface ChartSettingFieldPickerRootProps {
   disabled: boolean;
@@ -46,8 +48,8 @@ export const ChartSettingFieldPickerRoot = styled.div<ChartSettingFieldPickerRoo
     color: ${color("text-dark")};
   }
 
-  ${SelectButton.Root} {
-    ${props => props.disabled && `background-color: ${color("white")};`}
+  ${SelectButton.Root}:disabled {
+    background-color: ${color("white")};
   }
 `;
 
@@ -55,6 +57,15 @@ interface SettingsIconProps {
   noPointer?: boolean;
   noMargin?: boolean;
 }
+
+export const SettingsButton = styled(Button)<SettingsIconProps>`
+  margin-left: ${props => (props.noMargin ? "0" : "0.75rem")};
+  padding: 0;
+
+  &:hover {
+    background-color: unset;
+  }
+`;
 
 export const SettingsIcon = styled(Icon)<SettingsIconProps>`
   margin-left: ${props => (props.noMargin ? "0" : "0.75rem")};
@@ -64,4 +75,9 @@ export const SettingsIcon = styled(Icon)<SettingsIconProps>`
   &:hover {
     color: ${color("brand")};
   }
+`;
+
+export const FieldPickerColorPicker = styled(ChartSettingColorPicker)`
+  margin-bottom: 0;
+  margin-left: 0.25rem;
 `;

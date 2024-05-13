@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { color } from "metabase/lib/colors";
-import TextInput from "metabase/components/TextInput";
+import Input from "metabase/core/components/Input";
 import LoadingAndErrorWrapper from "metabase/components/LoadingAndErrorWrapper";
 
 export const QuestionListWrapper = styled(LoadingAndErrorWrapper)`
@@ -33,7 +33,7 @@ export const LoadMoreRow = styled.li`
   justify-content: center;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0.5rem 0;
   width: 100%;
 `;
 
@@ -45,8 +45,13 @@ export const SearchContainer = styled.div`
   border-bottom: 1px solid ${color("border")};
 `;
 
-export const SearchInput = styled(TextInput)`
+export const SearchInput = styled(Input)`
   width: 100%;
+
+  ${Input.Field} {
+    border-radius: 0;
+    outline: none;
+  }
 `;
 
 export const EmptyStateContainer = styled.div`

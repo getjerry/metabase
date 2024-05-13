@@ -1,9 +1,16 @@
 import React, { useCallback, useState } from "react";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { t } from "ttag";
 import { getIn } from "icepick";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import * as Urls from "metabase/lib/urls";
-import { AuthError, AuthErrorContainer, TextLink } from "./GoogleButton.styled";
+import ErrorBoundary from "metabase/ErrorBoundary";
+
+import {
+  GoogleButtonRoot,
+  AuthError,
+  AuthErrorRoot,
+  TextLink,
+} from "./GoogleButton.styled";
 
 export interface GoogleButtonProps {
   clientId: string | null;
@@ -45,17 +52,18 @@ const GoogleButton = ({
   }, []);
 
   return (
-    <div>
+    <GoogleButtonRoot>
       {isCard && clientId ? (
-        <GoogleOAuthProvider clientId={clientId}>
-          <GoogleLogin
-            useOneTap
-            onSuccess={handleLogin}
-            onError={handleError}
-            locale={locale}
-            width="366"
-          />
-        </GoogleOAuthProvider>
+        <ErrorBoundary>
+          <GoogleOAuthProvider clientId={clientId}>
+            <GoogleLogin
+              useOneTap
+              onSuccess={handleLogin}
+              onError={handleError}
+              locale={locale}
+            />
+          </GoogleOAuthProvider>
+        </ErrorBoundary>
       ) : (
         <TextLink to={Urls.login(redirectUrl)}>
           {t`Sign in with Google`}
@@ -63,13 +71,13 @@ const GoogleButton = ({
       )}
 
       {errors.length > 0 && (
-        <AuthErrorContainer>
+        <AuthErrorRoot>
           {errors.map((error, index) => (
             <AuthError key={index}>{error}</AuthError>
           ))}
-        </AuthErrorContainer>
+        </AuthErrorRoot>
       )}
-    </div>
+    </GoogleButtonRoot>
   );
 };
 

@@ -1,18 +1,15 @@
 import React from "react";
-
 import { Redirect, IndexRedirect, IndexRoute } from "react-router";
 import { routerActions } from "react-router-redux";
 import { UserAuthWrapper } from "redux-auth-wrapper";
 import { t } from "ttag";
+
 import { Route } from "metabase/hoc/Title";
-import { PLUGIN_LANDING_PAGE } from "metabase/plugins";
 
 import { loadCurrentUser } from "metabase/redux/user";
 import MetabaseSettings from "metabase/lib/settings";
 
 import App from "metabase/App.tsx";
-
-import ActivityApp from "metabase/home/containers/ActivityApp";
 
 // auth containers
 import ForgotPasswordApp from "metabase/auth/containers/ForgotPasswordApp";
@@ -32,7 +29,6 @@ import TableBrowser from "metabase/browse/containers/TableBrowser";
 
 import QueryBuilder from "metabase/query_builder/containers/QueryBuilder";
 
-import CollectionCreate from "metabase/collections/containers/CollectionCreate";
 import MoveCollectionModal from "metabase/collections/containers/MoveCollectionModal";
 import ArchiveCollectionModal from "metabase/components/ArchiveCollectionModal";
 import CollectionPermissionsModal from "metabase/admin/permissions/components/CollectionPermissionsModal/CollectionPermissionsModal";
@@ -40,11 +36,8 @@ import UserCollectionList from "metabase/containers/UserCollectionList";
 
 import PulseEditApp from "metabase/pulse/containers/PulseEditApp";
 import SetupApp from "metabase/setup/containers/SetupApp";
-// new question
-import NewQueryOptions from "metabase/new_query/containers/NewQueryOptions";
-import NewDatasetOptions from "metabase/new_query/containers/NewDatasetOptions";
 
-import CreateDashboardModal from "metabase/components/CreateDashboardModal";
+import NewModelOptions from "metabase/models/containers/NewModelOptions";
 
 import { Unauthorized } from "metabase/containers/ErrorPages";
 import NotFoundFallbackPage from "metabase/containers/NotFoundFallbackPage";
@@ -54,6 +47,7 @@ import MetricListContainer from "metabase/reference/metrics/MetricListContainer"
 import MetricDetailContainer from "metabase/reference/metrics/MetricDetailContainer";
 import MetricQuestionsContainer from "metabase/reference/metrics/MetricQuestionsContainer";
 import MetricRevisionsContainer from "metabase/reference/metrics/MetricRevisionsContainer";
+
 // Reference Segments
 import SegmentListContainer from "metabase/reference/segments/SegmentListContainer";
 import SegmentDetailContainer from "metabase/reference/segments/SegmentDetailContainer";
@@ -61,6 +55,7 @@ import SegmentQuestionsContainer from "metabase/reference/segments/SegmentQuesti
 import SegmentRevisionsContainer from "metabase/reference/segments/SegmentRevisionsContainer";
 import SegmentFieldListContainer from "metabase/reference/segments/SegmentFieldListContainer";
 import SegmentFieldDetailContainer from "metabase/reference/segments/SegmentFieldDetailContainer";
+
 // Reference Databases
 import DatabaseListContainer from "metabase/reference/databases/DatabaseListContainer";
 import DatabaseDetailContainer from "metabase/reference/databases/DatabaseDetailContainer";
@@ -81,13 +76,16 @@ import DashboardMoveModal from "metabase/dashboard/components/DashboardMoveModal
 import DashboardCopyModal from "metabase/dashboard/components/DashboardCopyModal";
 import { ModalRoute } from "metabase/hoc/ModalRoute";
 
-import HomePage from "metabase/home/homepage/containers/HomePage";
+// import HomePage from "metabase/home/homepage/containers/HomePage";
 import CollectionLanding from "metabase/collections/components/CollectionLanding";
 
 import ArchiveApp from "metabase/home/containers/ArchiveApp";
 import SearchApp from "metabase/home/containers/SearchApp";
 import { trackPageView } from "metabase/lib/analytics";
 import { getAdminPaths } from "metabase/admin/app/selectors";
+
+import ActionCreatorModal from "metabase/actions/containers/ActionCreatorModal";
+import ModelDetailPage from "metabase/models/containers/ModelDetailPage";
 
 const MetabaseIsSetup = UserAuthWrapper({
   predicate: authData => authData.hasUserSetup,
@@ -195,8 +193,8 @@ export const getRoutes = store => (
 
       {/* MAIN */}
       <Route component={IsAuthenticated}>
-        {/* The global all hands routes, things in here are for all the folks */}
-        <Route
+        {/* The global all hands rotues, things in here are for all the folks */}
+        {/* <Route
           path="/"
           component={HomePage}
           onEnter={(nextState, replace) => {
@@ -205,7 +203,12 @@ export const getRoutes = store => (
               replace(page);
             }
           }}
-        />
+        /> */}
+        {/* <Redirect from="/" to="/auto/dashboard/table/2" /> */}
+
+        {/* Use a dashboard page to replace homepage. */}
+        {/* eslint-disable-next-line no-undef */}
+        <Redirect from="/" to={`/dashboard/331`} />
 
         <Route path="search" title={t`Search`} component={SearchApp} />
         <Route path="archive" title={t`Archive`} component={ArchiveApp} />
@@ -217,13 +220,9 @@ export const getRoutes = store => (
         <Route path="collection/:slug" component={CollectionLanding}>
           <ModalRoute path="move" modal={MoveCollectionModal} />
           <ModalRoute path="archive" modal={ArchiveCollectionModal} />
-          <ModalRoute path="new_collection" modal={CollectionCreate} />
-          <ModalRoute path="new_dashboard" modal={CreateDashboardModal} />
           <ModalRoute path="permissions" modal={CollectionPermissionsModal} />
           {getCollectionTimelineRoutes()}
         </Route>
-
-        <Route path="activity" component={ActivityApp} />
 
         <Route
           path="dashboard/:slug"
@@ -237,25 +236,34 @@ export const getRoutes = store => (
 
         <Route path="/question">
           <IndexRoute component={QueryBuilder} />
-          {/* NEW QUESTION FLOW */}
-          <Route
-            path="new"
-            title={t`New Question`}
-            component={NewQueryOptions}
-          />
           <Route path="notebook" component={QueryBuilder} />
           <Route path=":slug" component={QueryBuilder} />
           <Route path=":slug/notebook" component={QueryBuilder} />
           <Route path=":slug/:objectId" component={QueryBuilder} />
         </Route>
 
+        <Route path="/model/:slug/detail">
+          <IndexRedirect to="usage" />
+          <Route path="usage" component={ModelDetailPage} />
+          <Route path="schema" component={ModelDetailPage} />
+          <Route path="actions" component={ModelDetailPage}>
+            <ModalRoute
+              path="new"
+              modal={ActionCreatorModal}
+              modalProps={{ wide: true, enableTransition: false }}
+            />
+            <ModalRoute
+              path=":actionId"
+              modal={ActionCreatorModal}
+              modalProps={{ wide: true, enableTransition: false }}
+            />
+          </Route>
+          <Redirect from="*" to="usage" />
+        </Route>
+
         <Route path="/model">
           <IndexRoute component={QueryBuilder} />
-          <Route
-            path="new"
-            title={t`New Model`}
-            component={NewDatasetOptions}
-          />
+          <Route path="new" title={t`New Model`} component={NewModelOptions} />
           <Route path="notebook" component={QueryBuilder} />
           <Route path=":slug" component={QueryBuilder} />
           <Route path=":slug/notebook" component={QueryBuilder} />
@@ -275,10 +283,6 @@ export const getRoutes = store => (
         {/* INDIVIDUAL DASHBOARDS */}
 
         <Route path="/auto/dashboard/*" component={AutomaticDashboardApp} />
-
-        <Route path="/collections">
-          <Route path="create" component={CollectionCreate} />
-        </Route>
 
         {/* REFERENCE */}
         <Route path="/reference" title={t`Data Reference`}>

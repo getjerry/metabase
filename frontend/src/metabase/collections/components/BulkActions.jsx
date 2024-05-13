@@ -12,6 +12,7 @@ import CollectionMoveModal from "metabase/containers/CollectionMoveModal";
 import CollectionCopyEntityModal from "metabase/collections/components/CollectionCopyEntityModal";
 
 import { ANALYTICS_CONTEXT } from "metabase/collections/constants";
+import { canArchiveItem, canMoveItem } from "metabase/collections/utils";
 import {
   ActionBarContent,
   ActionBarText,
@@ -45,16 +46,32 @@ const SelectionControls = ({
   size = 18,
 }) =>
   !hasUnselected ? (
-    <StackedCheckBox checked onChange={onSelectNone} size={size} />
+    <StackedCheckBox
+      checked
+      onChange={onSelectNone}
+      size={size}
+      aria-label="Select all items"
+    />
   ) : selected.length === 0 ? (
-    <StackedCheckBox onChange={onSelectAll} size={size} />
+    <StackedCheckBox
+      onChange={onSelectAll}
+      size={size}
+      aria-label="Select all items"
+    />
   ) : (
-    <StackedCheckBox checked indeterminate onChange={onSelectAll} size={size} />
+    <StackedCheckBox
+      checked
+      indeterminate
+      onChange={onSelectAll}
+      size={size}
+      aria-label="Select all items"
+    />
   );
 
 function BulkActions(props) {
   const {
     selected,
+    collection,
     selectedItems,
     selectedAction,
     onArchive,
@@ -64,6 +81,10 @@ function BulkActions(props) {
     onCopy,
     isNavbarOpen,
   } = props;
+
+  const canMove = selected.every(item => canMoveItem(item, collection));
+  const canArchive = selected.every(item => canArchiveItem(item, collection));
+
   return (
     <BulkActionBar showing={selected.length > 0} isNavbarOpen={isNavbarOpen}>
       {/* NOTE: these padding and grid sizes must be carefully matched
@@ -71,12 +92,8 @@ function BulkActions(props) {
       <ActionBarContent>
         <SelectionControls {...props} />
         <BulkActionControls
-          onArchive={
-            _.all(selected, item => item.setArchived) ? onArchive : null
-          }
-          onMove={
-            _.all(selected, item => item.setCollection) ? onMoveStart : null
-          }
+          onArchive={canArchive ? onArchive : null}
+          onMove={canMove ? onMoveStart : null}
         />
         <ActionBarText>
           {ngettext(

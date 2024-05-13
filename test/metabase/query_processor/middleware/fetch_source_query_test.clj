@@ -1,15 +1,17 @@
 (ns metabase.query-processor.middleware.fetch-source-query-test
-  (:require [cheshire.core :as json]
-            [clojure.set :as set]
-            [clojure.test :refer :all]
-            [metabase.mbql.schema :as mbql.s]
-            [metabase.models :refer [Card]]
-            [metabase.query-processor :as qp]
-            [metabase.query-processor.middleware.fetch-source-query :as fetch-source-query]
-            [metabase.test :as mt]
-            [metabase.util :as u]
-            [schema.core :as s]
-            [toucan.db :as db]))
+  (:require
+   [cheshire.core :as json]
+   [clojure.test :refer :all]
+   [metabase.driver.util :as driver.u]
+   [metabase.mbql.schema :as mbql.s]
+   [metabase.models :refer [Card]]
+   [metabase.query-processor :as qp]
+   [metabase.query-processor.middleware.fetch-source-query
+    :as fetch-source-query]
+   [metabase.test :as mt]
+   [metabase.util :as u]
+   [schema.core :as s]
+   [toucan.db :as db]))
 
 (defn- resolve-card-id-source-tables [query]
   (:pre (mt/test-qp-middleware fetch-source-query/resolve-card-id-source-tables query)))
@@ -249,15 +251,16 @@
                                    :query    {:source-table (str "card__" card-id)}}
             save-error            (try
                                     ;; `db/update!` will fail because it will try to validate the query when it saves
-                                    (db/execute! {:update Card
+                                    (db/execute! {:update :report_card
                                                   :set    {:dataset_query (json/generate-string circular-source-query)}
                                                   :where  [:= :id card-id]})
                                     nil
                                     (catch Throwable e
                                       (str "Failed to save Card:" e)))]
         ;; Make sure save isn't the thing throwing the Exception
-        (is (thrown?
+        (is (thrown-with-msg?
              clojure.lang.ExceptionInfo
+             #"Circular dependency"
              (or save-error
                  (resolve-card-id-source-tables circular-source-query)))))))
 
@@ -272,14 +275,15 @@
         ;; Make sure save isn't the thing throwing the Exception
         (let [save-error (try
                            ;; `db/update!` will fail because it will try to validate the query when it saves,
-                           (db/execute! {:update Card
+                           (db/execute! {:update :report_card
                                          :set    {:dataset_query (json/generate-string (circular-source-query card-2-id))}
                                          :where  [:= :id card-1-id]})
                            nil
                            (catch Throwable e
                              (str "Failed to save Card:" e)))]
-          (is (thrown?
+          (is (thrown-with-msg?
                clojure.lang.ExceptionInfo
+               #"Circular dependency"
                (or save-error
                    (resolve-card-id-source-tables (circular-source-query card-1-id))))))))))
 
@@ -340,8 +344,32 @@
                             :collection  "checkins"
                             :mbql?       true}
                  :database (mt/id)}]
-      (mt/with-temp Card [{card-id :id} {:dataset_query query}]
-        (is (= {:source-metadata nil
-                :source-query    (set/rename-keys (:native query) {:query :native})
-                :database        (mt/id)}
-               (#'fetch-source-query/card-id->source-query-and-metadata card-id)))))))
+      (with-redefs [driver.u/database->driver (constantly :mongo)]
+        (mt/with-temp Card [{card-id :id} {:dataset_query query}]
+          (is (= {:source-metadata nil
+                  :source-query    {:projections ["_id" "user_id" "venue_id"],
+                                    :native      {:collection "checkins"
+                                                  :query [{:$project {:_id "$_id"}}
+                                                          {:$limit 1048575}]}
+                                    :collection  "checkins"
+                                    :mbql?       true}
+                  :database        (mt/id)}
+                 (#'fetch-source-query/card-id->source-query-and-metadata card-id)))))))
+  (testing "card-id->source-query-and-metadata-test should preserve mongodb native queries in string format (#30112)"
+    (let [query-str (str "[{\"$project\":\n"
+                         "   {\"_id\":\"$_id\",\n"
+                         "    \"user_id\":\"$user_id\",\n"
+                         "    \"venue_id\": \"$venue_id\"}},\n"
+                         " {\"$limit\": 1048575}]")
+          query {:type     :native
+                 :native   {:query query-str
+                            :collection  "checkins"}
+                 :database (mt/id)}]
+      (with-redefs [driver.u/database->driver (constantly :mongo)]
+        (mt/with-temp Card [{card-id :id} {:dataset_query query}]
+          (is (= {:source-metadata nil
+                  :source-query    {:native      {:collection "checkins"
+                                                  :query      query-str}
+                                    :collection  "checkins"}
+                  :database        (mt/id)}
+                 (#'fetch-source-query/card-id->source-query-and-metadata card-id))))))))

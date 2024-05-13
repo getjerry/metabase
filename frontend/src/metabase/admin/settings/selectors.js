@@ -14,22 +14,23 @@ import CustomGeoJSONWidget from "./components/widgets/CustomGeoJSONWidget";
 import SettingsLicense from "./components/SettingsLicense";
 import SiteUrlWidget from "./components/widgets/SiteUrlWidget";
 import HttpsOnlyWidget from "./components/widgets/HttpsOnlyWidget";
-import { EmbeddingCustomizationInfo } from "./components/widgets/EmbeddingCustomizationInfo";
+import EmbeddingCustomizationInfo from "./components/widgets/EmbeddingCustomizationInfo";
 import {
   PublicLinksDashboardListing,
   PublicLinksQuestionListing,
+  PublicLinksActionListing,
   EmbeddedQuestionListing,
   EmbeddedDashboardListing,
 } from "./components/widgets/PublicLinksListing";
 import SecretKeyWidget from "./components/widgets/SecretKeyWidget";
 import EmbeddingLegalese from "./components/widgets/EmbeddingLegalese";
 import FormattingWidget from "./components/widgets/FormattingWidget";
-import { PremiumEmbeddingLinkWidget } from "./components/widgets/PremiumEmbeddingLinkWidget";
+import FullAppEmbeddingLinkWidget from "./components/widgets/FullAppEmbeddingLinkWidget";
 import ModelCachingScheduleWidget from "./components/widgets/ModelCachingScheduleWidget";
 import SectionDivider from "./components/widgets/SectionDivider";
 import SettingsUpdatesForm from "./components/SettingsUpdatesForm/SettingsUpdatesForm";
 import SettingsEmailForm from "./components/SettingsEmailForm";
-import SettingsSetupList from "./components/SettingsSetupList";
+import SetupCheckList from "./setup/components/SetupCheckList";
 import SlackSettings from "./slack/containers/SlackSettings";
 import { trackTrackingPermissionChanged } from "./analytics";
 
@@ -63,7 +64,7 @@ const SECTIONS = updateSectionsWithPlugins({
     name: t`Setup`,
     order: 1,
     settings: [],
-    component: SettingsSetupList,
+    component: SetupCheckList,
     adminOnly: true,
   },
   general: {
@@ -228,6 +229,7 @@ const SECTIONS = updateSectionsWithPlugins({
     name: t`Authentication`,
     order: 6,
     settings: [], // added by plugins
+    adminOnly: true,
   },
   maps: {
     name: t`Maps`,
@@ -325,6 +327,12 @@ const SECTIONS = updateSectionsWithPlugins({
         widget: PublicLinksQuestionListing,
         getHidden: settings => !settings["enable-public-sharing"],
       },
+      {
+        key: "-public-sharing-actions",
+        display_name: t`Shared Action Forms`,
+        widget: PublicLinksActionListing,
+        getHidden: settings => !settings["enable-public-sharing"],
+      },
     ],
   },
   "embedding-in-other-applications": {
@@ -359,7 +367,9 @@ const SECTIONS = updateSectionsWithPlugins({
         description: jt`Allow questions, dashboards, and more to be embedded. ${(
           <ExternalLink
             key="learn-embedding-link"
-            href="https://www.metabase.com/learn/embedding/embedding-charts-and-dashboards.html"
+            href={MetabaseSettings.learnUrl(
+              "embedding/embedding-charts-and-dashboards.html",
+            )}
           >
             {t`Learn more.`}
           </ExternalLink>
@@ -463,7 +473,7 @@ const SECTIONS = updateSectionsWithPlugins({
         },
       },
       {
-        widget: PremiumEmbeddingLinkWidget,
+        widget: FullAppEmbeddingLinkWidget,
         getHidden: (_, derivedSettings) =>
           !derivedSettings["enable-embedding"] ||
           MetabaseSettings.isEnterprise(),

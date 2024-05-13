@@ -1,3 +1,4 @@
+import axios from "axios";
 import { t } from "ttag";
 import { createAction } from "redux-actions";
 
@@ -9,11 +10,11 @@ import { createThunkAction } from "metabase/lib/redux";
 
 import { getMetadata } from "metabase/selectors/metadata";
 import { getSensibleDisplays } from "metabase/visualizations";
-import { isSameField } from "metabase-lib/lib/queries/utils/field-ref";
+import { isSameField } from "metabase-lib/queries/utils/field-ref";
 
-import Question from "metabase-lib/lib/Question";
+import Question from "metabase-lib/Question";
 
-import { isAdHocModelQuestion } from "metabase-lib/lib/metadata/utils/models";
+import { isAdHocModelQuestion } from "metabase-lib/metadata/utils/models";
 import {
   getIsRunning,
   getOriginalQuestion,
@@ -132,7 +133,7 @@ export const runQuestionQuery = ({
         ignoreCache: ignoreCache,
         isDirty: cardIsDirty,
       })
-      .then(queryResults => {
+      .then(async queryResults => {
         queryTimer(duration =>
           MetabaseAnalytics.trackStructEvent(
             "QueryBuilder",
@@ -141,6 +142,24 @@ export const runQuestionQuery = ({
             duration,
           ),
         );
+        // write in jfs (only jerry)
+        const card_id = question.card().id;
+        if (card_id !== undefined && queryResults.length > 0) {
+          try {
+            const userId = getState().currentUser.id;
+            const fileName = "report_" + card_id + "_user_" + userId;
+            const ans = await axios.post(
+              "https://metabase-proxy.getjerry.com/chatdata/write",
+              {
+                filename: fileName,
+                data: queryResults[0],
+              },
+            );
+            console.log(ans);
+          } catch (e) {
+            console.log(e);
+          }
+        }
         return dispatch(queryCompleted(question, queryResults));
       })
       .catch(error => dispatch(queryErrored(startTime, error)));

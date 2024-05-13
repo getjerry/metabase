@@ -1,4 +1,4 @@
-import React, { ErrorInfo, ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { Location } from "history";
 
@@ -15,10 +15,9 @@ import {
   getErrorPage,
   getIsAdminApp,
   getIsAppBarVisible,
-  getIsNavBarVisible,
+  getIsNavBarEnabled,
 } from "metabase/selectors/app";
 import { setErrorPage } from "metabase/redux/app";
-import { useOnMount } from "metabase/hooks/use-on-mount";
 import { initializeIframeResizer } from "metabase/lib/dom";
 
 import AppBanner from "metabase/components/AppBanner";
@@ -30,6 +29,7 @@ import { ContentViewportContext } from "metabase/core/context/ContentViewportCon
 import { AppErrorDescriptor, State } from "metabase-types/store";
 
 import { AppContainer, AppContent, AppContentContainer } from "./App.styled";
+import ErrorBoundary from "./ErrorBoundary";
 
 const getErrorComponent = ({ status, data, context }: AppErrorDescriptor) => {
   if (status === 403 || data?.error_code === "unauthorized") {
@@ -52,7 +52,7 @@ interface AppStateProps {
   isAdminApp: boolean;
   bannerMessageDescriptor?: string;
   isAppBarVisible: boolean;
-  isNavBarVisible: boolean;
+  isNavBarEnabled: boolean;
 }
 
 interface AppDispatchProps {
@@ -73,47 +73,35 @@ const mapStateToProps = (
   errorPage: getErrorPage(state),
   isAdminApp: getIsAdminApp(state, props),
   isAppBarVisible: getIsAppBarVisible(state, props),
-  isNavBarVisible: getIsNavBarVisible(state, props),
+  isNavBarEnabled: getIsNavBarEnabled(state, props),
 });
 
 const mapDispatchToProps: AppDispatchProps = {
   onError: setErrorPage,
 };
 
-class ErrorBoundary extends React.Component<{
-  onError: (errorInfo: ErrorInfo) => void;
-}> {
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.props.onError(errorInfo);
-  }
-
-  render() {
-    return this.props.children;
-  }
-}
-
 function App({
   errorPage,
   isAdminApp,
   isAppBarVisible,
-  isNavBarVisible,
+  isNavBarEnabled,
   children,
   onError,
 }: AppProps) {
   const [viewportElement, setViewportElement] = useState<HTMLElement | null>();
 
-  useOnMount(() => {
+  useEffect(() => {
     initializeIframeResizer();
-  });
+  }, []);
 
   return (
     <ErrorBoundary onError={onError}>
       <ScrollToTop>
         <AppContainer className="spread">
           <AppBanner />
-          {isAppBarVisible && <AppBar isNavBarVisible={isNavBarVisible} />}
+          {isAppBarVisible && <AppBar />}
           <AppContentContainer isAdminApp={isAdminApp}>
-            {isNavBarVisible && <Navbar />}
+            {isNavBarEnabled && <Navbar />}
             <AppContent ref={setViewportElement}>
               <ContentViewportContext.Provider value={viewportElement ?? null}>
                 {errorPage ? getErrorComponent(errorPage) : children}

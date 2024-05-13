@@ -1,5 +1,5 @@
 import React, { MouseEvent, ReactNode } from "react";
-import Tooltip from "metabase/components/Tooltip";
+import Tooltip from "metabase/core/components/Tooltip";
 import {
   MenuExternalLink,
   MenuItemContent,
@@ -32,7 +32,8 @@ const EntityMenuItem = ({
   onClose,
 }: EntityMenuItemProps): JSX.Element | null => {
   if (link && action) {
-    return <div />;
+    // You cannot specify both action and link props!
+    return null;
   }
 
   const content = (
@@ -51,6 +52,7 @@ const EntityMenuItem = ({
         event={event}
         tooltip={tooltip}
         onClose={onClose}
+        data-testid="entity-menu-link"
       >
         {content}
       </LinkMenuItem>
@@ -121,6 +123,7 @@ const LinkMenuItem = ({
         target="_blank"
         data-metabase-event={event}
         onClick={onClose}
+        data-testid="entity-menu-link"
       >
         {children}
       </MenuExternalLink>
@@ -130,6 +133,7 @@ const LinkMenuItem = ({
         disabled={disabled}
         data-metabase-event={event}
         onClick={onClose}
+        data-testid="entity-menu-link"
       >
         {children}
       </MenuLink>

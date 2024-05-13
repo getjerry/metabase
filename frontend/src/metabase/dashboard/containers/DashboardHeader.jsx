@@ -11,7 +11,7 @@ import { getIsNavbarOpen } from "metabase/redux/app";
 import ActionButton from "metabase/components/ActionButton";
 import Button from "metabase/core/components/Button";
 import Icon from "metabase/components/Icon";
-import Tooltip from "metabase/components/Tooltip";
+import Tooltip from "metabase/core/components/Tooltip";
 import EntityMenu from "metabase/components/EntityMenu";
 
 import Bookmark from "metabase/entities/bookmarks";
@@ -25,8 +25,13 @@ import {
   getIsBookmarked,
   getIsShowDashboardInfoSidebar,
 } from "metabase/dashboard/selectors";
-import { toggleSidebar } from "../actions";
+import {
+  addActionToDashboard,
+  toggleSidebar,
+} from "metabase/dashboard/actions";
 
+import { ChatAiDev } from "metabase/query_builder/components/view/ChatdataModal/ChatAiDev";
+import { OpenChatAi } from "metabase/query_builder/components/view/ChatdataModal/OpenChatAi";
 import Header from "../components/DashboardHeader";
 import { SIDEBAR_NAME } from "../constants";
 import {
@@ -35,13 +40,11 @@ import {
 } from "./DashboardHeader.styled";
 
 const mapStateToProps = (state, props) => {
-  const isDataApp = false;
-  const isShowingDashboardInfoSidebar =
-    !isDataApp && getIsShowDashboardInfoSidebar(state);
   return {
     isBookmarked: getIsBookmarked(state, props),
     isNavBarOpen: getIsNavbarOpen(state),
-    isShowingDashboardInfoSidebar,
+    isShowingDashboardInfoSidebar: getIsShowDashboardInfoSidebar(state),
+    queryUuid: state.dashboard.queryUuid,
   };
 };
 
@@ -52,6 +55,7 @@ const mapDispatchToProps = {
     Bookmark.actions.delete({ id, type: "dashboard" }),
   onChangeLocation: push,
   toggleSidebar,
+  addActionToDashboard,
 };
 
 class DashboardHeader extends Component {
@@ -67,6 +71,7 @@ class DashboardHeader extends Component {
   };
 
   static propTypes = {
+    user: PropTypes.object,
     dashboard: PropTypes.object.isRequired,
     isEditable: PropTypes.bool.isRequired,
     isEditing: PropTypes.oneOfType([PropTypes.bool, PropTypes.object])
@@ -81,6 +86,7 @@ class DashboardHeader extends Component {
 
     addCardToDashboard: PropTypes.func.isRequired,
     addTextDashCardToDashboard: PropTypes.func.isRequired,
+    addLinkDashCardToDashboard: PropTypes.func.isRequired,
     fetchDashboard: PropTypes.func.isRequired,
     saveDashboardAndCards: PropTypes.func.isRequired,
     setDashboardAttribute: PropTypes.func.isRequired,
@@ -98,6 +104,7 @@ class DashboardHeader extends Component {
     sidebar: PropTypes.string.isRequired,
     setSidebar: PropTypes.func.isRequired,
     closeSidebar: PropTypes.func.isRequired,
+    addActionToDashboard: PropTypes.func.isRequired,
   };
 
   handleEdit(dashboard) {
@@ -116,9 +123,15 @@ class DashboardHeader extends Component {
     this.props.addTextDashCardToDashboard({ dashId: this.props.dashboard.id });
   }
 
+  onAddLinkCard() {
+    this.props.addLinkDashCardToDashboard({ dashId: this.props.dashboard.id });
+  }
+
   onAddAction() {
-    this.props.addActionDashCardToDashboard({
+    this.props.addActionToDashboard({
       dashId: this.props.dashboard.id,
+      displayType: "button",
+      action: {},
     });
   }
 
@@ -185,6 +198,7 @@ class DashboardHeader extends Component {
 
   getHeaderButtons() {
     const {
+      user,
       dashboard,
       parametersWidget,
       isBookmarked,
@@ -200,18 +214,15 @@ class DashboardHeader extends Component {
       toggleSidebar,
       isShowingDashboardInfoSidebar,
       closeSidebar,
+      queryUuid,
     } = this.props;
-
-    const isDataAppPage = false;
     const canEdit = dashboard.can_write && isEditable && !!dashboard;
-
     const buttons = [];
     const extraButtons = [];
 
     if (isFullscreen && parametersWidget) {
       buttons.push(parametersWidget);
     }
-
     if (isEditing) {
       const activeSidebarName = sidebar.name;
       const addQuestionButtonHint =
@@ -243,6 +254,14 @@ class DashboardHeader extends Component {
               <Icon name="string" size={18} />
             </DashboardHeaderButton>
           </a>
+        </Tooltip>,
+        <Tooltip key="add-link-card" tooltip={t`Add link card`}>
+          <DashboardHeaderButton
+            onClick={() => this.onAddLinkCard()}
+            data-metabase-event={`Dashboard;Add Link Card`}
+          >
+            <Icon name="link" size={18} />
+          </DashboardHeaderButton>
         </Tooltip>,
       );
 
@@ -281,12 +300,49 @@ class DashboardHeader extends Component {
         </span>,
       );
 
+      if (canEdit) {
+        buttons.push(
+          <>
+            <DashboardHeaderActionDivider />
+            <Tooltip key="add-action-button" tooltip={t`Add action button`}>
+              <DashboardHeaderButton
+                onClick={() => this.onAddAction()}
+                aria-label={t`Add action`}
+                data-metabase-event={`Dashboard;Add Action Button`}
+              >
+                <Icon name="click" size={18} />
+              </DashboardHeaderButton>
+            </Tooltip>
+          </>,
+        );
+      }
+
       extraButtons.push({
         title: t`Revision history`,
         icon: "history",
         link: `${location.pathname}/history`,
         event: "Dashboard;Revisions",
       });
+    }
+
+    const hasChatdataButton = !isEditing;
+    if (hasChatdataButton) {
+      let hasChatAiDev = false;
+      if (user.group_ids.includes(24)) {
+        hasChatAiDev = true;
+      }
+      if (hasChatAiDev) {
+        buttons.push(<ChatAiDev />);
+      }
+      // open chatdata button
+      buttons.push(
+        <OpenChatAi
+          report={dashboard}
+          type="dashboard"
+          user={user}
+          uuid={queryUuid}
+        />,
+      );
     }
 
     if (!isFullscreen && !isEditing && canEdit) {
@@ -313,7 +369,7 @@ class DashboardHeader extends Component {
 
       extraButtons.push({
         title: t`Duplicate`,
-        icon: "copy",
+        icon: "clone",
         link: `${location.pathname}/copy`,
         event: "Dashboard;Copy",
       });
@@ -348,19 +404,17 @@ class DashboardHeader extends Component {
             onDeleteBookmark={deleteBookmark}
             isBookmarked={isBookmarked}
           />,
-          !isDataAppPage && (
-            <Tooltip key="dashboard-info-button" tooltip={t`More info`}>
-              <DashboardHeaderButton
-                icon="info"
-                isActive={isShowingDashboardInfoSidebar}
-                onClick={() =>
-                  isShowingDashboardInfoSidebar
-                    ? closeSidebar()
-                    : setSidebar({ name: SIDEBAR_NAME.info })
-                }
-              />
-            </Tooltip>
-          ),
+          <Tooltip key="dashboard-info-button" tooltip={t`More info`}>
+            <DashboardHeaderButton
+              icon="info"
+              isActive={isShowingDashboardInfoSidebar}
+              onClick={() =>
+                isShowingDashboardInfoSidebar
+                  ? closeSidebar()
+                  : setSidebar({ name: SIDEBAR_NAME.info })
+              }
+            />
+          </Tooltip>,
           <EntityMenu
             key="dashboard-action-menu-button"
             items={extraButtons}
@@ -384,7 +438,6 @@ class DashboardHeader extends Component {
       setSidebar,
     } = this.props;
 
-    const isDataAppPage = false;
     const hasLastEditInfo = dashboard["last-edit-info"] != null;
 
     return (
@@ -395,9 +448,7 @@ class DashboardHeader extends Component {
         dashboard={dashboard}
         isEditing={isEditing}
         isBadgeVisible={!isEditing && !isFullscreen && isAdditionalInfoVisible}
-        isLastEditInfoVisible={
-          !isDataAppPage && hasLastEditInfo && isAdditionalInfoVisible
-        }
+        isLastEditInfoVisible={hasLastEditInfo && isAdditionalInfoVisible}
         isEditingInfo={isEditing}
         isNavBarOpen={this.props.isNavBarOpen}
         headerButtons={this.getHeaderButtons()}

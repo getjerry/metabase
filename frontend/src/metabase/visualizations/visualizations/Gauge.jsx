@@ -12,7 +12,7 @@ import { formatValue } from "metabase/lib/formatting";
 import { columnSettings } from "metabase/visualizations/lib/settings/column";
 
 import ChartSettingGaugeSegments from "metabase/visualizations/components/settings/ChartSettingGaugeSegments";
-import { isNumeric } from "metabase-lib/lib/types/utils/isa";
+import { isNumeric } from "metabase-lib/types/utils/isa";
 import { GaugeArcPath } from "./Gauge.styled";
 
 const MAX_WIDTH = 500;
@@ -414,7 +414,7 @@ const GaugeSegmentLabel = ({ position: [x, y], style = {}, children }) => (
     y={y}
     style={{
       fill: color("text-medium"),
-      fontSize: `${FONT_SIZE_SEGMENT_LABEL}em`,
+      fontSize: `${FONT_SIZE_SEGMENT_LABEL}rem`,
       textAnchor: Math.abs(x) < 5 ? "middle" : x > 0 ? "start" : "end",
       // shift text in the lower half down a bit
       transform:

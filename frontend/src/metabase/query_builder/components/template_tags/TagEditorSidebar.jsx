@@ -8,7 +8,7 @@ import _ from "underscore";
 
 import SidebarContent from "metabase/query_builder/components/SidebarContent";
 import * as MetabaseAnalytics from "metabase/lib/analytics";
-import NativeQuery from "metabase-lib/lib/queries/NativeQuery";
+import NativeQuery from "metabase-lib/queries/NativeQuery";
 import TagEditorParam from "./TagEditorParam";
 import TagEditorHelp from "./TagEditorHelp";
 
@@ -24,6 +24,7 @@ export default class TagEditorSidebar extends React.Component {
     sampleDatabaseId: PropTypes.number,
     setDatasetQuery: PropTypes.func.isRequired,
     setTemplateTag: PropTypes.func.isRequired,
+    setTemplateTagConfig: PropTypes.func.isRequired,
     setParameterValue: PropTypes.func.isRequired,
   };
 
@@ -44,6 +45,7 @@ export default class TagEditorSidebar extends React.Component {
       setDatasetQuery,
       query,
       setTemplateTag,
+      setTemplateTagConfig,
       setParameterValue,
       onClose,
     } = this.props;
@@ -85,6 +87,7 @@ export default class TagEditorSidebar extends React.Component {
               database={database}
               databases={databases}
               setTemplateTag={setTemplateTag}
+              setTemplateTagConfig={setTemplateTagConfig}
               setParameterValue={setParameterValue}
             />
           ) : (
@@ -108,6 +111,7 @@ const SettingsPane = ({
   database,
   databases,
   setTemplateTag,
+  setTemplateTagConfig,
   setParameterValue,
 }) => (
   <div>
@@ -121,6 +125,7 @@ const SettingsPane = ({
           database={database}
           databases={databases}
           setTemplateTag={setTemplateTag}
+          setTemplateTagConfig={setTemplateTagConfig}
           setParameterValue={setParameterValue}
         />
       </div>

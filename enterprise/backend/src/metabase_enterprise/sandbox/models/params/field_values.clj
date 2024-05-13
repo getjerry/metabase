@@ -1,16 +1,19 @@
 (ns metabase-enterprise.sandbox.models.params.field-values
-  (:require [metabase-enterprise.sandbox.api.table :as table]
-            [metabase-enterprise.sandbox.models.group-table-access-policy :refer [GroupTableAccessPolicy]]
-            [metabase-enterprise.sandbox.query-processor.middleware.row-level-restrictions :as row-level-restrictions]
-            [metabase.api.common :as api]
-            [metabase.mbql.util :as mbql.u]
-            [metabase.models :refer [Field PermissionsGroupMembership]]
-            [metabase.models.field :as field]
-            [metabase.models.field-values :as field-values]
-            [metabase.models.params.field-values :as params.field-values]
-            [metabase.public-settings.premium-features :refer [defenterprise]]
-            [toucan.db :as db]
-            [toucan.hydrate :refer [hydrate]]))
+  (:require
+   [metabase-enterprise.sandbox.api.table :as table]
+   [metabase-enterprise.sandbox.models.group-table-access-policy :refer [GroupTableAccessPolicy]]
+   [metabase-enterprise.sandbox.query-processor.middleware.row-level-restrictions :as row-level-restrictions]
+   [metabase.api.common :as api]
+   [metabase.mbql.util :as mbql.u]
+   [metabase.models :refer [Field PermissionsGroupMembership]]
+   [metabase.models.field :as field]
+   [metabase.models.field-values :as field-values]
+   [metabase.models.params.field-values :as params.field-values]
+   [metabase.public-settings.premium-features :refer [defenterprise]]
+   [metabase.util :as u]
+   [toucan.db :as db]
+   [toucan.hydrate :refer [hydrate]]
+   [toucan2.core :as t2]))
 
 (comment api/keep-me)
 
@@ -40,7 +43,8 @@
 
   The gtap-attributes is a list with 2 elements:
   1. card-id - for GTAP that use a saved question
-  2. a map:
+  2. the timestamp when the saved question was last updated
+  3. a map:
     if query is mbql query:
       - with key is the user-attribute that applied to the table that `field` is in
       - value is the user-attribute of current user corresponding to the key
@@ -60,6 +64,7 @@
           attribute_remappings (:attribute_remappings gtap)
           field-ids            (db/select-field :id Field :table_id table_id)]
       [(:card_id gtap)
+       (-> gtap :card :updated_at)
        (if (= :native (get-in gtap [:card :query_type]))
          ;; For sandbox that uses native query, we can't narrow down to the exact attribute
          ;; that affect the current table. So we just hash the whole login-attributes of users.
@@ -71,6 +76,26 @@
                         :when (contains? field-ids
                                          (mbql.u/match-one v [:dimension [:field field-id _]] field-id))]
                     {k (get login-attributes k)})))])))
+
+(defenterprise field-id->field-values-for-current-user
+  "Fetch *existing* FieldValues for a sequence of `field-ids` for the current User. Values are returned as a map of
+    {field-id FieldValues-instance}
+  Returns `nil` if `field-ids` is empty or no matching FieldValues exist."
+  :feature :sandboxes
+  [field-ids]
+  (let [fields                   (when (seq field-ids)
+                                   (hydrate (t2/select Field :id [:in (set field-ids)]) :table))
+        {unsandboxed-fields false
+         sandboxed-fields   true} (group-by (comp boolean field-is-sandboxed?) fields)]
+    (merge
+     ;; use the normal OSS batched implementation for any Fields that aren't subject to sandboxing.
+     (when (seq unsandboxed-fields)
+       (params.field-values/default-field-id->field-values-for-current-user
+         (map u/the-id unsandboxed-fields)))
+     ;; for sandboxed fields, fetch the sandboxed values individually.
+     (into {} (for [{field-id :id, :as field} sandboxed-fields]
+                [field-id (select-keys (params.field-values/get-or-create-advanced-field-values! :sandbox field)
+                                       [:values :human_readable_values :field_id])])))))
 
 (defenterprise get-or-create-field-values-for-current-user!*
   "Fetch cached FieldValues for a `field`, creating them if needed if the Field should have FieldValues. These

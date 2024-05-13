@@ -9,17 +9,22 @@
   1. build a minimal card and query result dataset for different visualization types and settings (scenarios)
   2. run the real rendering pipeline, but, return a hiccup tree instead of png bytes
   3. provide quick ways to 'query' the tree for different content, to confirm that elements are properly rendered."
-  (:require [clojure.string :as str]
-            [clojure.zip :as zip]
-            [metabase.pulse.render :as render]
-            [metabase.pulse.render.body :as body]
-            [metabase.pulse.render.datetime :as datetime]
-            [metabase.pulse.render.image-bundle :as image-bundle]
-            [metabase.pulse.render.js-svg :as js-svg]
-            [metabase.shared.models.visualization-settings :as mb.viz]
-            [metabase.util :as u])
-  (:import [org.apache.batik.anim.dom SVGOMDocument]
-           [org.w3c.dom Element Node]))
+  (:require
+   [clojure.string :as str]
+   [clojure.zip :as zip]
+   [metabase.pulse.render :as render]
+   [metabase.pulse.render.body :as body]
+   [metabase.pulse.render.datetime :as datetime]
+   [metabase.pulse.render.image-bundle :as image-bundle]
+   [metabase.pulse.render.js-svg :as js-svg]
+   [metabase.shared.models.visualization-settings :as mb.viz]
+   [metabase.util :as u])
+  (:import
+   (org.apache.batik.anim.dom SVGOMDocument AbstractElement$ExtendedNamedNodeHashMap)
+   (org.apache.batik.dom GenericText)
+   (org.w3c.dom Element Node)))
+
+(set! *warn-on-reflection* true)
 
 (def test-card
   {:visualization_settings
@@ -33,6 +38,7 @@
                                :highlight_row true}
                               {:columns       ["c"]
                                :type          "range"
+                               :operator      "="
                                :min_type      "custom"
                                :min_value     3
                                :max_type      "custom"
@@ -41,12 +47,12 @@
 
 (def test-combo-card
   {:visualization_settings
-   {:graph.metrics ["NumPurchased", "NumKazoos"]
+   {:graph.metrics ["NumPurchased" "NumKazoos" "ExtraneousColumn"]
     :graph.dimensions ["Price"]}})
 
 (def test-stack-card
   {:visualization_settings
-   {:graph.metrics ["NumPurchased", "NumKazoos"]
+   {:graph.metrics ["NumPurchased" "NumKazoos"]
     :graph.dimensions ["Price"]
     :stackable.stack_type "stack"}})
 
@@ -79,41 +85,98 @@
      :unit         :default
      :base_type    (guess-type col-sample)}))
 
+(defn- fingerprint
+  [vals]
+  {:global {:distinct-count (-> vals distinct count) :nil% 0.0}
+   :type   {:type/Number {:min (apply min vals)
+                          :max (apply max vals)
+                          :avg (double (/ (reduce + vals) (count vals)))}}})
+
+(defn- base-results-metadata
+  "Create a basic metadata map for a column, which ends up in a vector at [:data :results_metadata :columns].
+  This mimics the shape of column-settings data returned from the query processor."
+  [idx col-name col-vals]
+  (let [ttype (guess-type (first col-vals))]
+    {:name           col-name
+     :display_name   col-name
+     :field_ref      [:field idx {:base-type ttype}]
+     :base_type      ttype
+     :effective_type ttype
+     :fingerprint (when (= :type/Number ttype) (fingerprint col-vals))}))
+
 (defn base-viz-settings
-  [display-type rows]
-  (let [header-row (first rows)
-        _sample-row (second rows)]
-    ({:pin_map     {}
-      :state       {}
-      :country     {}
-      :line        {:graph.dimensions [(first header-row)]
-                    :graph.metrics (vec (rest header-row))}
-      :area        {:graph.dimensions [(first header-row)]
-                    :graph.metrics (vec (rest header-row))}
-      :bar         {:graph.dimensions [(first header-row)]
-                    :graph.metrics (vec (rest header-row))}
-      :combo       {:graph.dimensions [(first header-row)]
-                    :graph.metrics (vec (rest header-row))}
-      :pie         {}
-      :funnel      {}
-      :progress    {}
-      :scalar      {}
-      :smartscalar {}
-      :gauge       {}
-      :table       {}
-      :scatter     {}
-      :row         {}
-      :list        {}
-      :pivot       {}} display-type)))
+  "Build the basic viz-settings map for a given `display-type` and x-axis configuration, `x-config`."
+  ([display-type rows] (base-viz-settings display-type :single rows))
+  ([display-type x-config rows]
+   (let [header-row  (first rows)
+         _sample-row (second rows)
+         lab-viz     (if (= x-config :single)
+                       {:graph.dimensions [(first header-row)]
+                        :graph.metrics    (vec (rest header-row))}
+                       {:graph.dimensions [(first header-row) "Grouping"]
+                        :graph.metrics    ["Values"]})]
+     (case display-type
+       :line        lab-viz
+       :area        lab-viz
+       :bar         lab-viz
+       :combo       lab-viz
+       :pin_map     {}
+       :state       {}
+       :country     {}
+       :pie         {}
+       :funnel      {}
+       :progress    {}
+       :scalar      {}
+       :smartscalar {}
+       :gauge       {}
+       :table       {}
+       :scatter     {}
+       :row         {}
+       :list        {}
+       :pivot       {}
+       {}))))
+
+(defn rows->multi-x-rows
+  [header-and-rows]
+  (let [[header & rows] header-and-rows
+        rows (vec rows)
+        x2s (vec (rest header))]
+    (for [idx1 (range (count rows))
+          idx2 (range (count x2s))]
+      (let [[x1 & vs] (get rows idx1)
+            vs (vec vs)]
+        (conj [x1 (get x2s idx2)] (get vs idx2))))))
 
 (defn make-card-and-data
-  "Make a basic `card-and-data` map for a given `display-type` key. Useful for buildng up test viz data without the need for `viz-scenarios`."
-  [rows display-type]
-  {:card {:display display-type
-          :visualization_settings (base-viz-settings display-type rows)}
-   :data {:viz-settings {}
-          :cols (mapv base-cols-settings (range (count (first rows))) (first rows) (second rows))
-          :rows (vec (rest rows))}})
+  "Make a basic `card-and-data` map for a given `display-type` key. Useful for buildng up test viz data without the need for `viz-scenarios`.
+  The `rows` should be a vector of vectors, where the first row is the header row.
+
+  X-axis configuration, `x-config`, is either `:single` or `:multi`.
+  The `x-config` is relevant for Line, Area, Bar, and Combo charts only, and alters how dimensions/metrics are split up.
+
+  The Default :single corresponds to the UI having only 1 series in the X-AXIS group, and any number of series in the Y-AXIS.
+  The :multi corresponds to the UI having 2 series in the X-AXIS and 1 in Y-AXIS.
+  This situation comes up if you do something like summarize with a 'Sum of Total' BY 2 categories (eg. Created at and Product->Category).
+
+  The thing is that this second :multi situation will be visually similar to a single-x-axis chart with several series, but the flow through render/body is somewhat different, so its important to provide ways to build test data for each situation."
+  ([header-and-rows display-type] (make-card-and-data header-and-rows display-type :single))
+  ([header-and-rows display-type x-config]
+   (let [[header & rows] header-and-rows
+         rows            (vec (case x-config
+                                :single rows
+                                :multi  (rows->multi-x-rows header-and-rows)
+                                rows))
+         header (vec (case x-config
+                       :single header
+                       :multi [(first header) "Grouping" "Values"]))
+         indices         (range (count (first header-and-rows)))
+         cols            (mapv (fn [idx] (mapv #(nth % idx) (vec rows))) indices)]
+     {:card {:display                display-type
+             :visualization_settings (base-viz-settings display-type x-config header-and-rows)}
+      :data {:viz-settings     (base-viz-settings display-type x-config header-and-rows)
+             :cols             (mapv base-cols-settings indices header (first rows))
+             :rows             rows
+             :results_metadata {:columns (mapv base-results-metadata indices header cols)}}})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;    validate-viz-scenarios
@@ -373,7 +436,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- node-attrs->map
-  [attrs]
+  [^AbstractElement$ExtendedNamedNodeHashMap attrs]
   (when attrs
     (into {} (map (fn [i]
                     (let [item (bean (.item attrs i))]
@@ -395,7 +458,7 @@
   [^SVGOMDocument document]
   (letfn [(tree [^Node node]
             (if (instance? org.apache.batik.dom.GenericText node)
-              (.getWholeText node)
+              (.getWholeText ^GenericText node)
               (into [(keyword (.getNodeName node)) (node-attrs->map (.getAttributes node))]
                     (map tree
                          (when (instance? Element node)
@@ -431,7 +494,7 @@
 (defn- wrapped-node?
   [loc]
   (let [node (zip/node loc)]
-    (and (= 1 (count node ))
+    (and (= 1 (count node))
          (seqable? node))))
 
 (def ^:private parse-svg #'js-svg/parse-svg-string)
@@ -523,11 +586,12 @@
   The output map will have:
   :card contains a map with the necessary keys that configure the given `viz-scenario`
   :"
-  [rows display-type viz-scenario]
-  (let [valid-viz-scenario (validate-viz-scenario display-type viz-scenario)
-        card-and-data      (->> (make-card-and-data rows display-type)
-                                (apply-viz-scenario valid-viz-scenario))]
-    (assoc card-and-data :viz-tree (render-as-hiccup card-and-data))))
+  ([rows display-type viz-scenario] (make-viz-data rows display-type :single viz-scenario))
+  ([rows display-type x-config viz-scenario]
+   (let [valid-viz-scenario (validate-viz-scenario display-type viz-scenario)
+         card-and-data      (->> (make-card-and-data rows display-type x-config)
+                                 (apply-viz-scenario valid-viz-scenario))]
+     (assoc card-and-data :viz-tree (render-as-hiccup card-and-data)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;   verification-utils

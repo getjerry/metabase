@@ -4,6 +4,7 @@ import moment from "moment-timezone";
 import _ from "underscore";
 
 import ChartNestedSettingColumns from "metabase/visualizations/components/settings/ChartNestedSettingColumns";
+import ChartSettingOrderedColumns from "metabase/visualizations/components/settings/ChartSettingOrderedColumns";
 
 // HACK: cyclical dependency causing errors in unit tests
 // import { getVisualizationRaw } from "metabase/visualizations";
@@ -27,6 +28,7 @@ const DEFAULT_GET_COLUMNS = (series, vizSettings) =>
 
 export function columnSettings({
   getColumns = DEFAULT_GET_COLUMNS,
+  hidden,
   ...def
 } = {}) {
   return nestedSettings("column_settings", {
@@ -34,10 +36,11 @@ export function columnSettings({
     objectName: "column",
     getObjects: getColumns,
     getObjectKey: getColumnKey,
-    getSettingDefintionsForObject: getSettingDefintionsForColumn,
+    getSettingDefinitionsForObject: getSettingDefinitionsForColumn,
     component: ChartNestedSettingColumns,
     getInheritedSettingsForObject: getInhertiedSettingsForColumn,
     useRawSeries: true,
+    hidden,
     ...def,
   });
 }
@@ -49,8 +52,9 @@ import {
   isCoordinate,
   isCurrency,
   isDateWithoutTime,
-} from "metabase-lib/lib/types/utils/isa";
-import { getColumnKey } from "metabase-lib/lib/queries/utils/get-column-key";
+} from "metabase-lib/types/utils/isa";
+import { findColumnIndexForColumnSetting } from "metabase-lib/queries/utils/dataset";
+import { getColumnKey } from "metabase-lib/queries/utils/get-column-key";
 import { nestedSettings } from "./nested";
 
 export function getGlobalSettingsForColumn(column) {
@@ -181,7 +185,6 @@ export const DATE_COLUMN_SETTINGS = {
   date_style: {
     title: t`Date style`,
     widget: "select",
-    variant: "form-field",
     getDefault: ({ unit }) => {
       // Grab the first option's value. If there were no options (for
       // hour-of-day probably), use an empty format string instead.
@@ -205,7 +208,6 @@ export const DATE_COLUMN_SETTINGS = {
     title: t`Date separators`,
     widget: "radio",
     default: "/",
-    variant: "form-field",
     getProps: (column, settings) => {
       const style = /\//.test(settings["date_style"])
         ? settings["date_style"]
@@ -234,7 +236,6 @@ export const DATE_COLUMN_SETTINGS = {
   time_enabled: {
     title: t`Show the time`,
     widget: "radio",
-    variant: "form-field",
     isValid: ({ unit }, settings) => {
       const options = getTimeEnabledOptionsForUnit(unit);
       return !!_.findWhere(options, { value: settings["time_enabled"] });
@@ -251,7 +252,6 @@ export const DATE_COLUMN_SETTINGS = {
     title: t`Time style`,
     widget: "radio",
     default: "h:mm A",
-    variant: "form-field",
     getProps: (column, settings) => ({
       options: [
         timeStyleOption("h:mm A", t`12-hour clock`),
@@ -282,13 +282,12 @@ export const NUMBER_COLUMN_SETTINGS = {
   number_style: {
     title: t`Style`,
     widget: "select",
-    variant: "form-field",
     props: {
       options: [
-        { name: "Normal", value: "decimal" },
-        { name: "Percent", value: "percent" },
-        { name: "Scientific", value: "scientific" },
-        { name: "Currency", value: "currency" },
+        { name: t`Normal`, value: "decimal" },
+        { name: t`Percent`, value: "percent" },
+        { name: t`Scientific`, value: "scientific" },
+        { name: t`Currency`, value: "currency" },
       ],
     },
     getDefault: (column, settings) =>
@@ -301,7 +300,6 @@ export const NUMBER_COLUMN_SETTINGS = {
   currency: {
     title: t`Unit of currency`,
     widget: "select",
-    variant: "form-field",
     props: {
       // FIXME: rest of these options
       options: currency.map(([_, currency]) => ({
@@ -317,7 +315,6 @@ export const NUMBER_COLUMN_SETTINGS = {
   currency_style: {
     title: t`Currency label style`,
     widget: "radio",
-    variant: "form-field",
     getProps: (column, settings) => {
       const c = settings["currency"] || "USD";
       const symbol = getCurrencySymbol(c);
@@ -356,7 +353,6 @@ export const NUMBER_COLUMN_SETTINGS = {
   currency_in_header: {
     title: t`Where to display the unit of currency`,
     widget: "radio",
-    variant: "form-field",
     props: {
       options: [
         { name: t`In the column heading`, value: true },
@@ -373,7 +369,6 @@ export const NUMBER_COLUMN_SETTINGS = {
     // uses 1-2 character string to represent decimal and thousands separators
     title: t`Separator style`,
     widget: "select",
-    variant: "form-field",
     props: {
       options: [
         { name: "100,000.00", value: ".," },
@@ -388,7 +383,6 @@ export const NUMBER_COLUMN_SETTINGS = {
   decimals: {
     title: t`Minimum number of decimal places`,
     widget: "number",
-    variant: "form-field",
     props: {
       placeholder: "1",
     },
@@ -396,7 +390,6 @@ export const NUMBER_COLUMN_SETTINGS = {
   scale: {
     title: t`Multiply by a number`,
     widget: "number",
-    variant: "form-field",
     props: {
       placeholder: "1",
     },
@@ -404,7 +397,6 @@ export const NUMBER_COLUMN_SETTINGS = {
   prefix: {
     title: t`Add a prefix`,
     widget: "input",
-    variant: "form-field",
     props: {
       placeholder: "$",
     },
@@ -412,7 +404,6 @@ export const NUMBER_COLUMN_SETTINGS = {
   suffix: {
     title: t`Add a suffix`,
     widget: "input",
-    variant: "form-field",
     props: {
       placeholder: t`dollars`,
     },
@@ -474,7 +465,7 @@ const COMMON_COLUMN_SETTINGS = {
   },
 };
 
-export function getSettingDefintionsForColumn(series, column) {
+export function getSettingDefinitionsForColumn(series, column) {
   const { visualization } = getVisualizationRaw(series);
   const extraColumnSettings =
     typeof visualization.columnSettings === "function"
@@ -500,3 +491,90 @@ export function getSettingDefintionsForColumn(series, column) {
     };
   }
 }
+
+export function isPivoted(series, settings) {
+  const [{ data }] = series;
+
+  if (!settings["table.pivot"]) {
+    return false;
+  }
+
+  const pivotIndex = _.findIndex(
+    data.cols,
+    col => col.name === settings["table.pivot_column"],
+  );
+  const cellIndex = _.findIndex(
+    data.cols,
+    col => col.name === settings["table.cell_column"],
+  );
+  const normalIndex = _.findIndex(
+    data.cols,
+    (col, index) => index !== pivotIndex && index !== cellIndex,
+  );
+
+  return pivotIndex >= 0 && cellIndex >= 0 && normalIndex >= 0;
+}
+
+export const getTitleForColumn = (column, series, settings) => {
+  const pivoted = isPivoted(series, settings);
+  if (pivoted) {
+    return formatColumn(column) || t`Unset`;
+  } else {
+    return (
+      settings.column(column)["_column_title_full"] || formatColumn(column)
+    );
+  }
+};
+
+export const tableColumnSettings = {
+  // NOTE: table column settings may be identified by fieldRef (possible not normalized) or column name:
+  //   { name: "COLUMN_NAME", enabled: true }
+  //   { fieldRef: ["field", 2, {"source-field": 1}], enabled: true }
+  "table.columns": {
+    section: t`Columns`,
+    title: t`Columns`,
+    widget: ChartSettingOrderedColumns,
+    getHidden: (series, vizSettings) => vizSettings["table.pivot"],
+    isValid: ([{ card, data }]) =>
+      // If "table.columns" happened to be an empty array,
+      // it will be treated as "all columns are hidden",
+      // This check ensures it's not empty,
+      // otherwise it will be overwritten by `getDefault` below
+      card.visualization_settings["table.columns"].length !== 0 &&
+      _.all(
+        card.visualization_settings["table.columns"],
+        columnSetting =>
+          findColumnIndexForColumnSetting(data.cols, columnSetting) >= 0,
+      ),
+    getDefault: ([
+      {
+        data: { cols },
+      },
+    ]) =>
+      cols.map(col => ({
+        name: col.name,
+        fieldRef: col.field_ref,
+        enabled: col.visibility_type !== "details-only",
+      })),
+    getProps: (series, settings) => {
+      const [
+        {
+          data: { cols },
+        },
+      ] = series;
+
+      return {
+        columns: cols,
+        getColumnName: columnSetting => {
+          const columnIndex = findColumnIndexForColumnSetting(
+            cols,
+            columnSetting,
+          );
+          if (columnIndex >= 0) {
+            return getTitleForColumn(cols[columnIndex], series, settings);
+          }
+        },
+      };
+    },
+  },
+};

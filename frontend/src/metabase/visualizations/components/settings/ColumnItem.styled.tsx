@@ -2,6 +2,8 @@ import styled from "@emotion/styled";
 import { color } from "metabase/lib/colors";
 
 import Icon from "metabase/components/Icon";
+import Button from "metabase/core/components/Button";
+import ChartSettingColorPicker from "./ChartSettingColorPicker";
 
 interface ColumnItemRootProps {
   isDraggable: boolean;
@@ -61,16 +63,20 @@ export const ColumnItemContainer = styled.div`
   align-items: center;
 `;
 
-export const ColumnItemIcon = styled(Icon)`
+export const ColumnItemIcon = styled(Button)`
   margin-left: 1rem;
-  cursor: pointer;
-  color: ${color("text-dark")};
+  padding: 0;
 
   &:hover {
-    color: ${color("text-medium")};
+    background-color: unset;
   }
 `;
 
 export const ColumnItemDragHandle = styled(Icon)`
   color: ${color("text-medium")};
+`;
+
+export const ColumnItemColorPicker = styled(ChartSettingColorPicker)`
+  margin-bottom: 0;
+  margin-left: 0.25rem;
 `;

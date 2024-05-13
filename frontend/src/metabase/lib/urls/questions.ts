@@ -4,7 +4,7 @@ import { serializeCardForUrl } from "metabase/lib/card";
 import MetabaseSettings from "metabase/lib/settings";
 
 import { Card as BaseCard } from "metabase-types/types/Card";
-import Question, { QuestionCreatorOpts } from "metabase-lib/lib/Question";
+import Question, { QuestionCreatorOpts } from "metabase-lib/Question";
 
 import { appendSlug, extractQueryParams } from "./utils";
 
@@ -18,21 +18,15 @@ type Card = Partial<BaseCard> & {
 
 export const newQuestionFlow = () => "/question/new";
 
-type QuestionUrlBuilderParams = {
+export type QuestionUrlBuilderParams = {
   hash?: Card | string;
   query?: Record<string, unknown> | string;
   objectId?: number | string;
-  isModelDetail?: boolean;
 };
 
 export function question(
   card: Card | null,
-  {
-    hash = "",
-    query = "",
-    objectId,
-    isModelDetail = false,
-  }: QuestionUrlBuilderParams = {},
+  { hash = "", query = "", objectId }: QuestionUrlBuilderParams = {},
 ) {
   if (hash && typeof hash === "object") {
     hash = serializeCardForUrl(hash);
@@ -115,10 +109,6 @@ export function newQuestion({
   } else {
     return url;
   }
-}
-
-export function dataset(...args: Parameters<typeof question>) {
-  return question(...args);
 }
 
 export function publicQuestion(

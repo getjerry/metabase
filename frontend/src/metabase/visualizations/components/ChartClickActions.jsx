@@ -7,7 +7,7 @@ import _ from "underscore";
 import cx from "classnames";
 import { Link } from "react-router";
 import Icon from "metabase/components/Icon";
-import Tooltip from "metabase/components/Tooltip";
+import Tooltip from "metabase/core/components/Tooltip";
 
 import "./ChartClickActions.css";
 
@@ -65,6 +65,9 @@ const SECTIONS = {
   },
   auto: {
     icon: "bolt",
+  },
+  info: {
+    icon: "info",
   },
 };
 // give them indexes so we can sort the sections by the above ordering (JS objects are ordered)
@@ -276,7 +279,7 @@ class ChartClickActions extends Component {
 
                   <div
                     className={cx(
-                      "flex",
+                      "",
                       {
                         "justify-end": SECTIONS[key].icon === "gear",
                       },
@@ -313,10 +316,13 @@ export const ChartClickAction = ({ action, isLastItem, handleClickAction }) => {
   // This is where all the different action button styles get applied.
   // Some of them have bespoke classes defined in ChartClickActions.css,
   // like for cases when we needed to really dial in the spacing.
-  const className = cx("cursor-pointer no-decoration", {
+  const className = cx("no-decoration", {
+    "cursor-pointer": action.buttonType !== "info",
     sort: action.buttonType === "sort",
     "formatting-button": action.buttonType === "formatting",
     "horizontal-button": action.buttonType === "horizontal",
+    "setting-button p1 flex flex-auto align-center bg-brand-hover text-dark text-white-hover":
+      action.buttonType === "setting",
   });
   if (action.url) {
     return (
@@ -364,6 +370,25 @@ export const ChartClickAction = ({ action, isLastItem, handleClickAction }) => {
             />
           )}
         </ClickActionButton>
+      </Tooltip>
+    );
+  } else if (action.buttonType === "setting") {
+    return (
+      <Tooltip tooltip={action.tooltip} maxWidth={400}>
+        <div
+          className={cx(className, "flex-row align-center")}
+          type={action.buttonType}
+          onClick={() => handleClickAction(action)}
+        >
+          {action.icon && (
+            <Icon
+              className="flex mr1 text-brand text-white-hover"
+              size={action.buttonType === "formatting" ? 16 : 12}
+              name={action.icon}
+            />
+          )}
+          {action.title}
+        </div>
       </Tooltip>
     );
   } else {

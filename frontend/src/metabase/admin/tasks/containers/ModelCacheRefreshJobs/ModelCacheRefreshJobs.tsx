@@ -7,7 +7,7 @@ import Link from "metabase/core/components/Link";
 import DateTime from "metabase/components/DateTime";
 import EmptyState from "metabase/components/EmptyState";
 import Icon from "metabase/components/Icon";
-import Tooltip from "metabase/components/Tooltip";
+import Tooltip from "metabase/core/components/Tooltip";
 import PaginationControls from "metabase/components/PaginationControls";
 
 import PersistedModels from "metabase/entities/persisted-models";
@@ -20,7 +20,7 @@ import { ModelCacheRefreshStatus } from "metabase-types/api";
 
 import NoResults from "assets/img/no_results.svg";
 
-import { checkCanRefreshModelCache } from "metabase-lib/lib/metadata/utils/models";
+import { checkCanRefreshModelCache } from "metabase-lib/metadata/utils/models";
 import {
   ErrorBox,
   IconButtonContainer,
@@ -34,7 +34,7 @@ type JobTableItemProps = {
 };
 
 function JobTableItem({ job, onRefresh }: JobTableItemProps) {
-  const modelUrl = Urls.dataset({ id: job.card_id, name: job.card_name });
+  const modelUrl = Urls.model({ id: job.card_id, name: job.card_name });
   const collectionUrl = Urls.collection({
     id: job.collection_id,
     name: job.collection_name,

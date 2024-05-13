@@ -8,6 +8,7 @@ import * as Urls from "metabase/lib/urls";
 import Utils from "metabase/lib/utils";
 import { createThunkAction } from "metabase/lib/redux";
 
+import { loadMetadataForCard } from "metabase/questions/actions";
 import { getCardAfterVisualizationClick } from "metabase/visualizations/lib/utils";
 
 import { openUrl } from "metabase/redux/app";
@@ -18,10 +19,10 @@ import { fetchAlertsForQuestion } from "metabase/alert/alert";
 import {
   cardIsEquivalent,
   cardQueryIsEquivalent,
-} from "metabase-lib/lib/queries/utils/card";
-import Query from "metabase-lib/lib/queries/Query";
+} from "metabase-lib/queries/utils/card";
+import Query from "metabase-lib/queries/Query";
 
-import { isAdHocModelQuestion } from "metabase-lib/lib/metadata/utils/models";
+import { isAdHocModelQuestion } from "metabase-lib/metadata/utils/models";
 import { trackNewQuestionSaved } from "../../analytics";
 import {
   getCard,
@@ -39,7 +40,6 @@ import { clearQueryResult, runQuestionQuery } from "../querying";
 import { onCloseSidebars } from "../ui";
 
 import { updateQuestion } from "./updateQuestion";
-import { loadMetadataForCard } from "./metadata";
 import { getQuestionWithDefaultVisualizationSettings } from "./utils";
 
 export const RESET_QB = "metabase/qb/RESET_QB";
@@ -182,9 +182,10 @@ export const apiCreateQuestion = question => {
       : question;
 
     const resultsMetadata = getResultsMetadata(getState());
+    const isResultDirty = getIsResultDirty(getState());
     const questionToCreate = questionWithVizSettings
       .setQuery(question.query().clean())
-      .setResultsMetadata(resultsMetadata);
+      .setResultsMetadata(isResultDirty ? null : resultsMetadata);
     const createdQuestion = await reduxCreateQuestion(
       questionToCreate,
       dispatch,
@@ -212,6 +213,9 @@ export const apiCreateQuestion = question => {
     const card = createdQuestion.lockDisplay().card();
 
     dispatch.action(API_CREATE_QUESTION, card);
+
+    const metadataOptions = { reload: createdQuestion.isDataset() };
+    await dispatch(loadMetadataForCard(card, metadataOptions));
   };
 };
 
@@ -221,7 +225,12 @@ export const apiUpdateQuestion = (question, { rerunQuery } = {}) => {
     const originalQuestion = getOriginalQuestion(getState());
     question = question || getQuestion(getState());
 
-    rerunQuery = rerunQuery || getIsResultDirty(getState());
+    const resultsMetadata = getResultsMetadata(getState());
+    const isResultDirty = getIsResultDirty(getState());
+
+    if (question.isStructured()) {
+      rerunQuery = rerunQuery ?? isResultDirty;
+    }
 
     // Needed for persisting visualization columns for pulses/alerts, see #6749
     const series = getTransformedSeries(getState());
@@ -229,13 +238,12 @@ export const apiUpdateQuestion = (question, { rerunQuery } = {}) => {
       ? getQuestionWithDefaultVisualizationSettings(question, series)
       : question;
 
-    const resultsMetadata = getResultsMetadata(getState());
     const questionToUpdate = questionWithVizSettings
       // Before we clean the query, we make sure question is not treated as a dataset
       // as calling table() method down the line would bring unwanted consequences
       // such as dropping joins (as joins are treated differently between pure questions and datasets)
       .setQuery(question.setDataset(false).query().clean())
-      .setResultsMetadata(resultsMetadata);
+      .setResultsMetadata(isResultDirty ? null : resultsMetadata);
 
     // When viewing a dataset, its dataset_query is swapped with a clean query using the dataset as a source table
     // (it's necessary for datasets to behave like tables opened in simple mode)
@@ -260,9 +268,10 @@ export const apiUpdateQuestion = (question, { rerunQuery } = {}) => {
 
     dispatch.action(API_UPDATE_QUESTION, updatedQuestion.card());
 
+    const metadataOptions = { reload: question.isDataset() };
+    await dispatch(loadMetadataForCard(question.card(), metadataOptions));
+
     if (rerunQuery) {
-      const metadataOptions = { reload: question.isDataset() };
-      await dispatch(loadMetadataForCard(question.card(), metadataOptions));
       dispatch(runQuestionQuery());
     }
   };

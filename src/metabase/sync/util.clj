@@ -1,31 +1,32 @@
 (ns metabase.sync.util
   "Utility functions and macros to abstract away some common patterns and operations across the sync processes, such
   as logging start/end messages."
-  (:require [buddy.core.hash :as buddy-hash]
-            [clojure.math.numeric-tower :as math]
-            [clojure.string :as str]
-            [clojure.tools.logging :as log]
-            [java-time :as t]
-            [medley.core :as m]
-            [metabase.driver :as driver]
-            [metabase.driver.util :as driver.u]
-            [metabase.events :as events]
-            [metabase.models.database :refer [Database]]
-            [metabase.models.field :refer [Field]]
-            [metabase.models.interface :as mi]
-            [metabase.models.table :refer [Table]]
-            [metabase.models.task-history :refer [TaskHistory]]
-            [metabase.query-processor.interface :as qp.i]
-            [metabase.sync.interface :as i]
-            [metabase.util :as u]
-            [metabase.util.date-2 :as u.date]
-            [metabase.util.i18n :refer [trs]]
-            [metabase.util.schema :as su]
-            [ring.util.codec :as codec]
-            [schema.core :as s]
-            [taoensso.nippy :as nippy]
-            [toucan.db :as db])
-  (:import java.time.temporal.Temporal))
+  (:require
+   [clojure.math.numeric-tower :as math]
+   [clojure.string :as str]
+   [java-time :as t]
+   [medley.core :as m]
+   [metabase.driver :as driver]
+   [metabase.driver.util :as driver.u]
+   [metabase.events :as events]
+   [metabase.models.database :refer [Database]]
+   [metabase.models.field :refer [Field]]
+   [metabase.models.interface :as mi]
+   [metabase.models.table :refer [Table]]
+   [metabase.models.task-history :refer [TaskHistory]]
+   [metabase.query-processor.interface :as qp.i]
+   [metabase.sync.interface :as i]
+   [metabase.util :as u]
+   [metabase.util.date-2 :as u.date]
+   [metabase.util.i18n :refer [trs]]
+   [metabase.util.log :as log]
+   [metabase.util.schema :as su]
+   [schema.core :as s]
+   [toucan.db :as db])
+  (:import
+   (java.time.temporal Temporal)))
+
+(set! *warn-on-reflection* true)
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                          SYNC OPERATION "MIDDLEWARE"                                           |
@@ -314,16 +315,6 @@
 (defmethod name-for-logging :default [{field-name :name}]
   (trs "Field ''{0}''" field-name))
 
-(defn calculate-hash
-  "Calculate a cryptographic hash on `clj-data` and return that hash as a string"
-  [clj-data]
-  (->> clj-data
-       ;; Serialize the sorted list to bytes that can be hashed
-       nippy/fast-freeze
-       buddy-hash/md5
-       ;; Convert the hash bytes to a string for storage/comparison with the hash in the database
-       codec/base64-encode))
-
 (s/defn calculate-duration-str :- s/Str
   "Given two datetimes, caculate the time between them, return the result as a string"
   [begin-time :- Temporal, end-time :- Temporal]
@@ -388,8 +379,32 @@
                          (apply sync-fn database args)
                          (catch Throwable e
                            (if *log-exceptions-and-continue?*
-                             {:throwable e}
+                             (do
+                               (log/warn e (trs "Error running step ''{0}'' for {1}" step-name (name-for-logging database)))
+                               {:throwable e})
                              (throw (ex-info (format "Error in sync step %s: %s" step-name (ex-message e)) {} e)))))))
+        end-time   (t/zoned-date-time)]
+    [step-name (assoc results
+                      :start-time start-time
+                      :end-time end-time
+                      :log-summary-fn log-summary-fn)]))
+
+(s/defn run-step-with-metadata-filter-dbname :- StepNameWithMetadata
+  "Runs `step` on `database` returning metadata from the run"
+  [database :- i/DatabaseInstance
+   dbname :- s/Str
+   {:keys [step-name sync-fn log-summary-fn] :as _step} :- StepDefinition]
+  (let [start-time (t/zoned-date-time)
+        results    (with-start-and-finish-debug-logging (trs "step ''{0}'' for {1}"
+                                                             step-name
+                                                             (name-for-logging database))
+                                                        (fn [& args]
+                                                          (try
+                                                            (apply sync-fn database dbname args)
+                                                            (catch Throwable e
+                                                              (if *log-exceptions-and-continue?*
+                                                                {:throwable e}
+                                                                (throw (ex-info (format "Error in sync step %s: %s" step-name (ex-message e)) {} e)))))))
         end-time   (t/zoned-date-time)]
     [step-name (assoc results
                       :start-time start-time
@@ -491,6 +506,28 @@
         step-metadata (loop [[step-defn & rest-defns] sync-steps
                              result                   []]
                         (let [[step-name r] (run-step-with-metadata database step-defn)
+                              new-result    (conj result [step-name r])]
+                          (cond (abandon-sync? r) new-result
+                                (not (seq rest-defns)) new-result
+                                :else (recur rest-defns new-result))))
+        end-time      (t/zoned-date-time)
+        sync-metadata {:start-time start-time
+                       :end-time   end-time
+                       :steps      step-metadata}]
+    (store-sync-summary! operation database sync-metadata)
+    (log-sync-summary operation database sync-metadata)
+    sync-metadata))
+
+(s/defn run-sync-operation-jerry
+  "Run `sync-steps` and log a summary message(jerry version)"
+  [operation :- s/Str
+   database :- i/DatabaseInstance
+   dbname :- s/Str
+   sync-steps :- [StepDefinition]]
+  (let [start-time    (t/zoned-date-time)
+        step-metadata (loop [[step-defn & rest-defns] sync-steps
+                             result                   []]
+                        (let [[step-name r] (run-step-with-metadata-filter-dbname database dbname step-defn)
                               new-result    (conj result [step-name r])]
                           (cond (abandon-sync? r) new-result
                                 (not (seq rest-defns)) new-result

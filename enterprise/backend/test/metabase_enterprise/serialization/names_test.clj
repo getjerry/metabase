@@ -1,11 +1,12 @@
 (ns metabase-enterprise.serialization.names-test
-  (:require [clojure.test :refer :all]
-            [metabase-enterprise.serialization.names :as names]
-            [metabase-enterprise.serialization.test-util :as ts]
-            [metabase.models :refer [Card Collection Dashboard Database Field Metric NativeQuerySnippet Segment Table]]
-            [metabase.test :as mt]
-            [metabase.util :as u]
-            [toucan.db :as db]))
+  (:require
+   [clojure.test :refer :all]
+   [metabase-enterprise.serialization.names :as names]
+   [metabase-enterprise.serialization.test-util :as ts]
+   [metabase.models :refer [Card Collection Dashboard Database Field Metric NativeQuerySnippet Segment Table]]
+   [metabase.test :as mt]
+   [metabase.util :as u]
+   [toucan.db :as db]))
 
 (deftest safe-name-test
   (are [s expected] (= (names/safe-name {:name s}) expected)
@@ -95,3 +96,12 @@
                              "/databases/Fingerprint test-data copy/schemas/public/tables/users/fields/id"} fq-name))
             (is (map? ctx))
             (is (some? (:table ctx)))))))))
+
+(deftest name-for-logging-test
+  (testing "serialization logging name generation from Toucan 2 records (#29322)"
+    (mt/with-temp* [Collection [{collection-id :id} {:name         "A Collection"}]
+                    Card       [{card-id :id}       {:name         "A Card"
+                                                     :collection_id collection-id}]]
+      (are [model s id] (= (format s id) (names/name-for-logging (db/select-one model :id id)))
+        'Collection ":metabase.models.collection/Collection \"A Collection\" (ID %d)" collection-id
+        'Card       ":metabase.models.card/Card \"A Card\" (ID %d)" card-id))))

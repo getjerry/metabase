@@ -2,12 +2,15 @@
   "Namesapce for defining settings used by the SSO backends. This is separate as both the functions needed to support
   the SSO backends and the generic routing code used to determine which SSO backend to use need this
   information. Separating out this information creates a better dependency graph and avoids circular dependencies."
-  (:require [clojure.tools.logging :as log]
-            [metabase.models.setting :as setting :refer [defsetting]]
-            [metabase.util.i18n :refer [deferred-tru trs tru]]
-            [metabase.util.schema :as su]
-            [saml20-clj.core :as saml]
-            [schema.core :as s]))
+  (:require
+   [metabase.models.setting :as setting :refer [defsetting]]
+   [metabase.util.i18n :refer [deferred-tru trs tru]]
+   [metabase.util.log :as log]
+   [metabase.util.schema :as su]
+   [saml20-clj.core :as saml]
+   [schema.core :as s]))
+
+(set! *warn-on-reflection* true)
 
 (def ^:private GroupMappings
   (s/maybe {su/KeywordOrString [su/IntGreaterThanZero]}))
@@ -83,6 +86,7 @@ on your IdP, this usually looks something like http://www.example.com/141xkex604
   ;; Should be in the form: {"groupName": [1, 2, 3]} where keys are SAML groups and values are lists of MB groups IDs
   (deferred-tru "JSON containing SAML to Metabase group mappings.")
   :type    :json
+  :cache?  false
   :default {}
   :setter (comp (partial setting/set-value-of-type! :json :saml-group-mappings) validate-group-mappings))
 
@@ -137,6 +141,7 @@ on your IdP, this usually looks something like http://www.example.com/141xkex604
   ;; Should be in the form: {"groupName": [1, 2, 3]} where keys are JWT groups and values are lists of MB groups IDs
   (deferred-tru "JSON containing JWT to Metabase group mappings.")
   :type    :json
+  :cache?  false
   :default {}
   :setter  (comp (partial setting/set-value-of-type! :json :jwt-group-mappings) validate-group-mappings))
 

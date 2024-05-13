@@ -5,8 +5,8 @@ import {
   isDateParameter,
   isNumberParameter,
   isStringParameter,
-} from "metabase-lib/lib/parameters/utils/parameter-type";
-import { isNative } from "metabase-lib/lib/queries/utils";
+} from "metabase-lib/parameters/utils/parameter-type";
+import { isNative } from "metabase-lib/queries/utils";
 
 export function syncParametersAndEmbeddingParams(before, after) {
   if (after.parameters && before.embedding_params) {
@@ -55,7 +55,15 @@ export function expandInlineCard(card) {
 }
 
 export function isVirtualDashCard(dashcard) {
-  return _.isObject(dashcard.visualization_settings.virtual_card);
+  return _.isObject(dashcard?.visualization_settings?.virtual_card);
+}
+
+export function getVirtualCardType(dashcard) {
+  return dashcard?.visualization_settings?.virtual_card?.display;
+}
+
+export function isLinkDashCard(dashcard) {
+  return getVirtualCardType(dashcard) === "link";
 }
 
 export function isNativeDashCard(dashcard) {

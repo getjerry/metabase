@@ -14,7 +14,7 @@ import { getGlobalSettingsForColumn } from "metabase/visualizations/lib/settings
 import { currency } from "cljs/metabase.shared.util.currency";
 
 import * as MetabaseAnalytics from "metabase/lib/analytics";
-import { isTypeFK, isCurrency } from "metabase-lib/lib/types/utils/isa";
+import { isTypeFK, isCurrency } from "metabase-lib/types/utils/isa";
 import { getFieldRawName } from "../../../utils";
 import { ColumnItemInput } from "./ColumnItem.styled";
 
@@ -59,7 +59,7 @@ class Column extends Component {
               <ColumnItemInput
                 variant="primary"
                 style={{ minWidth: 420 }}
-                className="AdminInput TableEditor-field-name float-left inline-block rounded text-bold"
+                className="float-left inline-block"
                 type="text"
                 value={this.props.field.display_name || ""}
                 onBlurChange={this.handleChangeName}
@@ -93,11 +93,12 @@ class Column extends Component {
             <div className="MetadataTable-title flex flex-column flex-full mt1 mr1">
               <ColumnItemInput
                 variant="secondary"
-                className="AdminInput TableEditor-field-description rounded"
+                className="TableEditor-field-description rounded"
                 type="text"
                 value={this.props.field.description || ""}
                 onBlurChange={this.handleChangeDescription}
                 placeholder={t`No column description yet`}
+                fullWidth
               />
             </div>
           </div>

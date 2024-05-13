@@ -5,7 +5,6 @@ import { PLUGIN_FORM_WIDGETS } from "metabase/plugins";
 
 import FormInfoWidget from "./widgets/FormInfoWidget";
 import FormInputWidget from "./widgets/FormInputWidget";
-import FormDateWidget from "./widgets/FormDateWidget";
 import FormEmailWidget from "./widgets/FormEmailWidget";
 import FormTextAreaWidget from "./widgets/FormTextAreaWidget";
 import FormPasswordWidget from "./widgets/FormPasswordWidget";
@@ -20,12 +19,10 @@ import FormCollectionWidget from "./widgets/FormCollectionWidget";
 import FormSnippetCollectionWidget from "./widgets/FormSnippetCollectionWidget";
 import FormHiddenWidget from "./widgets/FormHiddenWidget";
 import FormTextFileWidget from "./widgets/FormTextFileWidget";
-import FormModelWidget from "./widgets/FormModelWidget";
 
 const WIDGETS = {
   info: FormInfoWidget,
   input: FormInputWidget,
-  date: FormDateWidget,
   email: FormEmailWidget,
   text: FormTextAreaWidget,
   checkbox: FormCheckBoxWidget,
@@ -40,7 +37,6 @@ const WIDGETS = {
   snippetCollection: FormSnippetCollectionWidget,
   hidden: FormHiddenWidget,
   textFile: FormTextFileWidget,
-  model: FormModelWidget,
 };
 
 export function getWidgetComponent(formField) {
@@ -52,6 +48,9 @@ export function getWidgetComponent(formField) {
   return formField.type || FormInputWidget;
 }
 
+/**
+ * @deprecated
+ */
 const FormWidget = forwardRef(function FormWidget(
   { field, formField, ...props },
   ref,

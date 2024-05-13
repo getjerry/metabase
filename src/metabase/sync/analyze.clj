@@ -3,16 +3,17 @@
    This is significantly more expensive than the basic sync-metadata step, and involves things
    like running MBQL queries and fetching values to do things like determine Table row counts
    and infer field semantic types."
-  (:require [clojure.tools.logging :as log]
-            [metabase.models.field :refer [Field]]
-            [metabase.sync.analyze.classify :as classify]
-            [metabase.sync.analyze.fingerprint :as fingerprint]
-            [metabase.sync.interface :as i]
-            [metabase.sync.util :as sync-util]
-            [metabase.util :as u]
-            [metabase.util.i18n :refer [trs]]
-            [schema.core :as s]
-            [toucan.db :as db]))
+  (:require
+   [metabase.models.field :refer [Field]]
+   [metabase.sync.analyze.classify :as classify]
+   [metabase.sync.analyze.fingerprint :as fingerprint]
+   [metabase.sync.interface :as i]
+   [metabase.sync.util :as sync-util]
+   [metabase.util :as u]
+   [metabase.util.i18n :refer [trs]]
+   [metabase.util.log :as log]
+   [schema.core :as s]
+   [toucan.db :as db]))
 
 ;; How does analysis decide which Fields should get analyzed?
 ;;
@@ -99,7 +100,7 @@
   (trs "Total number of tables classified {0}, {1} updated"
        total-tables tables-classified))
 
-(defn ^:private make-analyze-steps [tables log-fn]
+(defn- make-analyze-steps [tables log-fn]
   [(sync-util/create-sync-step "fingerprint-fields"
                                #(fingerprint/fingerprint-fields-for-db! % tables log-fn)
                                fingerprint-fields-summary)
@@ -115,17 +116,20 @@
   driver supports, but includes things like cardinality testing and table row counting. This also updates the
   `:last_analyzed` value for each affected Field."
   [database :- i/DatabaseInstance]
-  (sync-util/sync-operation :analyze database (format "Analyze data for %s" (sync-util/name-for-logging database))
+  (if (not= "clickhouse" (name (:engine database)))
+    (sync-util/sync-operation :analyze database (format "Analyze data for %s" (sync-util/name-for-logging database))
     (let [tables (sync-util/db->sync-tables database)]
       (sync-util/with-emoji-progress-bar [emoji-progress-bar (inc (* 3 (count tables)))]
         (u/prog1 (sync-util/run-sync-operation "analyze" database (make-analyze-steps tables (maybe-log-progress emoji-progress-bar)))
-          (update-fields-last-analyzed-for-db! database tables))))))
+          (update-fields-last-analyzed-for-db! database tables)))))
+    (log/info (format "jerry data team stop analyze-db for %s trigger" (sync-util/name-for-logging database)))))
 
 (s/defn refingerprint-db!
   "Refingerprint a subset of tables in a given `database`. This will re-fingerprint tables up to a threshold amount of
   [[fingerprint/max-refingerprint-field-count]]."
   [database :- i/DatabaseInstance]
-  (sync-util/sync-operation :refingerprint database (format "Refingerprinting tables for %s" (sync-util/name-for-logging database))
+  (if (not= "clickhouse" (name (:engine database)))
+    (sync-util/sync-operation :refingerprint database (format "Refingerprinting tables for %s" (sync-util/name-for-logging database))
     (let [tables (sync-util/db->sync-tables database)
           log-fn (fn [step table]
                    (log/info (u/format-color 'blue "%s Analyzed %s" step (sync-util/name-for-logging table))))]
@@ -133,4 +137,5 @@
                                     database
                                     [(sync-util/create-sync-step "refingerprinting fields"
                                                                  #(fingerprint/refingerprint-fields-for-db! % tables log-fn)
-                                                                 fingerprint-fields-summary)]))))
+                                                                 fingerprint-fields-summary)])))
+      (log/info (format "jerry data team stop refingerprint-db for %s trigger" (sync-util/name-for-logging database)))))

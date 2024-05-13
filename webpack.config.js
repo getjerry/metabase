@@ -1,5 +1,6 @@
 /* eslint-env node */
 /* eslint-disable import/no-commonjs */
+/* eslint-disable import/order */
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 
 const webpack = require("webpack");
@@ -21,9 +22,11 @@ const LIB_SRC_PATH = __dirname + "/frontend/src/metabase-lib";
 const ENTERPRISE_SRC_PATH =
   __dirname + "/enterprise/frontend/src/metabase-enterprise";
 const TYPES_SRC_PATH = __dirname + "/frontend/src/metabase-types";
-const CLJS_SRC_PATH = __dirname + "/frontend/src/cljs";
+const CLJS_SRC_PATH = __dirname + "/frontend/src/cljs_release";
+const CLJS_SRC_PATH_DEV = __dirname + "/frontend/src/cljs";
 const TEST_SUPPORT_PATH = __dirname + "/frontend/test/__support__";
 const BUILD_PATH = __dirname + "/resources/frontend_client";
+const E2E_PATH = __dirname + "/e2e";
 
 // default WEBPACK_BUNDLE to development
 const WEBPACK_BUNDLE = process.env.WEBPACK_BUNDLE || "development";
@@ -32,6 +35,9 @@ const useFilesystemCache = process.env.FS_CACHE === "true";
 const shouldUseEslint =
   process.env.WEBPACK_BUNDLE !== "production" &&
   process.env.USE_ESLINT === "true";
+
+// id of the dashboard to be used as homepage.
+const DASHBOARD_ID = process.env["DASHBOARD_ID"] || 323;
 
 // Babel:
 const BABEL_CONFIG = {
@@ -108,6 +114,12 @@ const config = (module.exports = {
           { loader: "postcss-loader" },
         ],
       },
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        enforce: "pre",
+        use: ["source-map-loader"],
+      },
     ],
   },
   resolve: {
@@ -129,8 +141,9 @@ const config = (module.exports = {
       "metabase-enterprise": ENTERPRISE_SRC_PATH,
       "metabase-types": TYPES_SRC_PATH,
       "metabase-dev": `${SRC_PATH}/dev${devMode ? "" : "-noop"}.js`,
-      cljs: CLJS_SRC_PATH,
+      cljs: devMode ? CLJS_SRC_PATH_DEV : CLJS_SRC_PATH,
       __support__: TEST_SUPPORT_PATH,
+      e2e: E2E_PATH,
       style: SRC_PATH + "/css/core/index",
       ace: __dirname + "/node_modules/ace-builds/src-min-noconflict",
       // NOTE @kdoh - 7/24/18
@@ -141,6 +154,10 @@ const config = (module.exports = {
       "ee-plugins":
         process.env.MB_EDITION === "ee"
           ? ENTERPRISE_SRC_PATH + "/plugins"
+          : SRC_PATH + "/lib/noop",
+      "ee-overrides":
+        process.env.MB_EDITION === "ee"
+          ? ENTERPRISE_SRC_PATH + "/overrides"
           : SRC_PATH + "/lib/noop",
     },
   },
@@ -212,15 +229,17 @@ const config = (module.exports = {
     new webpack.EnvironmentPlugin({
       WEBPACK_BUNDLE: "development",
     }),
+    // https://github.com/remarkjs/remark/discussions/903
+    new webpack.ProvidePlugin({ process: "process/browser.js" }),
   ],
 });
 
 if (WEBPACK_BUNDLE === "hot") {
-
-  const localIpAddress = getLocalIpAddress("IPv4") || getLocalIpAddress("IPv6") || "0.0.0.0";
+  const localIpAddress =
+    getLocalIpAddress("IPv4") || getLocalIpAddress("IPv6") || "0.0.0.0";
 
   const webpackPort = 8080;
-  const webpackHost = `http://${localIpAddress}:${webpackPort}`
+  const webpackHost = `http://${localIpAddress}:${webpackPort}`;
   config.target = "web";
   // suffixing with ".hot" allows us to run both `yarn run build-hot` and `yarn run test` or `yarn run test-watch` simultaneously
   config.output.filename = "[name].hot.bundle.js?[contenthash]";
@@ -248,8 +267,8 @@ if (WEBPACK_BUNDLE === "hot") {
     allowedHosts: "auto",
     hot: true,
     client: {
-      progress: true,
-      overlay: false
+      progress: false,
+      overlay: false,
     },
     headers: {
       "Access-Control-Allow-Origin": "*",
@@ -302,7 +321,7 @@ if (WEBPACK_BUNDLE !== "production") {
   // by default enable "cheap" source maps for fast re-build speed
   // with BETTER_SOURCE_MAPS we switch to sourcemaps that work with breakpoints and makes stacktraces readable
   config.devtool = process.env.BETTER_SOURCE_MAPS
-    ? "inline-source-map"
+    ? "eval-source-map"
     : "cheap-module-source-map";
 
   // helps with source maps
@@ -316,6 +335,13 @@ if (WEBPACK_BUNDLE !== "production") {
     }),
   );
 } else {
+  // Don't bother with ESLint for CI/production (we catch linting errors with another CI run)
+  config.module.rules = config.module.rules.filter(rule => {
+    return Array.isArray(rule.use)
+      ? rule.use[0].loader != "eslint-loader"
+      : true;
+  });
+
   config.plugins.push(
     new TerserPlugin({ parallel: true, test: /\.(tsx?|jsx?)($|\?)/i }),
   );
@@ -326,11 +352,14 @@ if (WEBPACK_BUNDLE !== "production") {
 function getLocalIpAddress(ipFamily) {
   const networkInterfaces = os.networkInterfaces();
   const interfaces = Object.keys(networkInterfaces)
+    .sort()
     .map(iface => networkInterfaces[iface])
     .reduce((interfaces, iface) => interfaces.concat(iface));
 
-  const externalInterfaces = interfaces.filter(iface => !iface.internal)
+  const externalInterfaces = interfaces.filter(iface => !iface.internal);
 
-  const { address } = externalInterfaces.filter(({ family }) => family === ipFamily).shift();
+  const { address } = externalInterfaces
+    .filter(({ family }) => family === ipFamily)
+    .shift();
   return address;
 }

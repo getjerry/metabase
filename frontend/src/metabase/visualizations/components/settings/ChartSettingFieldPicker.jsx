@@ -2,11 +2,14 @@
 import React from "react";
 import { t } from "ttag";
 import _ from "underscore";
-import { getColumnKey } from "metabase-lib/lib/queries/utils/get-column-key";
+import { keyForSingleSeries } from "metabase/visualizations/lib/settings/series";
+import { getColumnKey } from "metabase-lib/queries/utils/get-column-key";
 import ChartSettingSelect from "./ChartSettingSelect";
 import {
   SettingsIcon,
+  SettingsButton,
   ChartSettingFieldPickerRoot,
+  FieldPickerColorPicker,
 } from "./ChartSettingFieldPicker.styled";
 
 const ChartSettingFieldPicker = ({
@@ -20,6 +23,10 @@ const ChartSettingFieldPicker = ({
   showColumnSetting,
   showDragHandle,
   columnHasSettings,
+  showColorPicker,
+  colors,
+  series,
+  onChangeSeriesColor,
 }) => {
   let columnKey;
   if (value && showColumnSetting && columns) {
@@ -28,13 +35,34 @@ const ChartSettingFieldPicker = ({
       columnKey = getColumnKey(column);
     }
   }
+
+  let seriesKey;
+  if (series && columnKey && showColorPicker) {
+    const seriesForColumn = series.find(single => {
+      const metricColumn = single.data.cols[1];
+      return getColumnKey(metricColumn) === columnKey;
+    });
+    if (seriesForColumn) {
+      seriesKey = keyForSingleSeries(seriesForColumn);
+    }
+  }
   return (
     <ChartSettingFieldPickerRoot
       className={className}
       disabled={options.length === 1 && options[0].value === value}
+      data-testid="chartsettings-field-picker"
     >
       {showDragHandle && (
         <SettingsIcon name="grabber2" size={12} noPointer noMargin />
+      )}
+      {showColorPicker && seriesKey && (
+        <FieldPickerColorPicker
+          pillSize="small"
+          value={colors[seriesKey]}
+          onChange={value => {
+            onChangeSeriesColor(seriesKey, value);
+          }}
+        />
       )}
       <ChartSettingSelect
         value={value}
@@ -46,8 +74,9 @@ const ChartSettingFieldPicker = ({
         hiddenIcons
       />
       {columnKey && (
-        <SettingsIcon
-          name="ellipsis"
+        <SettingsButton
+          onlyIcon
+          icon="ellipsis"
           onClick={e => {
             onShowWidget(
               {
@@ -62,9 +91,11 @@ const ChartSettingFieldPicker = ({
         />
       )}
       {onRemove && (
-        <SettingsIcon
+        <SettingsButton
           data-testid={`remove-${value}`}
-          name="close"
+          icon="close"
+          iconSize={14}
+          onlyIcon
           onClick={onRemove}
         />
       )}

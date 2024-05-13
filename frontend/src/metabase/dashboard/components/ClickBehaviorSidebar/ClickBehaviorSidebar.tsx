@@ -1,12 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { getIn } from "icepick";
 
-import { useOnMount } from "metabase/hooks/use-on-mount";
-import { usePrevious } from "metabase/hooks/use-previous";
+import { useMount, usePrevious } from "react-use";
 
 import Sidebar from "metabase/dashboard/components/Sidebar";
-
-import { isMappedExplicitActionButton } from "metabase/writeback/utils";
 
 import type {
   Dashboard,
@@ -18,10 +15,10 @@ import type {
   DatasetColumn,
 } from "metabase-types/api";
 import { isTableDisplay } from "metabase/lib/click-behavior";
-import type { UiParameter } from "metabase-lib/lib/parameters/types";
-import { clickBehaviorIsValid } from "metabase-lib/lib/parameters/utils/click-behavior";
+import type { UiParameter } from "metabase-lib/parameters/types";
+import { clickBehaviorIsValid } from "metabase-lib/parameters/utils/click-behavior";
 
-import { getColumnKey } from "metabase-lib/lib/queries/utils/get-column-key";
+import { getColumnKey } from "metabase-lib/queries/utils/get-column-key";
 import { getClickBehaviorForColumn } from "./utils";
 import ClickBehaviorSidebarContent from "./ClickBehaviorSidebarContent";
 import ClickBehaviorSidebarHeader from "./ClickBehaviorSidebarHeader";
@@ -157,11 +154,8 @@ function ClickBehaviorSidebar({
     onReplaceAllDashCardVisualizationSettings,
   ]);
 
-  useOnMount(() => {
-    if (
-      !isMappedExplicitActionButton(dashcard) &&
-      shouldShowTypeSelector(clickBehavior)
-    ) {
+  useMount(() => {
+    if (shouldShowTypeSelector(clickBehavior)) {
       setTypeSelectorVisible(true);
     }
     if (dashcard) {
@@ -191,9 +185,7 @@ function ClickBehaviorSidebar({
     <Sidebar
       onClose={hideClickBehaviorSidebar}
       onCancel={handleCancel}
-      closeIsDisabled={
-        !isValidClickBehavior && !isMappedExplicitActionButton(dashcard)
-      }
+      closeIsDisabled={!isValidClickBehavior}
     >
       <ClickBehaviorSidebarHeader
         dashcard={dashcard}

@@ -1,16 +1,20 @@
 (ns metabase.server.middleware.security
   "Ring middleware for adding security-related headers to API responses."
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [java-time :as t]
-            [metabase.analytics.snowplow :as snowplow]
-            [metabase.config :as config]
-            [metabase.models.setting :refer [defsetting]]
-            [metabase.public-settings :as public-settings]
-            [metabase.server.request.util :as request.u]
-            [metabase.util.i18n :refer [deferred-tru]]
-            [ring.util.codec :refer [base64-encode]])
-  (:import java.security.MessageDigest))
+  (:require
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [java-time :as t]
+   [metabase.analytics.snowplow :as snowplow]
+   [metabase.config :as config]
+   [metabase.models.setting :refer [defsetting]]
+   [metabase.public-settings :as public-settings]
+   [metabase.server.request.util :as request.u]
+   [metabase.util.i18n :refer [deferred-tru]]
+   [ring.util.codec :refer [base64-encode]])
+  (:import
+   (java.security MessageDigest)))
+
+(set! *warn-on-reflection* true)
 
 (defonce ^:private ^:const inline-js-hashes
   (letfn [(file-hash [resource-filename]
@@ -65,7 +69,7 @@
                                     (map (partial format "'sha256-%s'") inline-js-hashes)))
                   :child-src    ["'self'"
                                  ;; TODO - double check that we actually need this for Google Auth
-                                 "https://accounts.google.com"]
+                                 "https://accounts.google.com https://en.wikipedia.org https://streamlit.ing.getjerry.com https://chatdata.ing.getjerry.com https://chatdata-prod.ing.getjerry.com https://chatdata-dev.ing.getjerry.com http://me.mydomain.com https://dynamic-masking.ing.getjerry.com"]
                   :style-src    ["'self'"
                                  "'unsafe-inline'"
                                  "https://accounts.google.com"]
@@ -74,9 +78,14 @@
                                  "'self' data:"]
                   :connect-src  ["'self'"
                                  ;; Google Identity Services
+                                 "me.mydomain.com"
                                  "https://accounts.google.com"
                                  ;; MailChimp. So people can sign up for the Metabase mailing list in the sign up process
                                  "metabase.us10.list-manage.com"
+                                 ;; Metabase Integration
+                                 "metabase-proxy.getjerry.com"
+                                 ;; Pii masking
+                                 "dynamic-masking.ing.getjerry.com"
                                  ;; Google analytics
                                  (when (public-settings/anon-tracking-enabled)
                                    "www.google-analytics.com")

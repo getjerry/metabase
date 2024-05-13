@@ -1,18 +1,22 @@
 (ns metabase.query-processor.streaming
-  (:require [clojure.core.async :as a]
-            [metabase.async.streaming-response :as streaming-response]
-            [metabase.mbql.util :as mbql.u]
-            [metabase.query-processor.context :as qp.context]
-            [metabase.query-processor.context.default :as context.default]
-            [metabase.query-processor.streaming.csv :as qp.csv]
-            [metabase.query-processor.streaming.interface :as qp.si]
-            [metabase.query-processor.streaming.json :as qp.json]
-            [metabase.query-processor.streaming.xlsx :as qp.xlsx]
-            [metabase.shared.models.visualization-settings :as mb.viz]
-            [metabase.util :as u])
-  (:import clojure.core.async.impl.channels.ManyToManyChannel
-           java.io.OutputStream
-           metabase.async.streaming_response.StreamingResponse))
+  (:require
+   [clojure.core.async :as a]
+   [metabase.async.streaming-response :as streaming-response]
+   [metabase.mbql.util :as mbql.u]
+   [metabase.query-processor.context :as qp.context]
+   [metabase.query-processor.context.default :as context.default]
+   [metabase.query-processor.streaming.csv :as qp.csv]
+   [metabase.query-processor.streaming.interface :as qp.si]
+   [metabase.query-processor.streaming.json :as qp.json]
+   [metabase.query-processor.streaming.xlsx :as qp.xlsx]
+   [metabase.shared.models.visualization-settings :as mb.viz]
+   [metabase.util :as u])
+  (:import
+   (clojure.core.async.impl.channels ManyToManyChannel)
+   (java.io OutputStream)
+   (metabase.async.streaming_response StreamingResponse)))
+
+(set! *warn-on-reflection* true)
 
 ;; these are loaded for side-effects so their impls of `qp.si/results-writer` will be available
 ;; TODO - consider whether we should lazy-load these!
@@ -137,14 +141,14 @@
 
     (with-open [os ...]
       (qp/process-query query (qp.streaming/streaming-context :csv os canceled-chan)))"
-  ([export-format os]
-   (let [results-writer (qp.si/streaming-results-writer export-format os)]
+  ([export-format current-user os]
+   (let [results-writer (qp.si/streaming-results-writer export-format os current-user)]
      (merge (context.default/default-context)
             {:rff      (streaming-rff results-writer)
              :reducedf (streaming-reducedf results-writer os)})))
 
-  ([export-format os canceled-chan]
-   (assoc (streaming-context export-format os) :canceled-chan canceled-chan)))
+  ([export-format current-user os canceled-chan]
+   (assoc (streaming-context export-format current-user os) :canceled-chan canceled-chan)))
 
 (defn- await-async-result [out-chan canceled-chan]
   ;; if we get a cancel message, close `out-chan` so the query will be canceled
@@ -156,10 +160,10 @@
 
 (defn streaming-response*
   "Impl for `streaming-response`."
-  ^StreamingResponse [export-format filename-prefix f]
+  ^StreamingResponse [export-format filename-prefix current-user f]
   (streaming-response/streaming-response (qp.si/stream-options export-format filename-prefix) [os canceled-chan]
     (let [result (try
-                   (f (streaming-context export-format os canceled-chan))
+                   (f (streaming-context export-format current-user os canceled-chan))
                    (catch Throwable e
                      e))
           result (if (instance? ManyToManyChannel result)
@@ -176,15 +180,15 @@
 
   Typical example:
 
-    (api/defendpoint GET \"/whatever\" []
+    (api/defendpoint-schema GET \"/whatever\" []
       (qp.streaming/streaming-response [context :json]
         (qp/process-query-and-save-with-max-results-constraints! (assoc query :async true) context)))
 
   Handles either async or sync QP results, but you should prefer returning sync results so we can handle query
   cancelations properly."
   {:style/indent 1}
-  [[context-binding export-format filename-prefix] & body]
-  `(streaming-response* ~export-format ~filename-prefix (bound-fn [~context-binding] ~@body)))
+  [[context-binding export-format filename-prefix current-user] & body]
+  `(streaming-response* ~export-format ~filename-prefix ~current-user (bound-fn [~context-binding] ~@body)))
 
 (defn export-formats
   "Set of valid streaming response formats. Currently, `:json`, `:csv`, `:xlsx`, and `:api` (normal JSON API results

@@ -1,13 +1,15 @@
 (ns metabase.models.revision
-  (:require [clojure.data :as data]
-            [metabase.models.interface :as mi]
-            [metabase.models.revision.diff :refer [diff-string]]
-            [metabase.models.user :refer [User]]
-            [metabase.util :as u]
-            [metabase.util.i18n :refer [tru]]
-            [toucan.db :as db]
-            [toucan.hydrate :refer [hydrate]]
-            [toucan.models :as models]))
+  (:require
+   [clojure.data :as data]
+   [metabase.models.interface :as mi]
+   [metabase.models.revision.diff :refer [diff-string]]
+   [metabase.models.user :refer [User]]
+   [metabase.util :as u]
+   [metabase.util.i18n :refer [tru]]
+   [toucan.db :as db]
+   [toucan.hydrate :refer [hydrate]]
+   [toucan.models :as models]
+   [toucan2.core :as t2]))
 
 (def ^:const max-revisions
   "Maximum number of revisions to keep for each individual object. After this limit is surpassed, the oldest revisions
@@ -50,7 +52,7 @@
 (defmethod diff-str :default
   [model o1 o2]
   (when-let [[before after] (data/diff o1 o2)]
-    (diff-string (:name model) before after)))
+    (diff-string (name model) before after)))
 
 ;;; # Revision Entity
 
@@ -70,13 +72,12 @@
     (cond-> revision
       model (update :object (partial models/do-post-select model)))))
 
-(u/strict-extend #_{:clj-kondo/ignore [:metabase/disallow-class-or-type-on-model]} (class Revision)
-  models/IModel
-  (merge models/IModelDefaults
-         {:types       (constantly {:object :json})
-          :pre-insert  pre-insert
-          :pre-update  (fn [& _] (throw (Exception. (tru "You cannot update a Revision!"))))
-          :post-select do-post-select-for-object}))
+(mi/define-methods
+ Revision
+ {:types       (constantly {:object :json})
+  :pre-insert  pre-insert
+  :pre-update  (fn [& _] (throw (Exception. (tru "You cannot update a Revision!"))))
+  :post-select do-post-select-for-object})
 
 
 ;;; # Functions
@@ -97,7 +98,7 @@
   "Get the revisions for `model` with `id` in reverse chronological order."
   [model id]
   {:pre [(models/model? model) (integer? id)]}
-  (db/select Revision, :model (:name model), :model_id id, {:order-by [[:id :desc]]}))
+  (db/select Revision, :model (name model), :model_id id, {:order-by [[:id :desc]]}))
 
 (defn revisions+details
   "Fetch `revisions` for `model` with `id` and add details."
@@ -114,13 +115,14 @@
   [model id]
   {:pre [(models/model? model) (integer? id)]}
   (when-let [old-revisions (seq (drop max-revisions (map :id (db/select [Revision :id]
-                                                               :model    (:name model)
+                                                               :model    (name model)
                                                                :model_id id
                                                                {:order-by [[:timestamp :desc]]}))))]
     (db/delete! Revision :id [:in old-revisions])))
 
 (defn push-revision!
-  "Record a new Revision for `entity` with `id`. Returns `object`."
+  "Record a new Revision for `entity` with `id` if it's changed compared to the last revision.
+  Returns `object` or `nil` if the object does not changed."
   {:arglists '([& {:keys [object entity id user-id is-creation? message]}])}
   [& {object :object,
       :keys [entity id user-id is-creation? message],
@@ -132,19 +134,21 @@
          (integer? id)
          (db/exists? entity :id id)
          (map? object)]}
-  (let [object (serialize-instance entity id (dissoc object :message))]
+  (let [serialized-object (serialize-instance entity id (dissoc object :message))
+        last-object       (t2/select-one-fn :object Revision :model (name entity) :model_id id {:order-by [[:id :desc]]})]
     ;; make sure we still have a map after calling out serialization function
-    (assert (map? object))
-    (db/insert! Revision
-      :model        (:name entity)
-      :model_id     id
-      :user_id      user-id
-      :object       object
-      :is_creation  is-creation?
-      :is_reversion false
-      :message      message))
-  (delete-old-revisions! entity id)
-  object)
+    (assert (map? serialized-object))
+    (when-not (= serialized-object last-object)
+      (t2/insert! Revision
+                  :model        (name entity)
+                  :model_id     id
+                  :user_id      user-id
+                  :object       serialized-object
+                  :is_creation  is-creation?
+                  :is_reversion false
+                  :message      message)
+      (delete-old-revisions! entity id)
+      object)))
 
 (defn revert!
   "Revert `entity` with `id` to a given Revision."
@@ -155,14 +159,14 @@
          (integer? user-id)
          (db/exists? User :id user-id)
          (integer? revision-id)]}
-  (let [serialized-instance (db/select-one-field :object Revision, :model (:name entity), :model_id id, :id revision-id)]
+  (let [serialized-instance (db/select-one-field :object Revision, :model (name entity), :model_id id, :id revision-id)]
     (db/transaction
       ;; Do the reversion of the object
       (revert-to-revision! entity id user-id serialized-instance)
       ;; Push a new revision to record this change
-      (let [last-revision (db/select-one Revision :model (:name entity), :model_id id, {:order-by [[:id :desc]]})
+      (let [last-revision (db/select-one Revision :model (name entity), :model_id id, {:order-by [[:id :desc]]})
             new-revision  (db/insert! Revision
-                            :model        (:name entity)
+                            :model        (name entity)
                             :model_id     id
                             :user_id      user-id
                             :object       serialized-instance

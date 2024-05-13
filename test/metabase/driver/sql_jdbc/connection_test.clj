@@ -1,36 +1,39 @@
 (ns metabase.driver.sql-jdbc.connection-test
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.test :refer :all]
-            [metabase.db.spec :as mdb.spec]
-            [metabase.driver :as driver]
-            [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
-            [metabase.driver.sql-jdbc.test-util :as sql-jdbc.tu]
-            [metabase.driver.util :as driver.u]
-            [metabase.models :refer [Database Secret]]
-            [metabase.sync :as sync]
-            [metabase.test :as mt]
-            [metabase.test.data :as data]
-            [metabase.test.fixtures :as fixtures]
-            [metabase.util :as u]
-            [toucan.db :as db]))
+  (:require
+   [clojure.java.jdbc :as jdbc]
+   [clojure.test :refer :all]
+   [metabase.db.spec :as mdb.spec]
+   [metabase.driver :as driver]
+   [metabase.driver.h2 :as h2]
+   [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
+   [metabase.driver.sql-jdbc.test-util :as sql-jdbc.tu]
+   [metabase.driver.util :as driver.u]
+   [metabase.models :refer [Database Secret]]
+   [metabase.sync :as sync]
+   [metabase.test :as mt]
+   [metabase.test.data :as data]
+   [metabase.test.fixtures :as fixtures]
+   [metabase.util :as u]
+   [toucan.db :as db]))
+
+(set! *warn-on-reflection* true)
 
 (use-fixtures :once (fixtures/initialize :db))
 
 (deftest can-connect-with-details?-test
-  (is (= true
-         (driver.u/can-connect-with-details? :h2 (:details (data/db)))))
-  (testing "Lie and say Test DB is Postgres. `can-connect?` should fail"
-    (is (= false
-           (driver.u/can-connect-with-details? :postgres (:details (data/db))))))
-  (testing "Random made-up DBs should fail"
-    (is (= false
-           (driver.u/can-connect-with-details? :postgres {:host   "localhost"
-                                                          :port   5432
-                                                          :dbname "ABCDEFGHIJKLMNOP"
-                                                          :user   "rasta"}))))
-  (testing "Things that you can connect to, but are not DBs, should fail"
-    (is (= false
-           (driver.u/can-connect-with-details? :postgres {:host "google.com", :port 80})))))
+  (testing "Should not be able to connect without setting h2/*allow-testing-h2-connections*"
+    (is (not (driver.u/can-connect-with-details? :h2 (:details (data/db))))))
+  (binding [h2/*allow-testing-h2-connections* true]
+    (is (driver.u/can-connect-with-details? :h2 (:details (data/db))))
+    (testing "Lie and say Test DB is Postgres. `can-connect?` should fail"
+      (is (not (driver.u/can-connect-with-details? :postgres (:details (data/db))))))
+    (testing "Random made-up DBs should fail"
+      (is (not (driver.u/can-connect-with-details? :postgres {:host   "localhost"
+                                                              :port   5432
+                                                              :dbname "ABCDEFGHIJKLMNOP"
+                                                              :user   "rasta"}))))
+    (testing "Things that you can connect to, but are not DBs, should fail"
+      (is (not (driver.u/can-connect-with-details? :postgres {:host "google.com", :port 80}))))))
 
 (deftest db->pooled-connection-spec-test
   (mt/test-driver :h2
@@ -72,7 +75,7 @@
             [_ db-nm]  (re-matches (re-pattern (format "^db-%d-%s-(.*)$" (u/the-id db) (name driver/*driver*)))
                                    (get props "dataSourceName"))]
         (is (some? db-nm))
-        ;; ensure that, for any sql-jdbc drier anyway, we found *some* DB name to use in this String
+        ;; ensure that, for any sql-jdbc driver anyway, we found *some* DB name to use in this String
         (is (not= db-nm "null"))))))
 
 (deftest same-connection-details-result-in-equal-specs-test

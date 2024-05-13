@@ -1,11 +1,12 @@
 (ns metabase.server.request.util-test
-  (:require [clojure.test :refer :all]
-            [clojure.tools.reader.edn :as edn]
-            [java-time :as t]
-            [metabase.server.request.util :as request.u]
-            [metabase.test :as mt]
-            [ring.mock.request :as ring.mock]
-            [schema.core :as s]))
+  (:require
+   [clojure.test :refer :all]
+   [clojure.tools.reader.edn :as edn]
+   [java-time :as t]
+   [metabase.server.request.util :as request.u]
+   [metabase.test :as mt]
+   [ring.mock.request :as ring.mock]
+   [schema.core :as s]))
 
 ;; don't run these tests when running driver tests (i.e., `DRIVERS` is set) because they tend to flake
 (use-fixtures :each (fn [thunk]
@@ -80,10 +81,11 @@
             (is (= "1.2.3.4"
                    (request.u/ip-address mock-request)))))))))
 
-(deftest geocode-ip-addresses-test
-  (are [ip-addresses expected] (schema= expected (request.u/geocode-ip-addresses ip-addresses))
+(deftest ^:parallel geocode-ip-addresses-test
+  (are [ip-addresses expected] (schema= (s/conditional some? expected nil? (s/eq nil))
+                                        (request.u/geocode-ip-addresses ip-addresses))
     ["8.8.8.8"]
-    {(s/required-key "8.8.8.8") {:description (s/eq "United States")
+    {(s/required-key "8.8.8.8") {:description #"United States"
                                  :timezone    (s/eq (t/zone-id "America/Chicago"))}}
 
     ;; this is from the MaxMind sample high-risk IP address list https://www.maxmind.com/en/high-risk-ip-sample-list

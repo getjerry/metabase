@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from "react";
 import { Motion, spring } from "react-motion";
+import cx from "classnames";
 
 import { isReducedMotionPreferred } from "metabase/lib/dom";
 
@@ -19,6 +20,12 @@ class EntityMenu extends Component {
     freezeMenu: false,
     menuItemContent: null,
   };
+
+  constructor(props, context) {
+    super(props, context);
+
+    this.rootRef = React.createRef();
+  }
 
   toggleMenu = () => {
     if (this.state.freezeMenu) {
@@ -45,13 +52,19 @@ class EntityMenu extends Component {
       triggerIcon,
       triggerProps,
       className,
+      openClassNames,
+      closedClassNames,
       tooltip,
       trigger,
       targetOffsetY,
     } = this.props;
     const { open, menuItemContent } = this.state;
     return (
-      <Container className={className} open={open}>
+      <Container
+        className={cx(className, open ? openClassNames : closedClassNames)}
+        open={open}
+        ref={this.rootRef}
+      >
         <EntityMenuTrigger
           trigger={trigger}
           icon={triggerIcon}
@@ -61,6 +74,7 @@ class EntityMenu extends Component {
           triggerProps={triggerProps}
         />
         <Popover
+          target={this.rootRef.current}
           isOpen={open}
           onClose={this.toggleMenu}
           hasArrow={false}

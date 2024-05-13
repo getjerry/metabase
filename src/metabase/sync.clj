@@ -8,17 +8,20 @@
 
    In the near future these steps will be scheduled individually, meaning those functions will
    be called directly instead of calling the `sync-database!` function to do all three at once."
-  (:require [metabase.driver.util :as driver.u]
-            [metabase.models.field :as field]
-            [metabase.models.table :as table]
-            [metabase.sync.analyze :as analyze]
-            [metabase.sync.analyze.fingerprint :as fingerprint]
-            [metabase.sync.field-values :as field-values]
-            [metabase.sync.interface :as i]
-            [metabase.sync.sync-metadata :as sync-metadata]
-            [metabase.sync.util :as sync-util]
-            [schema.core :as s])
-  (:import java.time.temporal.Temporal))
+  (:require
+   [metabase.driver.h2 :as h2]
+   [metabase.driver.util :as driver.u]
+   [metabase.models.field :as field]
+   [metabase.models.table :as table]
+   [metabase.sync.analyze :as analyze]
+   [metabase.sync.analyze.fingerprint :as fingerprint]
+   [metabase.sync.field-values :as field-values]
+   [metabase.sync.interface :as i]
+   [metabase.sync.sync-metadata :as sync-metadata]
+   [metabase.sync.util :as sync-util]
+   [schema.core :as s])
+  (:import
+   (java.time.temporal Temporal)))
 
 (def SyncDatabaseResults
   "Schema for results returned from `sync-database!`"
@@ -35,7 +38,6 @@
 
   Please note that this function is *not* what is called by the scheduled tasks; those call different steps
   independently. This function is called when a Database is first added."
-  {:style/indent 1}
   ([database]
    (sync-database! database nil))
 
@@ -69,7 +71,10 @@
   [field :- i/FieldInstance]
   (let [table (field/table field)
         database (table/database table)]
-    (if (driver.u/can-connect-with-details? (:engine database) (:details database))
+    ;; it's okay to allow testing H2 connections during sync. We only want to disallow you from testing them for the
+    ;; purposes of creating a new H2 database.
+    (if (binding [h2/*allow-testing-h2-connections* true]
+          (driver.u/can-connect-with-details? (:engine database) (:details database)))
       (sync-util/with-error-handling (format "Error refingerprinting field %s"
                                              (sync-util/name-for-logging field))
         (fingerprint/refingerprint-field field))

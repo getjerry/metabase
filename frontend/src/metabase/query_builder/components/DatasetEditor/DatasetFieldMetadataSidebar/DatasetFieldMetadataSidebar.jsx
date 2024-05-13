@@ -8,6 +8,7 @@ import React, {
 import PropTypes from "prop-types";
 import { t } from "ttag";
 import _ from "underscore";
+import { usePrevious } from "react-use";
 
 import Radio from "metabase/core/components/Radio";
 
@@ -17,15 +18,14 @@ import {
 } from "metabase/lib/core";
 import { getSemanticTypeIcon } from "metabase/lib/schema_metadata";
 import RootForm from "metabase/containers/FormikForm";
-import { usePrevious } from "metabase/hooks/use-previous";
 
 import SidebarContent from "metabase/query_builder/components/SidebarContent";
 import ColumnSettings, {
   hasColumnSettingsWidgets,
 } from "metabase/visualizations/components/ColumnSettings";
 import { getGlobalSettingsForColumn } from "metabase/visualizations/lib/settings/column";
-import { isSameField } from "metabase-lib/lib/queries/utils/field-ref";
-import { isFK } from "metabase-lib/lib/types/utils/isa";
+import { isSameField } from "metabase-lib/queries/utils/field-ref";
+import { isFK } from "metabase-lib/types/utils/isa";
 
 import { EDITOR_TAB_INDEXES } from "../constants";
 import MappedFieldPicker from "./MappedFieldPicker";

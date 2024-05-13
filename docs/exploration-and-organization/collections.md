@@ -6,7 +6,7 @@ redirect_from:
 
 # Collections
 
- After your team has been using Metabase for a while, you’ll probably end up with lots of saved questions.
+ After your team has been using Metabase for a while, you’ll probably end up with lots of saved questions and dashboards.
 
 ![Our analytics](./images/our-analytics-page.png)
 
@@ -16,15 +16,17 @@ Collections are the main way to organize questions, dashboards, and [models][mod
 
 ### Regular collections
 
-They're just basic collections. You can put stuff in them.
+They're like file-system folders. You can put stuff in them.
 
 ### Official collections
 
 {% include plans-blockquote.html feature="Official collections" %}
 
-These are special collections, in that they have a badge to let people know that the items in this collection are the ones people should be looking at (or whatever "official" means to you). Questions and dashboards in official collections are also more likely to show up at the top of search results.
-
 ![Official collections](./images/official-collection.png)
+
+Metabase admins can designate collections as "official". These collections have a yellow badge to let people know that the items in the collection are the ones people should be looking at (or whatever "official" means to you). Questions and dashboards in official collections are also more likely to show up at the top of search results. Pairing Official badges with [verified items](./exploration.md#verified-items) can help everyone in your Metabase sort out which questions people can trust.
+
+To add an official badge to a collection, an admin can visit the collection and click on the dot dot dot menu (**...**) and select **Make collection official**. Admins can also remove an official badge in the same menu. Admins can also mark a collection as official or not when they first create the collection.
 
 ## Collection permissions
 
@@ -56,19 +58,17 @@ To move a question, dashboard, or pulse into a collection, or from one collectio
 
 ![Selecting questions](./images/question-checkbox.png)
 
-Note that you have to have Curate permission for the collection that you're moving a question into _and_ the collection you're moving the question out of.
-
-## Archiving items
-
-Sometimes questions outlive their usefulness and need to be sent to Question Heaven. To archive a question or dashboard, just click on the `…` menu that appears on the far right when you hover over a question and pick the Archive action. You'll only see that option if you have "curate" permission for the current collection. You can also archive multiple items at once, the same way as you move multiple items. Note that archiving a question removes it from all dashboards or Pulses where it appears, so be careful!
-
-You can also archive _collections_ if you have curate permissions for the collection you're trying to archive, the collection _it's_ inside of, as well as any and all collections inside of _it_. Archiving a collection archives all of its contents as well.
-
-If you have second thoughts and want to bring an archived item back, you can see all your archived questions from the archive; click the menu icon in the top-right of any collection page to get to the archive. To unarchive a question, hover over it and click the unarchive icon that appears on the far right.
+Note that you have to have Curate permission for the collection that you're moving a question into _and_ the collection you're moving the question out of. Metabase admins can move items into (and out of) anyone's [personal collection](#your-personal-collection).
 
 ## Events and timelines
 
 You can add events to collections, and organize those events into timelines. See [Events and timelines](events-and-timelines.md).
 
+## Further reading
+
+- [Keeping your analytics organized](https://www.metabase.com/learn/administration/same-page)
+- [Multiple environments](https://www.metabase.com/learn/administration/multi-env#one-collection-per-environment)
+
 [dashboards]: ../dashboards/introduction.md
 [models]: ../data-modeling/models.md
+

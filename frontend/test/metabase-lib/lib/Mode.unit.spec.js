@@ -7,7 +7,7 @@ import {
 } from "__support__/sample_database_fixture";
 
 import { getMode } from "metabase/modes/lib/modes";
-import Question from "metabase-lib/lib/Question";
+import Question from "metabase-lib/Question";
 
 describe("Mode", () => {
   const rawDataQuestion = ORDERS.question();
@@ -108,21 +108,7 @@ describe("Mode", () => {
         const mode = getMode(question);
         expect(mode && mode.name()).toEqual("default");
       });
-      it("returns `default` mode with >=1 aggregations and >=1 breakouts when first neither date or category", () => {});
     });
-    describe("with native query question", () => {
-      it("returns `NativeMode` for empty query", () => {});
-      it("returns `NativeMode` for query with query text", () => {});
-    });
-    describe("with oddly constructed query", () => {
-      it("should throw an error", () => {
-        // this is not the actual behavior atm (it returns DefaultMode)
-      });
-    });
-  });
-
-  describe("name()", () => {
-    it("returns the correct name of current mode", () => {});
   });
 
   describe("actionsForClick()", () => {

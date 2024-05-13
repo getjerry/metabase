@@ -1,21 +1,25 @@
 (ns metabase.driver.common
   "Shared definitions and helper functions for use across different drivers."
-  (:require [clj-time.coerce :as time.coerce]
-            [clj-time.core :as time]
-            [clj-time.format :as time.format]
-            [clojure.string :as str]
-            [clojure.tools.logging :as log]
-            [metabase.driver :as driver]
-            [metabase.models.setting :as setting]
-            [metabase.public-settings :as public-settings]
-            [metabase.query-processor.context.default :as context.default]
-            [metabase.query-processor.store :as qp.store]
-            [metabase.util :as u]
-            [metabase.util.i18n :refer [deferred-tru trs tru]]
-            [schema.core :as s])
-  (:import java.text.SimpleDateFormat
-           org.joda.time.DateTime
-           org.joda.time.format.DateTimeFormatter))
+  (:require
+   [clj-time.coerce :as time.coerce]
+   [clj-time.core :as time]
+   [clj-time.format :as time.format]
+   [clojure.string :as str]
+   [metabase.driver :as driver]
+   [metabase.models.setting :as setting]
+   [metabase.public-settings :as public-settings]
+   [metabase.query-processor.context.default :as context.default]
+   [metabase.query-processor.store :as qp.store]
+   [metabase.util :as u]
+   [metabase.util.i18n :refer [deferred-tru trs tru]]
+   [metabase.util.log :as log]
+   [schema.core :as s])
+  (:import
+   (java.text SimpleDateFormat)
+   (org.joda.time DateTime)
+   (org.joda.time.format DateTimeFormatter)))
+
+(set! *warn-on-reflection* true)
 
 ;; TODO - we should rename these from `default-*-details` to `default-*-connection-property`
 
@@ -409,13 +413,19 @@
 (def ^:private ^clojure.lang.PersistentVector days-of-week
   [:monday :tuesday :wednesday :thursday :friday :saturday :sunday])
 
+(def ^:dynamic *start-of-week*
+  "Used to override the [[metabase.public-settings/start-of-week]] settings.
+  Primarily being used to calculate week-of-year in US modes where the start-of-week is always Sunday.
+  More in (defmethod date [:sql :week-of-year-us])."
+  nil)
+
 (s/defn start-of-week->int :- (s/pred (fn [n] (and (integer? n) (<= 0 n 6)))
                                       "Start of week integer")
   "Returns the int value for the current [[metabase.public-settings/start-of-week]] Setting value, which ranges from
   `0` (`:monday`) to `6` (`:sunday`). This is guaranteed to return a value."
   {:added "0.42.0"}
   []
-  (.indexOf days-of-week (setting/get-value-of-type :keyword :start-of-week)))
+  (.indexOf days-of-week (or *start-of-week* (setting/get-value-of-type :keyword :start-of-week))))
 
 (defn start-of-week-offset-for-day
   "Like [[start-of-week-offset]] but takes a `start-of-week` keyword like `:sunday` rather than ` driver`. Returns the

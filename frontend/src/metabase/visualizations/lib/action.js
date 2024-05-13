@@ -45,7 +45,6 @@ export function performDefaultAction(actions, props) {
   if (!actions) {
     return false;
   }
-
   // "default" action if there's only one
   if (actions.length === 1 && actions[0].default) {
     return performAction(actions[0], props);

@@ -3,11 +3,7 @@ import d3 from "d3";
 import { t } from "ttag";
 import crossfilter from "crossfilter";
 
-import {
-  isDimension,
-  isMetric,
-  isDate,
-} from "metabase-lib/lib/types/utils/isa";
+import { isDimension, isMetric, isDate } from "metabase-lib/types/utils/isa";
 
 export const MAX_SERIES = 100;
 
@@ -395,8 +391,6 @@ export const preserveExistingColumnsOrder = (prevColumns, newColumns) => {
   return mergedColumnsResult;
 };
 
-export const moveElement = (array, oldIndex, newIndex) => {
-  const arrayCopy = [...array];
-  arrayCopy.splice(newIndex, 0, arrayCopy.splice(oldIndex, 1)[0]);
-  return arrayCopy;
-};
+export function getCardKey(card) {
+  return `${card?.id ?? "unsaved"}`;
+}

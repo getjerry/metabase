@@ -12,8 +12,6 @@ import title from "metabase/hoc/Title";
 
 import { getParameterValuesByIdFromQueryParams } from "metabase/parameters/utils/parameter-values";
 
-import { getCardUiParameters } from "metabase/parameters/utils/cards";
-
 import {
   PublicApi,
   EmbedApi,
@@ -27,9 +25,11 @@ import { addParamValues, addFields } from "metabase/redux/metadata";
 import { getMetadata } from "metabase/selectors/metadata";
 
 import PublicMode from "metabase/modes/components/modes/PublicMode";
-import { getParameterValuesBySlug } from "metabase-lib/lib/parameters/utils/parameter-values";
-import { getParametersFromCard } from "metabase-lib/lib/parameters/utils/template-tags";
-import { applyParameters } from "metabase-lib/lib/queries/utils/card";
+import Question from "metabase-lib/Question";
+import { getCardUiParameters } from "metabase-lib/parameters/utils/cards";
+import { getParameterValuesBySlug } from "metabase-lib/parameters/utils/parameter-values";
+import { getParametersFromCard } from "metabase-lib/parameters/utils/template-tags";
+import { applyParameters } from "metabase-lib/queries/utils/card";
 import EmbedFrame from "../components/EmbedFrame";
 
 const mapStateToProps = state => ({
@@ -173,6 +173,7 @@ class PublicQuestion extends Component {
       metadata,
     } = this.props;
     const { card, result, initialized, parameterValues } = this.state;
+    const question = new Question(card, metadata);
 
     const actionButtons = result && (
       <QueryDownloadWidget
@@ -180,6 +181,7 @@ class PublicQuestion extends Component {
         uuid={uuid}
         token={token}
         result={result}
+        card={card}
       />
     );
 
@@ -192,6 +194,7 @@ class PublicQuestion extends Component {
         name={card && card.name}
         description={card && card.description}
         actionButtons={actionButtons}
+        question={question}
         parameters={initialized ? parameters : []}
         parameterValues={parameterValues}
         setParameterValue={this.setParameterValue}

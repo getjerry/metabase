@@ -1,6 +1,6 @@
 import { formatValue } from "metabase/lib/formatting";
 import type { DatasetColumn } from "metabase-types/api/dataset";
-import { isDate } from "metabase-lib/lib/types/utils/isa";
+import { isDate } from "metabase-lib/types/utils/isa";
 import { formatDateTimeForParameter } from "./date";
 
 interface TemplateForClickFormatFunctionParamsType {
@@ -61,7 +61,6 @@ function renderTemplateForClick(
       if (valueAndColumn) {
         return formatFunction(valueAndColumn);
       }
-      console.warn("Missing value for " + name);
       return "";
     },
   );

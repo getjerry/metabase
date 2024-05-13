@@ -2,19 +2,22 @@
   "Helpers intended to be shared by various models.
   Most of these are common operations done while (de)serializing several models, like handling a foreign key on a Table
   or user."
-  (:require [cheshire.core :as json]
-            [clojure.core.match :refer [match]]
-            [clojure.set :as set]
-            [clojure.string :as str]
-            [medley.core :as m]
-            [metabase.mbql.normalize :as mbql.normalize]
-            [metabase.mbql.schema :as mbql.s]
-            [metabase.mbql.util :as mbql.u]
-            [metabase.models.serialization.base :as serdes.base]
-            [metabase.models.serialization.hash :as serdes.hash]
-            [metabase.shared.models.visualization-settings :as mb.viz]
-            [toucan.db :as db]
-            [toucan.models :as models]))
+  (:require
+   [cheshire.core :as json]
+   [clojure.core.match :refer [match]]
+   [clojure.set :as set]
+   [clojure.string :as str]
+   [medley.core :as m]
+   [metabase.mbql.normalize :as mbql.normalize]
+   [metabase.mbql.schema :as mbql.s]
+   [metabase.mbql.util :as mbql.u]
+   [metabase.models.serialization.base :as serdes.base]
+   [metabase.models.serialization.hash :as serdes.hash]
+   [metabase.shared.models.visualization-settings :as mb.viz]
+   [toucan.db :as db]
+   [toucan.models :as models]))
+
+(set! *warn-on-reflection* true)
 
 ;; -------------------------------------------- General Foreign Keys -------------------------------------------------
 (defn export-fk
@@ -124,21 +127,40 @@
                   (when schema {:model "Schema" :id schema})
                   {:model "Table" :id table-name}]))
 
+(defn storage-table-path-prefix
+  "The [[serdes.base/storage-path]] for Table is a bit tricky, and shared with Fields and FieldValues, so it's
+  factored out here.
+  Takes the :serdes/meta value for a `Table`!
+  The return value includes the directory for the Table, but not the file for the Table itself.
+
+  With a schema: `[\"databases\" \"db_name\" \"schemas\" \"public\" \"tables\" \"customers\"]`
+  No schema:     `[\"databases\" \"db_name\" \"tables\" \"customers\"]`"
+  [path]
+  (let [db-name    (-> path first :id)
+        schema     (when (= (count path) 3)
+                     (-> path second :id))
+        table-name (-> path last :id)]
+    (concat ["databases" db-name]
+            (when schema ["schemas" schema])
+            ["tables" table-name])))
+
 ;; -------------------------------------------------- Fields ---------------------------------------------------------
 (defn export-field-fk
   "Given a numeric `field_id`, return a portable field reference.
   That has the form `[db-name schema table-name field-name]`, where the `schema` might be nil.
   [[import-field-fk]] is the inverse."
   [field-id]
-  (let [{:keys [name table_id]}     (db/select-one 'Field :id field-id)
-        [db-name schema field-name] (export-table-fk table_id)]
-    [db-name schema field-name name]))
+  (when field-id
+    (let [{:keys [name table_id]}     (db/select-one 'Field :id field-id)
+          [db-name schema field-name] (export-table-fk table_id)]
+      [db-name schema field-name name])))
 
 (defn import-field-fk
   "Given a `field_id` as exported by [[export-field-fk]], resolve it back into a numeric `field_id`."
-  [[db-name schema table-name field-name]]
-  (let [table_id (import-table-fk [db-name schema table-name])]
-    (db/select-one-id 'Field :table_id table_id :name field-name)))
+  [[db-name schema table-name field-name :as field-id]]
+  (when field-id
+    (let [table_id (import-table-fk [db-name schema table-name])]
+      (db/select-one-id 'Field :table_id table_id :name field-name))))
 
 (defn field->path
   "Given a `field_id` as exported by [[export-field-fk]], turn it into a `[{:model ...}]` path for the Field.
@@ -207,6 +229,9 @@
     mbql-entity-reference?
     (mbql-id->fully-qualified-name &match)
 
+    sequential?
+    (mapv ids->fully-qualified-names &match)
+
     map?
     (as-> &match entity
       (m/update-existing entity :database (fn [db-id]
@@ -221,17 +246,16 @@
                                                (mapv mbql-id->fully-qualified-name breakout)))
       (m/update-existing entity :aggregation (fn [aggregation]
                                                (mapv mbql-id->fully-qualified-name aggregation)))
-      (m/update-existing entity :filter      (fn [filter]
-                                               (m/map-vals mbql-id->fully-qualified-name filter)))
+      (m/update-existing entity :filter      ids->fully-qualified-names)
       (m/update-existing entity ::mb.viz/param-mapping-source export-field-fk)
+      (m/update-existing entity :segment    export-fk 'Segment)
       (m/update-existing entity :snippet-id export-fk 'NativeQuerySnippet)
       (merge entity
              (m/map-vals ids->fully-qualified-names
                          (dissoc entity
-                                 :database :card_id :card-id :source-table :breakout :aggregation :filter
+                                 :database :card_id :card-id :source-table :breakout :aggregation :filter :segment
                                  ::mb.viz/param-mapping-source :snippet-id))))))
 
-;(ids->fully-qualified-names {:aggregation [[:sum [:field 277405 nil]]]})
 
 (defn export-mbql
   "Given an MBQL expression, convert it to an EDN structure and turn the non-portable Database, Table and Field IDs
@@ -302,7 +326,12 @@
     (_ :guard (every-pred map? (comp portable-id? :source_table)))
     (-> &match
         (assoc :source_table (str "card__" (import-fk (:source_table &match) 'Card)))
-        mbql-fully-qualified-names->ids*))) ;; process other keys
+        mbql-fully-qualified-names->ids*) ;; process other keys
+
+    (_ :guard (every-pred map? (comp portable-id? :snippet-id)))
+    (-> &match
+        (assoc :snippet-id (import-fk (:snippet-id &match) 'NativeQuerySnippet))
+        mbql-fully-qualified-names->ids*)))
 
 (defn- mbql-fully-qualified-names->ids
   [entity]
@@ -326,6 +355,10 @@
          ["field"    (field :guard vector?) tail] (into #{(field->path field)} (mbql-deps-map tail))
          [:field-id  (field :guard vector?) tail] (into #{(field->path field)} (mbql-deps-map tail))
          ["field-id" (field :guard vector?) tail] (into #{(field->path field)} (mbql-deps-map tail))
+         [:metric    (field :guard portable-id?)] #{[{:model "Metric" :id field}]}
+         ["metric"   (field :guard portable-id?)] #{[{:model "Metric" :id field}]}
+         [:segment   (field :guard portable-id?)] #{[{:model "Segment" :id field}]}
+         ["segment"  (field :guard portable-id?)] #{[{:model "Segment" :id field}]}
          :else (reduce #(cond
                           (map? %2)    (into %1 (mbql-deps-map %2))
                           (vector? %2) (into %1 (mbql-deps-vector %2))
@@ -342,6 +375,7 @@
            (and (= k :source-table) (vector? v))      #{(table->path v)}
            (and (= k :source-table) (portable-id? v)) #{[{:model "Card" :id v}]}
            (and (= k :source-field) (vector? v))      #{(field->path v)}
+           (and (= k :snippet-id)   (portable-id? v)) #{[{:model "NativeQuerySnippet" :id v}]}
            (and (= k :card_id)      (string? v))      #{[{:model "Card" :id v}]}
            (and (= k :card-id)      (string? v))      #{[{:model "Card" :id v}]}
            (map? v)                                   (mbql-deps-map v)
@@ -371,6 +405,57 @@
   (->> mappings
        (map mbql-fully-qualified-names->ids)
        (map #(m/update-existing % :card_id import-fk 'Card))))
+
+(defn export-parameters
+  "Given the :parameter field of a `Card` or `Dashboard`, as a vector of maps, converts
+  it to a portable form with the CardIds/FieldIds replaced with `[db schema table field]` references."
+  [parameters]
+  (map ids->fully-qualified-names parameters))
+
+(defn import-parameters
+  "Given the :parameter field as exported by serialization convert its field references
+  (`[db schema table field]`) back into raw IDs."
+  [parameters]
+  (for [param parameters]
+    (-> param
+        mbql-fully-qualified-names->ids
+        (m/update-existing-in [:values_source_config :card_id] import-fk 'Card))))
+
+(defn parameters-deps
+  "Given the :parameters (possibly nil) for an entity, return any embedded serdes-deps as a set.
+  Always returns an empty set even if the input is nil."
+  [parameters]
+  (reduce set/union #{}
+          (for [parameter parameters
+                :when (= "card" (:values_source_type parameter))
+                :let  [config (:values_source_config parameter)]]
+            (set/union #{[{:model "Card" :id (:card_id config)}]}
+                       (mbql-deps-vector (:value_field config))))))
+
+(def link-card-model->toucan-model
+  "A map from model on linkcards to its corresponding toucan model.
+
+  Link cards are dashcards that link to internal entities like Database/Dashboard/... or an url.
+
+  It's here instead of [metabase.models.dashboard_card] to avoid cyclic deps."
+  {"card"       :metabase.models.card/Card
+   "dataset"    :metabase.models.card/Card
+   "collection" :metabase.models.collection/Collection
+   "database"   :metabase.models.database/Database
+   "dashboard"  :metabase.models.dashboard/Dashboard
+   "table"      :metabase.models.table/Table})
+
+(defn- export-viz-link-card
+  [settings]
+  (m/update-existing-in
+    settings
+    [:link :entity]
+    (fn [{:keys [id model] :as entity}]
+      (merge entity
+             {:id (case model
+                    "table"    (export-table-fk id)
+                    "database" (export-fk-keyed id 'Database :name)
+                    (export-fk id (link-card-model->toucan-model model)))}))))
 
 (defn- export-visualizations [entity]
   (mbql.u/replace
@@ -414,7 +499,20 @@
   (when settings
     (-> settings
         export-visualizations
+        export-viz-link-card
         (update :column_settings export-column-settings))))
+
+(defn- import-viz-link-card
+  [settings]
+  (m/update-existing-in
+    settings
+    [:link :entity]
+    (fn [{:keys [id model] :as entity}]
+      (merge entity
+             {:id (case model
+                    "table"    (import-table-fk id)
+                    "database" (import-fk-keyed id 'Database :name)
+                    (import-fk id (link-card-model->toucan-model model)))}))))
 
 (defn- import-visualizations [entity]
   (mbql.u/replace
@@ -446,7 +544,16 @@
   (when settings
     (-> settings
         import-visualizations
+        import-viz-link-card
         (update :column_settings import-column-settings))))
+
+(defn- viz-link-card-deps
+  [settings]
+  (when-let [{:keys [model id]} (get-in settings [:link :entity])]
+    #{(case model
+        "table" (table->path id)
+        [{:model (name (link-card-model->toucan-model model))
+          :id    id}])}))
 
 (defn visualization-settings-deps
   "Given the :visualization_settings (possibly nil) for an entity, return any embedded serdes-deps as a set.
@@ -455,6 +562,8 @@
   (let [vis-column-settings (some->> viz
                                      :column_settings
                                      keys
-                                     (map (comp mbql-deps json/parse-string name)))]
-    (reduce set/union (cons (mbql-deps viz)
-                            vis-column-settings))))
+                                     (map (comp mbql-deps json/parse-string name)))
+        link-card-deps      (viz-link-card-deps viz)]
+    (->> (concat vis-column-settings [(mbql-deps viz) link-card-deps])
+         (filter some?)
+         (reduce set/union))))

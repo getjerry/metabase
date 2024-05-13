@@ -12,6 +12,7 @@ export const Root = styled.div<{
   noPadding?: boolean;
   inline?: boolean;
   marginBottom?: string;
+  borderBottom?: boolean;
 }>`
   ${props =>
     !props.noPadding &&
@@ -53,12 +54,19 @@ export const Root = styled.div<{
       }
     `}
 
+    ${props =>
+    props.borderBottom &&
+    css`
+      padding-bottom: 1rem;
+      border-bottom: 1px solid ${color("border")};
+    `}
+
   input, .AdminSelect {
     transition: border 0.3s;
 
     &:hover {
       transition: border 0.3s;
-      border-color: ${() => color("brand")};
+      border-color: ${color("brand")};
     }
   }
 `;

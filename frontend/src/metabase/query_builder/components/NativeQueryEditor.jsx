@@ -17,6 +17,7 @@ import "ace/snippets/mysql";
 import "ace/snippets/pgsql";
 import "ace/snippets/sqlserver";
 import "ace/snippets/json";
+import "ace-builds/src-noconflict/ext-searchbox";
 import _ from "underscore";
 import { ResizableBox } from "react-resizable";
 import { connect } from "react-redux";
@@ -26,18 +27,24 @@ import { isEventOverElement } from "metabase/lib/dom";
 import { getEngineNativeAceMode } from "metabase/lib/engine";
 import { SQLBehaviour } from "metabase/lib/ace/sql_behaviour";
 import ExplicitSize from "metabase/components/ExplicitSize";
+import Modal from "metabase/components/Modal";
 
+import Databases from "metabase/entities/databases";
 import Snippets from "metabase/entities/snippets";
 import SnippetCollections from "metabase/entities/snippet-collections";
-import SnippetModal from "metabase/query_builder/components/template_tags/SnippetModal";
+import SnippetFormModal from "metabase/query_builder/components/template_tags/SnippetFormModal";
 import Questions from "metabase/entities/questions";
-import { CARD_TAG_REGEX } from "metabase-lib/lib/queries/NativeQuery";
+import { CARD_TAG_REGEX } from "metabase-lib/queries/NativeQuery";
 import { ResponsiveParametersList } from "./ResponsiveParametersList";
 import NativeQueryEditorSidebar from "./NativeQueryEditor/NativeQueryEditorSidebar";
 import VisibilityToggler from "./NativeQueryEditor/VisibilityToggler";
 import RightClickPopover from "./NativeQueryEditor/RightClickPopover";
 import DataSourceSelectors from "./NativeQueryEditor/DataSourceSelectors";
-import { SCROLL_MARGIN, MIN_HEIGHT_LINES } from "./NativeQueryEditor/constants";
+import {
+  ACE_ELEMENT_ID,
+  SCROLL_MARGIN,
+  MIN_HEIGHT_LINES,
+} from "./NativeQueryEditor/constants";
 import {
   calcInitialEditorHeight,
   getEditorLineHeight,
@@ -50,7 +57,7 @@ import { NativeQueryEditorRoot } from "./NativeQueryEditor.styled";
 const AUTOCOMPLETE_DEBOUNCE_DURATION = 700;
 const AUTOCOMPLETE_CACHE_DURATION = AUTOCOMPLETE_DEBOUNCE_DURATION * 1.2; // tolerate 20%
 
-class NativeQueryEditor extends Component {
+export class NativeQueryEditor extends Component {
   _localUpdate = false;
 
   constructor(props) {
@@ -108,7 +115,7 @@ class NativeQueryEditor extends Component {
   };
 
   componentDidUpdate(prevProps) {
-    const { query } = this.props;
+    const { query, readOnly } = this.props;
     if (!query || !this._editor) {
       return;
     }
@@ -136,7 +143,7 @@ class NativeQueryEditor extends Component {
 
     const editorElement = this.editor.current;
 
-    if (query.hasWritePermission()) {
+    if (query.hasWritePermission() && !readOnly) {
       this._editor.setReadOnly(false);
       editorElement.classList.remove("read-only");
     } else {
@@ -174,6 +181,7 @@ class NativeQueryEditor extends Component {
     if (this.props.cancelQueryOnLeave) {
       this.props.cancelQuery?.();
     }
+    this._editor?.destroy?.();
     document.removeEventListener("keydown", this.handleKeyDown);
     document.removeEventListener("contextmenu", this.handleRightClick);
   }
@@ -277,7 +285,7 @@ class NativeQueryEditor extends Component {
       enableSnippets: false,
       enableLiveAutocompletion: true,
       showPrintMargin: false,
-      highlightActiveLine: false,
+      highlightActiveLine: true,
       highlightGutterLine: false,
       showLineNumbers: true,
     });
@@ -403,16 +411,21 @@ class NativeQueryEditor extends Component {
     // Note we need to drop the leading `#` from the card tag name because the prefix only includes alphanumerics
     if (prefix !== this.getCardTagNameAtCursor(pos).substring(1)) {
       callback(null, null);
-      return null;
     }
     const apiResults = await this.props.cardAutocompleteResultsFn(prefix);
-    // Convert to format ace expects
-    const resultsForAce = apiResults.map(({ id, name, dataset }) => ({
-      name: `${id}-${slugg(name)}`,
-      value: `${id}-${slugg(name)}`,
-      meta: dataset ? t`Model` : t`Question`,
-      score: dataset ? 100000 : 0, // prioritize models above questions
-    }));
+    const resultsForAce = apiResults.map(
+      ({ id, name, dataset, collection_name }) => {
+        const collectionName = collection_name || t`Our analytics`;
+        return {
+          name: `${id}-${slugg(name)}`,
+          value: `${id}-${slugg(name)}`,
+          meta: dataset
+            ? t`Model in ${collectionName}`
+            : t`Question in ${collectionName}`,
+          score: dataset ? 100000 : 0, // prioritize models above questions
+        };
+      },
+    );
     callback(null, resultsForAce);
   };
 
@@ -427,9 +440,11 @@ class NativeQueryEditor extends Component {
         MIN_HEIGHT_LINES,
       ),
     );
-    if (newHeight > element.offsetHeight) {
-      element.style.height = newHeight + "px";
-      this._editor.resize();
+    if (element !== null && element.offsetHeight !== undefined) {
+      if (newHeight > element.offsetHeight) {
+        element.style.height = newHeight + "px";
+        this._editor.resize();
+      }
     }
   }
 
@@ -493,6 +508,7 @@ class NativeQueryEditor extends Component {
 
   render() {
     const {
+      question,
       query,
       setParameterValue,
       readOnly,
@@ -504,7 +520,7 @@ class NativeQueryEditor extends Component {
       resizableBoxProps = {},
       snippetCollections = [],
       resizable,
-      requireWriteback = false,
+      editorContext = "question",
       setDatasetQuery,
     } = this.props;
 
@@ -521,25 +537,35 @@ class NativeQueryEditor extends Component {
     );
 
     return (
-      <NativeQueryEditorRoot className="NativeQueryEditor bg-light full">
+      <NativeQueryEditorRoot
+        id="nativeQueryEditor-full"
+        className="NativeQueryEditor bg-light full"
+        data-testid="native-query-editor-container"
+      >
         {hasTopBar && (
           <div className="flex align-center" data-testid="native-query-top-bar">
-            <div className={!isNativeEditorOpen ? "hide sm-show" : ""}>
+            <div
+              className={!isNativeEditorOpen ? "hide sm-show" : ""}
+              id={"native-query-bar"}
+            >
               <DataSourceSelectors
                 isNativeEditorOpen={isNativeEditorOpen}
                 query={query}
                 readOnly={readOnly}
                 setDatabaseId={this.setDatabaseId}
                 setTableId={this.setTableId}
-                requireWriteback={requireWriteback}
+                editorContext={editorContext}
               />
             </div>
             {hasParametersList && (
-              <ResponsiveParametersList
-                parameters={parameters}
-                setParameterValue={setParameterValue}
-                setParameterIndex={this.setParameterIndex}
-              />
+              <div className="query_filters" style={{ display: "block" }}>
+                <ResponsiveParametersList
+                  question={question}
+                  parameters={parameters}
+                  setParameterValue={setParameterValue}
+                  setParameterIndex={this.setParameterIndex}
+                />
+              </div>
             )}
             {query.hasWritePermission() && this.props.setIsNativeEditorOpen && (
               <VisibilityToggler
@@ -568,7 +594,12 @@ class NativeQueryEditor extends Component {
             this._editor.resize();
           }}
         >
-          <div className="flex-full" id="id_sql" ref={this.editor} />
+          <div
+            className="flex-full"
+            data-testid="native-query-editor"
+            id={ACE_ELEMENT_ID}
+            ref={this.editor}
+          />
 
           <RightClickPopover
             isOpen={this.state.isSelectedTextPopoverOpen}
@@ -579,17 +610,20 @@ class NativeQueryEditor extends Component {
           />
 
           {this.props.modalSnippet && (
-            <SnippetModal
-              onSnippetUpdate={(newSnippet, oldSnippet) => {
-                if (newSnippet.name !== oldSnippet.name) {
-                  setDatasetQuery(query.updateSnippetNames([newSnippet]));
-                }
-              }}
-              snippet={this.props.modalSnippet}
-              insertSnippet={this.props.insertSnippet}
-              closeModal={this.props.closeSnippetModal}
-            />
+            <Modal onClose={this.props.closeSnippetModal}>
+              <SnippetFormModal
+                snippet={this.props.modalSnippet}
+                onCreate={this.props.insertSnippet}
+                onUpdate={(newSnippet, oldSnippet) => {
+                  if (newSnippet.name !== oldSnippet.name) {
+                    setDatasetQuery(query.updateSnippetNames([newSnippet]));
+                  }
+                }}
+                onClose={this.props.closeSnippetModal}
+              />
+            </Modal>
           )}
+
           {hasEditingSidebar && !readOnly && (
             <NativeQueryEditorSidebar
               runQuery={this.runQuery}
@@ -616,6 +650,7 @@ const mapDispatchToProps = dispatch => ({
 
 export default _.compose(
   ExplicitSize(),
+  Databases.loadList({ loadingAndErrorWrapper: false }),
   Snippets.loadList({ loadingAndErrorWrapper: false }),
   SnippetCollections.loadList({ loadingAndErrorWrapper: false }),
   connect(null, mapDispatchToProps),

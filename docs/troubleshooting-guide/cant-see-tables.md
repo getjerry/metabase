@@ -4,93 +4,79 @@ title: I can't see my tables
 
 # I can't see my tables
 
-You have connected Metabase to a database, but:
+You've connected Metabase to a database, but:
 
 - you don't see the tables in the [Data Model](../data-modeling/metadata-editing.md) section of the Admin Panel,
 - the tables don't appear in the [Data Browser](https://www.metabase.com/learn/getting-started/data-browser),
 - the tables don't show up as possible data sources when you create a query using the Notebook Editor, or
 - you can no longer see tables that you used to be able to see.
 
-## Is your browser showing you a cached list of tables?
+## Check for browser issues
 
-**Root cause:** Sometimes browsers will show an old cached list of tables.
+1. Clear your browser cache.
+2. Check if a browser extension or plugin is interfering with Metabase:
+   - Disable all extensions and plugins,
+   - Open Metabase in an incognito browser session, or
+   - Open Metabase in a different browser.
 
-**Steps to take:** Refresh your browser tab and check for your table or tables again.
+**Explanation** 
 
-## Does the database exist?
+Sometimes your browser will show an old cached list of tables. Browser extensions can also prevent pages from loading correctly.
 
-**Root cause:** The database doesn't exist. For example, you may have connected to a test database while doing an evaluation but are now in a production environment.
+## Test the database connection
 
-**Steps to take:**
+1. Go to the Metabase [SQL editor](../questions/native-editor/writing-sql.md).
+2. Test the connection to your database by running:
+    ```
+    SELECT 1
+    ```
 
-1. Go to Admin > Databases.
-2. Check that the database you're trying to query is listed.
-3. Click on the database name and examine the settings.
+If you get an error, see [Troubleshooting database connections](./db-connection.md).
 
-Exactly what settings you need will depend on your environment. To test that the settings are correct:
+**Explanation**
 
-1. Try to connect to the database using some other application (e.g., `psql` for PostgreSQL).
+Something may have changed on the database side (if you were previously connected). For example, you may have connected to a test database while doing an evaluation but are now in a production environment.
 
-If you can't connect to the database with another application, the problem is probably not with Metabase. Please check that the database server is running and that you have the correct host, port, username, password, and other settings.
+## Check table access
 
-## What's the status of your database connection?
+To make sure that your table is actually queryable by Metabase:
 
-**Root cause:** You've configured a database connection, but it's not working as expected.
+1. Go to the Metabase [SQL editor](../questions/native-editor/writing-sql.md).
+2. Look for your table:
+    ```
+    SELECT * 
+    FROM your_table
+    ```
 
-**Steps to take:**
+If there's a problem with your table name or database permissions, you'll get an error message like:
 
-If your connection isn't working, go to [Troubleshooting database connections](./db-connection.md).
+- [Table not found](https://www.metabase.com/learn/debugging-sql/sql-syntax#column-or-table-name-is-not-found-or-not-recognized)
+- [Permission denied](./data-permissions.md#getting-a-permission-denied-error-message)
 
-## Does the table exist?
+For less common errors, try searching or asking the [Metabase community](https://discourse.metabase.com/).
 
-**Root cause:** The table you think you should be able to see does not exist (e.g., it has a different name than you expect).
+**Explanation**
 
-**Steps to take:** To test that the table you are trying to query actually exists and that you have permission to access it, use the SQL Editor to create and run a query like:
+Something might have changed on database side: your table could've been renamed or dropped, or the permissions revoked.
 
-```
-select * from SOMEWHERE
-```
+## Metabase permissions
 
-where `SOMEWHERE` is the table you think you should be able to see. Metabase should display an error message like:
+If there are only a few people who can't view tables, see [A user group has the wrong access to a table or schema](./data-permissions.md#a-user-group-has-the-wrong-access-to-a-table-or-schema).
 
-```
-Table "SOMEWHERE" not found
-```
+**Explanation**
 
-If you see this message, use another application (e.g., `psql` for PostreSQL) to send the same query to the database. If it also produces a "table not found" message, check the database schema and the spelling of the table name.
+Metabase uses a group-based permission model: people belong to groups, and admins can set permissions to hide tables from groups.
 
-Be sure to log in to the database using the same credentials that Metabase uses. A common problem is that the account Metabase uses to connect to the database lacks the same privileges as a member of IT staff or a developer, so tables that are visible to the latter when they use external applications are invisible to Metabase. You may want to [check if Metabase has the correct permissions](./data-permissions.md#getting-a-permission-denied-error-message).
+## MongoDB
 
-## Does the person who cannot see the table have permission to view it?
+MongoDB lets you "successfully connect" to any collection name, even if the collection doesn't exist. If you don't see a MongoDB collection in Metabase, make sure that:
 
-**Root cause:** Metabase uses a group-based permission model: people belong to groups, and administrators can set permissions so that some groups cannot see all of the tables.
+- you have the correct collection name, and
+- the collection is non-empty.
 
-**Steps to take:**
+## Related topics
 
-1. Log into Metabase using the ID of the person who cannot see the expected tables.
-2. Confirm that the tables are not visible.
-3. Log out, then log in using the administrator's credentials.
-
-If the administrator's account can see the tables but an individual person cannot, see [Troubleshooting permissions][troubleshooting-permissions].
-
-## Is Metabase's metadata out of sync with the state of the database?
-
-**Root cause:** In order to display available tables and columns in dropdown menus and previews, Metabase runs a query every hour to find out what tables are available and what columns are in each available table, and stores this information in its application database.
-
-1. If a table has been added or removed since the last time this "sync" operation ran, Metabase's information about the database will be outdated.
-2. In some rare cases Metabase may time out while synchronizing with the database. For example, if you're using MongoDB and have very large (hundreds of kilobytes) JSON blobs, the sync operation may not complete in the allowed time.
-
-**Steps to take:**
-
-1. Run the "sync" process manually:
-   1. Go to Admin Panel > Databases.
-   2. Choose the database.
-   3. Click on "Sync database schema now".
-2. Go to Admin > Troubleshooting > Logs and see if there are any error messages saying that the "sync" operation could not run (e.g., because the network or the database itself was temporarily down).
-3. If there are no suspicious error messages, log out of Metabase, close the browser tab, log back into Metabase in a new browser tab, and try to access your table again.
-
-## Related problems
-
+- [Table visibility](../data-modeling/metadata-editing.md#table-visibility).
 - [My data sandboxes aren't working](./sandboxing.md).
 - [I can't view or edit a question or dashboard](./cant-view-or-edit.md).
 - [My visualizations are wrong](./visualization.md).

@@ -3,6 +3,7 @@ import { getIn } from "icepick";
 import { t } from "ttag";
 
 import { normalize, schema } from "normalizr";
+import axios from "axios";
 import { createAction, createThunkAction } from "metabase/lib/redux";
 import { defer } from "metabase/lib/promise";
 
@@ -24,8 +25,8 @@ import {
 } from "metabase/services";
 
 import { getMetadata } from "metabase/selectors/metadata";
-import { getParameterValuesBySlug } from "metabase-lib/lib/parameters/utils/parameter-values";
-import { applyParameters } from "metabase-lib/lib/queries/utils/card";
+import { getParameterValuesBySlug } from "metabase-lib/parameters/utils/parameter-values";
+import { applyParameters } from "metabase-lib/queries/utils/card";
 import {
   getDashboardComplete,
   getParameterValues,
@@ -108,11 +109,7 @@ const loadingComplete = createThunkAction(
         dispatch(setShowLoadingCompleteFavicon(false));
       }, 3000);
     } else {
-      const dashboard = getDashboardComplete(getState());
-      const message = dashboard.is_app_age
-        ? t`Your page is ready`
-        : t`Your dashboard is ready`;
-      dispatch(setDocumentTitle(message));
+      dispatch(setDocumentTitle(t`Your dashboard is ready`));
       document.addEventListener(
         "visibilitychange",
         () => {
@@ -172,6 +169,27 @@ export const fetchDashboard = createThunkAction(
         dashId = result.id = String(dashId);
       } else {
         result = await DashboardApi.get({ dashId: dashId });
+        // get dashboard config, so write result in jfs
+        try {
+          const meta_data = {
+            info: result,
+            type: "dashboard",
+            created_at: new Date().toISOString().slice(0, -1),
+            external_id: dashId,
+            user_id: getState().currentUser.id,
+            user_name: getState().currentUser.common_name,
+            email: getState().currentUser.email,
+          };
+          // console.log("meta", getState().dashboard.queryUuid);
+          axios.post("https://metabase-proxy.getjerry.com/chatdata/write", {
+            id: getState().dashboard.queryUuid,
+            type: "metabase_dashboard",
+            filename: "meta",
+            data: meta_data,
+          });
+        } catch (e) {
+          console.log(e);
+        }
       }
 
       if (dashboardType === "normal" || dashboardType === "transient") {
@@ -361,8 +379,23 @@ export const fetchCardData = createThunkAction(
             queryOptions,
           ),
         );
-      }
 
+        // if endpoint is DashboardApi, need write data to jerry jfs
+        if (endpoint === DashboardApi.cardQuery && result !== null) {
+          try {
+            const fileName = "report_" + card.id;
+            // console.log("report", getState().dashboard.queryUuid);
+            axios.post("https://metabase-proxy.getjerry.com/chatdata/write", {
+              id: getState().dashboard.queryUuid,
+              type: "metabase_dashboard",
+              filename: fileName,
+              data: result,
+            });
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      }
       setFetchCardDataCancel(card.id, dashcard.id, null);
       clearTimeout(slowCardTimer);
 

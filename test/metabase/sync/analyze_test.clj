@@ -1,25 +1,25 @@
-(ns metabase.sync.analyze-test
-  (:require [clojure.test :refer :all]
-            [metabase.analytics.snowplow-test :as snowplow-test]
-            [metabase.models.database :refer [Database]]
-            [metabase.models.field :as field :refer [Field]]
-            [metabase.models.interface :as mi]
-            [metabase.models.table :refer [Table]]
-            [metabase.sync.analyze :as analyze]
-            [metabase.sync.analyze.classifiers.category :as classifiers.category]
-            [metabase.sync.analyze.classifiers.name :as classifiers.name]
-            [metabase.sync.analyze.classifiers.no-preview-display :as classifiers.no-preview-display]
-            [metabase.sync.analyze.classifiers.text-fingerprint :as classifiers.text-fingerprint]
-            [metabase.sync.analyze.fingerprint.fingerprinters :as fingerprinters]
-            [metabase.sync.concurrent :as sync.concurrent]
-            [metabase.sync.interface :as i]
-            [metabase.sync.sync-metadata :as sync-metadata]
-            [metabase.test :as mt]
-            [metabase.test.data :as data]
-            [metabase.test.sync :as test.sync :refer [sync-survives-crash?]]
-            [metabase.util :as u]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+(ns ^:mb/once metabase.sync.analyze-test
+  (:require
+   [clojure.test :refer :all]
+   [metabase.models.database :refer [Database]]
+   [metabase.models.field :as field :refer [Field]]
+   [metabase.models.interface :as mi]
+   [metabase.models.table :refer [Table]]
+   [metabase.sync.analyze :as analyze]
+   [metabase.sync.analyze.classifiers.category :as classifiers.category]
+   [metabase.sync.analyze.classifiers.name :as classifiers.name]
+   [metabase.sync.analyze.classifiers.no-preview-display :as classifiers.no-preview-display]
+   [metabase.sync.analyze.classifiers.text-fingerprint :as classifiers.text-fingerprint]
+   [metabase.sync.analyze.fingerprint.fingerprinters :as fingerprinters]
+   [metabase.sync.concurrent :as sync.concurrent]
+   [metabase.sync.interface :as i]
+   [metabase.sync.sync-metadata :as sync-metadata]
+   [metabase.test :as mt]
+   [metabase.test.data :as data]
+   [metabase.test.sync :as test.sync :refer [sync-survives-crash?]]
+   [metabase.util :as u]
+   [toucan.db :as db]
+   [toucan.util.test :as tt]))
 
 (deftest skip-analysis-of-fields-with-current-fingerprint-version-test
   (testing "Check that Fields do *not* get analyzed if they're not newly created and fingerprint version is current"
@@ -254,24 +254,3 @@
         (is (= last-sync-time
                (latest-sync-time table))
             "sync time shouldn't change")))))
-
-(deftest analyze-should-send-a-snowplow-event-test
-  (testing "the recorded event should include db-id and db-engine"
-    (snowplow-test/with-fake-snowplow-collector
-      (mt/with-temp* [Table [table  (fake-table)]
-                      Field [_field (fake-field table)]]
-        (analyze-table! table)
-        (is (= {:data {"task_id"    true
-                       "event"      "new_task_history"
-                       "started_at" true
-                       "ended_at"   true
-                       "duration"   true
-                       "db_engine"  (name (db/select-one-field :engine Database :id (mt/id)))
-                       "db_id"      true
-                       "task_name"  "classify-tables"}
-                :user-id nil}
-               (-> (snowplow-test/pop-event-data-and-user-id!)
-                   last
-                   mt/boolean-ids-and-timestamps
-                   (update :data dissoc "task_details")
-                   (update-in [:data "duration"] some?))))))))

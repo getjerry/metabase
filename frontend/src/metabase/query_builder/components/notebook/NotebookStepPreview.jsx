@@ -14,7 +14,7 @@ import Button from "metabase/core/components/Button";
 import QuestionResultLoader from "metabase/containers/QuestionResultLoader";
 import Visualization from "metabase/visualizations/components/Visualization";
 
-import Question from "metabase-lib/lib/Question";
+import Question from "metabase-lib/Question";
 import {
   PreviewButtonContainer,
   PreviewHeader,
@@ -61,7 +61,7 @@ class NotebookStepPreview extends React.Component {
       : { stiffness: 170 };
 
     return (
-      <PreviewRoot>
+      <PreviewRoot data-testid="preview-root">
         <PreviewHeader>
           <span className="text-bold">{t`Preview`}</span>
           <PreviewIconContainer>
