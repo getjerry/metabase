@@ -11,10 +11,14 @@
   (let [data {:data (assoc metadata :rows rows) :user_info current-user}
         json-str (json/generate-string data)
         api-url (or (config/config-str :jerry-pii-masking-api) "http://127.0.0.1:5500/api/mask")
-        api-timeout-ms (or (config/config-int :jerry-pii-masking-api-timeout) 10000)
+        api-timeout-ms (or (config/config-int :jerry-pii-masking-api-timeout) 8000)
         start-time (System/currentTimeMillis)
+        _ (log/info (trs "Jerry Pii Masking {0}. set timeout {1}" api-url api-timeout-ms))
         response (try
-                   (http/post api-url {:form-params data, :content-type :json, :timeout api-timeout-ms})
+                   (http/post api-url {:form-params data
+                                       :content-type :json
+                                       :socket-timeout api-timeout-ms
+                                       :connection-timeout api-timeout-ms})
                    (catch Exception e
                      {:status 400, :body (.getMessage e)}))]
     (try
