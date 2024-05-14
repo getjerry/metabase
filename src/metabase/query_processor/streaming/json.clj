@@ -45,15 +45,16 @@
          (let [new-rows (deref rows)
                output-order (deref val-output-order)
                pii-masked-data (masking/send-results-to-pii-marking data new-rows current-user)]
-           (let [new-rows (:rows pii-masked-data)]
-             (doseq [row new-rows]
+           (let [new-rows (:rows pii-masked-data)
+                 num-rows (count new-rows)]
+             (doseq [[idx row] (map-indexed vector new-rows)]
                (let [ordered-row (if output-order
                                    (let [row-v (into [] row)]
                                      (for [i output-order] (row-v i)))
                                    row)]
                  (json/generate-stream (zipmap @col-names (map common/format-value ordered-row))
                                        writer)
-                 (when-not (= row (last new-rows))
+                 (when-not (= idx (dec num-rows))
                            (.write writer ",\n")))))
            (.write writer "\n]")
            (.flush writer)
@@ -86,11 +87,12 @@
            (let [deref-rows (deref rows)
                  pii-masked-data (masking/send-results-to-pii-marking data deref-rows current-user)]
              (let [new-data (:data pii-masked-data)
-                   new-rows (:rows pii-masked-data)]
+                   new-rows (:rows pii-masked-data)
+                   num-rows (count new-rows)]
                ;; write rows
-               (doseq [row new-rows]
+               (doseq [[idx row] (map-indexed vector new-rows)]
                  (json/generate-stream row writer)
-                 (when-not (= row (last new-rows))
+                 (when-not (= idx (dec num-rows))
                            (.write writer ",\n")))
                (.write writer "\n]")
                (let [data-kvs-str           (map->serialized-json-kvs new-data)
