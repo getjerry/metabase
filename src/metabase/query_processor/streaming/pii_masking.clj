@@ -13,13 +13,14 @@
         api-url (or (config/config-str :jerry-pii-masking-api) "http://127.0.0.1:5500/api/mask")
         api-timeout-ms (or (config/config-int :jerry-pii-masking-api-timeout) 8000)
         start-time (System/currentTimeMillis)
-        _ (log/info (trs "Jerry Pii Masking {0}. set timeout {1}" api-url api-timeout-ms))
+;        _ (log/info (trs "Jerry Pii Masking {0}. set timeout {1}" api-url api-timeout-ms))
         response (try
                    (http/post api-url {:form-params data
                                        :content-type :json
                                        :socket-timeout api-timeout-ms
                                        :connection-timeout api-timeout-ms})
                    (catch Exception e
+;                     (println "Error occurred while calling dynamic masking API:" (.getMessage e))
                      {:status 400, :body (.getMessage e)}))]
     (try
       (let [status (:status response)
@@ -33,7 +34,7 @@
             (log/info (trs "Jerry Pii Masking {0} Successful. Response Time: {1}" api-url response-time)) ;; Add response time parameter to the log
             {:data metadata :rows body-rows})
           (do
-            (log/error (trs "Jerry Pii Masking {0} returned non-2xx status: {1}" api-url status))
+            (log/error (trs "Jerry Pii Masking {0} returned non-2xx status: {1}, body: {2}" api-url status body))
             {:data metadata :rows rows})))
       (catch Exception e
         (log/error e (trs "Error while calling Jerry Pii Masking API"))
