@@ -76,7 +76,8 @@ import DashboardMoveModal from "metabase/dashboard/components/DashboardMoveModal
 import DashboardCopyModal from "metabase/dashboard/components/DashboardCopyModal";
 import { ModalRoute } from "metabase/hoc/ModalRoute";
 
-// import HomePage from "metabase/home/homepage/containers/HomePage";
+import HomePage from "metabase/home/homepage/containers/HomePage";
+import { PLUGIN_LANDING_PAGE } from "metabase/plugins";
 import CollectionLanding from "metabase/collections/components/CollectionLanding";
 
 import ArchiveApp from "metabase/home/containers/ArchiveApp";
@@ -194,16 +195,19 @@ export const getRoutes = store => (
       {/* MAIN */}
       <Route component={IsAuthenticated}>
         {/* The global all hands rotues, things in here are for all the folks */}
-        {/* <Route
-          path="/"
+        <Route
+          path="/recent_activity"
           component={HomePage}
           onEnter={(nextState, replace) => {
             const page = PLUGIN_LANDING_PAGE[0] && PLUGIN_LANDING_PAGE[0]();
             if (page && page !== "/") {
-              replace(page);
+              replace({
+                pathname: page[0] === "/" ? page : `/${page}`,
+                state: { preserveNavbarState: true },
+              });
             }
           }}
-        /> */}
+        />
         {/* <Redirect from="/" to="/auto/dashboard/table/2" /> */}
 
         {/* Use a dashboard page to replace homepage. */}

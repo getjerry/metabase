@@ -62,6 +62,12 @@ const ViewFooter = ({
   );
 
   const copyToClipboard = str => {
+    console.log(question);
+    console.log(result);
+    console.log(className);
+    console.log(isShowingRawTable);
+    console.log(setUIControls({ isShowingRawTable }));
+
     navigator.clipboard.writeText(str).then(
       () => {
         console.log("Data copied to clipboard successfully!");
@@ -170,7 +176,7 @@ const ViewFooter = ({
             name={isCopied ? "check" : "copy"}
             key="copy-data-to-clipboard-icon"
             tooltip={t`Copy data to clipboard`}
-            className={cx(className, "text-brand-hover cursor-pointer")}
+            className={cx(className, "mx1 text-brand-hover cursor-pointer")}
             onClick={handleCopyDataIconClick}
           />,
           QuestionLastUpdated.shouldRender({ result }) && (
