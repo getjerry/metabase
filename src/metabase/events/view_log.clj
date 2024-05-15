@@ -94,7 +94,7 @@
       :limit    [:inline 8]})))
 
 (defsetting user-recent-views
-  (deferred-tru "List of the 10 most recently viewed items for the user.")
+  (deferred-tru "List of the 50 most recently viewed items for the user.")
   :user-local :only
   :type :json
   :getter (fn []
@@ -143,7 +143,7 @@
             prior-views (remove #{view} (user-recent-views))]
         (when (= model "dashboard") (most-recently-viewed-dashboard! model-id))
         (when-not ((set prior-views) view)
-          (let [new-views (vec (take 10 (conj prior-views view)))]
+          (let [new-views (vec (take 50 (conj prior-views view)))]
             (user-recent-views! new-views)))))))
 
 (defn handle-view-event!

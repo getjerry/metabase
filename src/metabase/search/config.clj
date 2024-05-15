@@ -18,11 +18,11 @@
   that results are truncated.
 
   Under normal situations it shouldn't be rebound, but it's dynamic to make unit testing easier."
-  1000)
+  200)
 
 (def ^:const max-filtered-results
   "Number of results to return in an API response"
-  1000)
+  200)
 
 (def ^:const stale-time-in-days
   "Results older than this number of days are all considered to be equally old. In other words, there is a ranking
@@ -52,7 +52,8 @@
 (def all-models
   "All valid models to search for. The order of this list also influences the order of the results: items earlier in the
   list will be ranked higher."
-  ["dashboard" "metric" "segment" "card" "dataset" "collection" "table" "action" "database"])
+;  ["dashboard" "metric" "segment" "card" "dataset" "collection" "table" "action" "database"])
+  ["dashboard", "card"])
 
 (def ^:const displayed-columns
   "All of the result components that by default are displayed by the frontend."
