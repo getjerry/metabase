@@ -113,7 +113,7 @@
 (def ^:private card-runs-limit 8)
 
 (api/defendpoint GET "/recent_views"
-  "Get a list of 5 things the current user has been viewing most recently."
+  "Get a list of 50 things the current user has been viewing most recently."
   []
   (let [views            (view-log/user-recent-views)
         model->id->items (models-for-views views)]
@@ -129,7 +129,7 @@
                              (= (:visibility_type model-object) :hidden))))]
            (cond-> (assoc view-log :model_object model-object)
              (:dataset model-object) (assoc :model "dataset")))
-         (take 5))))
+         (take 50))))
 
 (defn- official?
   "Returns true if the item belongs to an official collection. False otherwise. Assumes that `:authority_level` exists
