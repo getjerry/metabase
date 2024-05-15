@@ -34,7 +34,7 @@
             (log/info (trs "Jerry Pii Masking {0} Successful. Response Time: {1}" api-url response-time)) ;; Add response time parameter to the log
             {:data metadata :rows body-rows})
           (do
-            (log/error (trs "Jerry Pii Masking {0} returned non-2xx status: {1}, body: {2}" api-url status body))
+            (log/error (trs "Jerry Pii Masking {0} returned non-2xx status: {1}, body: {2}, Response Time: {3}" api-url status body response-time))
             {:data metadata :rows rows})))
       (catch Exception e
         (log/error e (trs "Error while calling Jerry Pii Masking API"))
