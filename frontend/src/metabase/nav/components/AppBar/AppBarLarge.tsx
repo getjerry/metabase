@@ -5,6 +5,7 @@ import ProfileLink from "../ProfileLink";
 import SearchBar from "../SearchBar";
 import CollectionBreadcrumbs from "../../containers/CollectionBreadcrumbs";
 import QuestionLineage from "../../containers/QuestionLineage";
+import RecentActivityButton from "../JerryCustomButton/RecentActivityButton";
 import AppBarLogo from "./AppBarLogo";
 import {
   AppBarLeftContainer,
@@ -70,6 +71,7 @@ const AppBarLarge = ({
       {(isSearchVisible || isNewButtonVisible || isProfileLinkVisible) && (
         <AppBarRightContainer>
           {isSearchVisible && <SearchBar />}
+          {isSearchVisible && <RecentActivityButton />}
           {isNewButtonVisible && <NewItemButton collectionId={collectionId} />}
           {isProfileLinkVisible && (
             <AppBarProfileLinkContainer>

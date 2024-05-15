@@ -79,7 +79,13 @@ function RecentsList({ list, loading, onChangeLocation, onClick, className }) {
   const ResultContainer = onClick ? ResultButton : ResultLink;
 
   return (
-    <Root className={className}>
+    <Root
+      className={className}
+      style={{
+        maxHeight: "500px",
+        overflowY: "auto",
+      }}
+    >
       <Header>{t`Recently viewed`}</Header>
       <LoadingAndErrorWrapper loading={loading} noWrapper>
         <React.Fragment>

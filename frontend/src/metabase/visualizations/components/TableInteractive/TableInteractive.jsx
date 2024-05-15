@@ -655,6 +655,8 @@ class TableInteractive extends Component {
       /* using formatValue instead of <Value> here for performance. The later wraps in an extra <span> */
     );
 
+    // console.log(cellData);
+
     const isLink = cellData && cellData.type === ExternalLink;
     const isClickable = !isLink && this.visualizationIsClickable(clicked);
     const backgroundColor = this.getCellBackgroundColor(
