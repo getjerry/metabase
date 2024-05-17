@@ -1,19 +1,21 @@
 (ns metabase.events.view-log
-  (:require
-   [clojure.core.async :as a]
-   [clojure.string :as str]
-   [java-time :as t]
-   [metabase.api.common :as api]
-   [metabase.db.connection :as mdb.connection]
-   [metabase.db.query :as mdb.query]
-   [metabase.events :as events]
-   [metabase.models.setting :as setting :refer [defsetting]]
-   [metabase.models.view-log :refer [ViewLog]]
-   [metabase.server.middleware.session :as mw.session]
-   [metabase.util.honey-sql-2 :as h2x]
-   [metabase.util.i18n :as i18n :refer [deferred-tru]]
-   [metabase.util.log :as log]
-   [toucan.db :as db]))
+    (:require
+      [clojure.core.async :as a]
+      [clojure.string :as str]
+      [java-time :as t]
+      [metabase.api.common :as api]
+      [metabase.db.connection :as mdb.connection]
+      [metabase.db.query :as mdb.query]
+      [metabase.events :as events]
+      [metabase.models.setting :as setting
+       :refer                      [defsetting]]
+      [metabase.models.view-log :refer [ViewLog]]
+      [metabase.server.middleware.session :as mw.session]
+      [metabase.util.honey-sql-2 :as h2x]
+      [metabase.util.i18n :as i18n
+       :refer                 [deferred-tru]]
+      [metabase.util.log :as log]
+      [toucan.db :as db]))
 
 (def ^:private view-log-topics
   "The `Set` of event topics which we subscribe to for view counting."
@@ -23,7 +25,8 @@
     :dashboard-read
     :table-read})
 
-(defonce ^:private ^{:doc "Channel for receiving event notifications we want to subscribe to for view counting."}
+(defonce
+  ^:private ^{:doc "Channel for receiving event notifications we want to subscribe to for view counting."}
   view-log-channel
   (a/chan))
 
@@ -65,11 +68,11 @@
                    :from   :query_execution}
         vl        {:select    [[(h2x/literal "vl") :source]
                                :user_id
-                               [(h2x/literal "question") :context]
+                                [(h2x/literal "question") :context]
                                :timestamp
-                               :model
+                                :model
                                :model_id
-                               [:report_card.dataset :dataset]]
+                                [:report_card.dataset :dataset]]
                    :from      [:view_log]
                    :left-join [:report_card
                                [:and
@@ -87,8 +90,12 @@
                   [:not= :context (h2x/literal "pulse")]
                   [:not= :context (h2x/literal "collection")]
                   [:not= :context (h2x/literal "ad-hoc")]
-                  [:not= [:composite :context :model] [:composite (h2x/literal "dashboard") (h2x/literal "card")]]
-                  [:not= [:composite :source :model :dataset] [:composite (h2x/literal "vl") (h2x/literal "card") [:inline false]]]
+                  [:not=
+                   [:composite :context :model]
+                   [:composite (h2x/literal "dashboard") (h2x/literal "card")]]
+                  [:not=
+                   [:composite :source :model :dataset]
+                   [:composite (h2x/literal "vl") (h2x/literal "card") [:inline false]]]
                   [:not-in [:composite :model :model_id] bookmarks]]]
       :group-by [:model :model_id]
       :order-by [[:timestamp :desc]]
@@ -98,30 +105,33 @@
   (deferred-tru "List of the 50 most recently viewed items for the user.")
   :user-local :only
   :type :json
-  :getter (fn []
-            (let [value (setting/get-value-of-type :json :user-recent-views)]
-              (if value
-                (vec value)
-                (let [views (mapv #(select-keys % [:model :model_id])
-                                  (recent-views-from-view-log api/*current-user-id*))]
-                  (setting/set-value-of-type! :json :user-recent-views views)
-                  views)))))
+  :getter
+  (fn []
+    (let [value (setting/get-value-of-type :json :user-recent-views)]
+      (if value
+        (vec value)
+        (let [views (mapv #(select-keys % [:model :model_id])
+                          (recent-views-from-view-log api/*current-user-id*))]
+          (setting/set-value-of-type! :json :user-recent-views views)
+          views)))))
 
 ;; TODO: remove this setting as part of Audit V2 project.
 (defsetting most-recently-viewed-dashboard
   (deferred-tru "The Dashboard that the user has most recently viewed within the last 24 hours.")
   :user-local :only
   :type :json
-  :getter (fn []
-            (let [{:keys [id timestamp] :as value} (setting/get-value-of-type :json :most-recently-viewed-dashboard)
-                  yesterday                        (t/minus (t/zoned-date-time) (t/hours 24))]
-              ;; If the latest view is older than 24 hours, return 'nil'
-              (when (and value (t/after? (t/zoned-date-time timestamp) yesterday))
-                id)))
-  :setter (fn [id]
-            (when id
-              ;; given a dashboard's ID, save it with a timestamp of 'now', for comparing later in the getter
-              (setting/set-value-of-type! :json :most-recently-viewed-dashboard {:id id :timestamp (t/zoned-date-time)}))))
+  :getter
+  (fn []
+    (let [{:keys [id timestamp] :as value} (setting/get-value-of-type :json :most-recently-viewed-dashboard)
+          yesterday                        (t/minus (t/zoned-date-time) (t/hours 24))]
+      ;; If the latest view is older than 24 hours, return 'nil'
+      (when (and value (t/after? (t/zoned-date-time timestamp) yesterday))
+            id)))
+  :setter
+  (fn [id]
+    (when id
+          ;; given a dashboard's ID, save it with a timestamp of 'now', for comparing later in the getter
+          (setting/set-value-of-type! :json :most-recently-viewed-dashboard {:id id :timestamp (t/zoned-date-time)}))))
 
 ;;; ## ---------------------------------------- EVENT PROCESSING ----------------------------------------
 
@@ -130,22 +140,22 @@
   [model model-id user-id metadata]
   ;; TODO - we probably want a little code that prunes old entries so that this doesn't get too big
   (db/insert! ViewLog
-    :user_id  user-id
-    :model    model
-    :model_id model-id
-    :metadata metadata))
+              :user_id  user-id
+              :model    model
+              :model_id model-id
+              :metadata metadata))
 
 (defn- update-users-recent-views!
   [user-id model model-id]
   (when user-id
-    (mw.session/with-current-user user-id
-      (let [view        {:model    (name model)
-                         :model_id model-id}
-            prior-views (remove #{view} (user-recent-views))]
-        (when (= model "dashboard") (most-recently-viewed-dashboard! model-id))
-        (when-not ((set prior-views) view)
-          (let [new-views (vec (take 50 (conj prior-views view)))]
-            (user-recent-views! new-views)))))))
+        (mw.session/with-current-user user-id
+                                      (let [view        {:model    (name model)
+                                                         :model_id model-id}
+                                            prior-views (remove #{view} (user-recent-views))]
+                                        (when (= model "dashboard") (most-recently-viewed-dashboard! model-id))
+                                        (when-not ((set prior-views) view)
+                                                  (let [new-views (vec (take 50 (conj prior-views view)))]
+                                                    (user-recent-views! new-views)))))))
 
 (defn handle-view-event!
   "Handle processing for a single event notification received on the view-log-channel"
@@ -157,8 +167,10 @@
             model-id                       (events/object->model-id topic object)
             user-id                        (events/object->user-id object)
             {:keys [context] :as metadata} (events/object->metadata object)]
-        (when (and (#{:card-query :dashboard-read :table-read} topic)
-                   ((complement #{:collection :dashboard}) context)) ;; we don't want to count pinned card views
+        (when
+          (and (#{:card-query :dashboard-read :table-read} topic)
+               ((complement #{:collection :dashboard}) context))
+          ;; we don't want to count pinned card views
           (update-users-recent-views! user-id model model-id))
         (record-view! model model-id user-id metadata)))
     (catch Throwable e
@@ -167,8 +179,8 @@
 ;;; ## ---------------------------------------- LIFECYLE ----------------------------------------
 
 (defmethod events/init! ::ViewLog
-  [_]
-  (events/start-event-listener! view-log-topics view-log-channel handle-view-event!))
+           [_]
+           (events/start-event-listener! view-log-topics view-log-channel handle-view-event!))
 
 
 (defmethod events/init! ::ViewLog
@@ -206,8 +218,21 @@
    #"\?"
    (str user-id)))
 
+(defn add-model-object [query-results]
+  (map
+    #(assoc % :model_object
+      {:authority_level    nil
+       :description        (:description %)
+       :archived           false
+       :name               (:name %)
+       :moderation_reviews []
+       :moderated_status   nil
+       :id                 (:model_id %)
+       :display            (:model %)})
+    query-results))
+
 (defn execute-query-recent-views!
   [user_id]
-  (let [sql (recent-view-sql user_id)
+  (let [sql    (recent-view-sql user_id)
         result (db/query sql)]
-    result))
+    (add-model-object result)))

@@ -92,16 +92,6 @@ function RecentsList({ list, loading, onChangeLocation, onClick, className }) {
           {hasRecents && (
             <ul>
               {list.map((item, index) => {
-                item.model_object = {
-                  authority_level: null,
-                  description: item.description,
-                  archived: false,
-                  name: item.name,
-                  moderation_reviews: [],
-                  moderated_status: null,
-                  id: item.model_id,
-                  display: item.model,
-                };
                 const key = getItemKey(item);
                 const title = getItemName(item);
                 const type = getTranslatedEntityName(item.model);
