@@ -13,6 +13,7 @@
    [metabase.search.config :as search-config]
    [metabase.search.scoring :as scoring]
    [metabase.search.util :as search-util]
+   [metabase.search.jerry-search :as js]
    [metabase.server.middleware.offset-paging :as mw.offset-paging]
    [metabase.util :as u]
    [metabase.util.honey-sql-2 :as h2x]
@@ -196,7 +197,9 @@
           (for [column searchable-columns
                 token (search-util/tokenize (search-util/normalize query))]
             (if (and (= model "card") (= column (keyword (name (model->alias model)) "dataset_query")))
-              [:= (keyword (name (model->alias model)) "query_type") "native"]
+              [:like
+               [:lower column]
+               (wildcard-match token)]
               [:like
                [:lower column]
                (wildcard-match token)])))))
@@ -456,7 +459,7 @@
 ; This is basically a union type. defendpoint splits the string if it only gets one
 (def ^:private models-schema (s/conditional vector? [su/NonBlankString] :else su/NonBlankString))
 
-(s/defn ^:private search-context :- SearchContext
+(s/defn search-context :- SearchContext
   [search-string   :- (s/maybe su/NonBlankString),
    archived-string :- (s/maybe su/BooleanString)
    table-db-id     :- (s/maybe su/IntGreaterThanZero)
@@ -492,13 +495,6 @@
    archived     (s/maybe su/BooleanString)
    table_db_id  (s/maybe su/IntGreaterThanZero)
    models       (s/maybe models-schema)}
-  (api/check-valid-page-params mw.offset-paging/*limit* mw.offset-paging/*offset*)
-  (search (search-context
-           q
-           archived
-           table_db_id
-           models
-           mw.offset-paging/*limit*
-           mw.offset-paging/*offset*)))
+  (js/jerry-search-func q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset*))
 
 (api/define-routes)

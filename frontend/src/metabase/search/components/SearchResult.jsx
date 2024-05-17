@@ -59,11 +59,11 @@ export function ItemIcon({ item, type, active }) {
   );
 }
 
-function Score({ scores }) {
-  return (
-    <pre className="hide search-score">{JSON.stringify(scores, null, 2)}</pre>
-  );
-}
+// function Score({ scores }) {
+//   return (
+//     <pre className="hide search-score">{JSON.stringify(scores, null, 2)}</pre>
+//   );
+// }
 
 function Context({ context }) {
   if (!context) {
@@ -103,6 +103,14 @@ export default function SearchResult({
   // we want to remove link behavior if we have an onClick handler
   const ResultContainer = onClick ? ResultButton : ResultLink;
 
+  if (!result.collection) {
+    result.collection = {
+      id: null,
+      name: "Our anayitics",
+      authority_level: null,
+    };
+  }
+
   return (
     <ResultContainer
       isSelected={isSelected}
@@ -130,7 +138,7 @@ export default function SearchResult({
           {hasDescription && result.description && (
             <Description>{result.description}</Description>
           )}
-          <Score scores={result.scores} />
+          {/*<Score scores={result.scores} />*/}
         </div>
         {loading && <ResultSpinner size={24} borderWidth={3} />}
       </ResultLinkContent>
