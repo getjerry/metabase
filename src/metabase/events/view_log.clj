@@ -1,6 +1,7 @@
 (ns metabase.events.view-log
   (:require
    [clojure.core.async :as a]
+   [clojure.string :as str]
    [java-time :as t]
    [metabase.api.common :as api]
    [metabase.db.connection :as mdb.connection]
@@ -168,3 +169,45 @@
 (defmethod events/init! ::ViewLog
   [_]
   (events/start-event-listener! view-log-topics view-log-channel handle-view-event!))
+
+
+(defmethod events/init! ::ViewLog
+           [_]
+           (events/start-event-listener! view-log-topics view-log-channel handle-view-event!))
+
+(defn recent-view-sql [user-id]
+  (str/replace
+   "SELECT
+      view_log.model as model,
+      view_log.model_id as model_id,
+      coalesce(report_dashboard.name, report_card.name, metabase_table.name) as name,
+      coalesce(report_dashboard.description, report_card.description, metabase_table.description) as description
+    FROM (
+      SELECT *
+      FROM (
+        SELECT model, model_id, timestamp,
+               ROW_NUMBER() OVER (PARTITION BY model, model_id ORDER BY timestamp DESC) AS row_num
+        FROM view_log
+        WHERE user_id = ?
+              and model in ('card', 'dashboard')
+              and timestamp >= NOW() - INTERVAL '30 days'
+      ) AS recent_logs
+      WHERE row_num = 1
+      ORDER BY timestamp desc
+      LIMIT 50
+    ) view_log
+    LEFT JOIN report_card
+    ON report_card.id = view_log.model_id AND view_log.model = 'card'
+    LEFT JOIN report_dashboard
+    ON report_dashboard.id = view_log.model_id AND view_log.model = 'dashboard'
+    LEFT JOIN metabase_table
+    ON metabase_table.id = view_log.model_id AND view_log.model = 'table'
+    ORDER BY view_log.timestamp desc"
+   #"\?"
+   (str user-id)))
+
+(defn execute-query-recent-views!
+  [user_id]
+  (let [sql (recent-view-sql user_id)
+        result (db/query sql)]
+    result))

@@ -112,24 +112,11 @@
 (def ^:private views-limit 8)
 (def ^:private card-runs-limit 8)
 
-(api/defendpoint GET "/recent_views"
+(api/defendpoint-schema GET "/recent_views"
   "Get a list of 50 things the current user has been viewing most recently."
   []
-  (let [views            (view-log/user-recent-views)
-        model->id->items (models-for-views views)]
-    (->> (for [{:keys [model model_id] :as view-log} views
-               :let
-               [model-object (-> (get-in model->id->items [model model_id])
-                                 (dissoc :dataset_query))]
-               :when
-               (and model-object
-                    (mi/can-read? model-object)
-                    ;; hidden tables, archived cards/dashboards
-                    (not (or (:archived model-object)
-                             (= (:visibility_type model-object) :hidden))))]
-           (cond-> (assoc view-log :model_object model-object)
-             (:dataset model-object) (assoc :model "dataset")))
-         (take 50))))
+  (let [user_id *current-user-id*]
+    (view-log/execute-query-recent-views! user_id)))
 
 (defn- official?
   "Returns true if the item belongs to an official collection. False otherwise. Assumes that `:authority_level` exists
