@@ -23,13 +23,14 @@
     (str api-host "?" query-str)))
 
 (defn jerry-search-func
-  [q archived table_db_id models limit offset]
+  [q archived table_db_id models limit offset user_id]
   (let [start-time     (System/currentTimeMillis)
         api-host       (or (config/config-str :jerry-search-api) "http://127.0.0.1:5500/api/search")
         api-url        (build-api-url api-host q archived table_db_id models limit offset)
         api-token      (or (config/config-str :jerry-search-token) "")
         headers        {"accept" "application/json"
-                        "token" api-token}
+                        "token" api-token
+                        "user_id" user_id}
         api-timeout-ms 8000
         response       (try
                          (http/get api-url {:headers headers})

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { t } from "ttag";
 import _ from "underscore";
@@ -11,8 +11,8 @@ import * as Urls from "metabase/lib/urls";
 import { isSyncCompleted } from "metabase/lib/syncing";
 import { PLUGIN_MODERATION } from "metabase/plugins";
 import {
-  ResultLink,
   ResultButton,
+  ResultLink,
   ResultSpinner,
   Title,
   TitleWrapper,
@@ -24,10 +24,10 @@ import { useListKeyboardNavigation } from "metabase/hooks/use-list-keyboard-navi
 
 import { getTranslatedEntityName } from "../utils";
 import {
-  Root,
   EmptyStateContainer,
   Header,
   RecentListItemContent,
+  Root,
 } from "./RecentsList.styled";
 
 const LOADER_THRESHOLD = 100;
@@ -92,6 +92,16 @@ function RecentsList({ list, loading, onChangeLocation, onClick, className }) {
           {hasRecents && (
             <ul>
               {list.map((item, index) => {
+                item.model_object = {
+                  authority_level: null,
+                  description: item.description,
+                  archived: false,
+                  name: item.name,
+                  moderation_reviews: [],
+                  moderated_status: null,
+                  id: item.model_id,
+                  display: item.model,
+                };
                 const key = getItemKey(item);
                 const title = getItemName(item);
                 const type = getTranslatedEntityName(item.model);
