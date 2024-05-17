@@ -69,7 +69,7 @@
                                     (map (partial format "'sha256-%s'") inline-js-hashes)))
                   :child-src    ["'self'"
                                  ;; TODO - double check that we actually need this for Google Auth
-                                 "https://accounts.google.com https://en.wikipedia.org https://streamlit.ing.getjerry.com https://chatdata.ing.getjerry.com https://chatdata-prod.ing.getjerry.com https://chatdata-dev.ing.getjerry.com http://me.mydomain.com http://dynamic-masking-service"]
+                                 "https://accounts.google.com https://en.wikipedia.org https://streamlit.ing.getjerry.com https://chatdata.ing.getjerry.com https://chatdata-prod.ing.getjerry.com https://chatdata-dev.ing.getjerry.com http://me.mydomain.com http://dynamic-masking-service https://mb-search.ing.getjerry.com"]
                   :style-src    ["'self'"
                                  "'unsafe-inline'"
                                  "https://accounts.google.com"]
@@ -86,6 +86,8 @@
                                  "metabase-proxy.getjerry.com"
                                  ;; Pii masking
                                  "dynamic-masking-service"
+                                 ;; jerry search
+                                 "mb-search.ing.getjerry.com"
                                  ;; Google analytics
                                  (when (public-settings/anon-tracking-enabled)
                                    "www.google-analytics.com")
