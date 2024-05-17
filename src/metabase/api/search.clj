@@ -495,6 +495,8 @@
    archived     (s/maybe su/BooleanString)
    table_db_id  (s/maybe su/IntGreaterThanZero)
    models       (s/maybe models-schema)}
-  (js/jerry-search-func q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset*))
+  (if models
+    (search (search-context q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset*))
+    (js/jerry-search-func q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset*)))
 
 (api/define-routes)
