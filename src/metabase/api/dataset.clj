@@ -67,9 +67,10 @@
                                 :context     context
                                 :card-id     source-card-id}
                          (:dataset source-card)
-                         (assoc :metadata/dataset-metadata (:result_metadata source-card)))]
+                         (assoc :metadata/dataset-metadata (:result_metadata source-card)))
+        current-user @api/*current-user*]
     (binding [qp.perms/*card-id* source-card-id]
-      (qp.streaming/streaming-response [context export-format]
+      (qp.streaming/streaming-response [context export-format nil current-user]
         (qp-runner query info context)))))
 
 #_{:clj-kondo/ignore [:deprecated-var]}
