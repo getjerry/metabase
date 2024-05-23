@@ -142,7 +142,7 @@
           event {:eventCategory "Metabase",
                  :eventAction "Backend",
                  :eventLabel uri}]
-      (when (and uri (not= uri "/api/jerry/event"))
+      (when (and uri (not= uri "/api/jerry/event") (not (str/includes? uri "autocomplete_suggestions")))
             (jerry.e/track-event-async event info)))
     (catch Throwable e
       (log/error e (trs "track backend event error")))))
