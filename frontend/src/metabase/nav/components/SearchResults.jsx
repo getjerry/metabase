@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { t } from "ttag";
 import { connect } from "react-redux";
@@ -10,6 +10,7 @@ import Search from "metabase/entities/search";
 import SearchResult from "metabase/search/components/SearchResult";
 import EmptyState from "metabase/components/EmptyState";
 import { useListKeyboardNavigation } from "metabase/hooks/use-list-keyboard-navigation";
+import { trackEvent } from "metabase/event/jerry-utils";
 import { EmptyStateContainer } from "./SearchResults.styled";
 
 const propTypes = {
@@ -17,13 +18,28 @@ const propTypes = {
   onChangeLocation: PropTypes.func,
   onEntitySelect: PropTypes.func,
   searchText: PropTypes.string,
+  user: PropTypes.object,
 };
+
+function trackSearchEvent(searchText, user, searchResult) {
+  const event = {
+    eventCategory: "Metabase",
+    eventAction: "Frontend",
+    eventLabel: "search input",
+  };
+  const meta = {
+    user_info: user,
+    input: searchText,
+  };
+  trackEvent(event, meta);
+}
 
 const SearchResults = ({
   list,
   onChangeLocation,
   onEntitySelect,
   searchText,
+  user,
 }) => {
   const { reset, getRef, cursorIndex } = useListKeyboardNavigation({
     list,
@@ -33,11 +49,39 @@ const SearchResults = ({
     resetOnListChange: false,
   });
 
+  const listRef = useRef(list);
+  const userRef = useRef(user);
   useEffect(() => {
     reset();
+    const trackEventWithList = () => {
+      trackSearchEvent(searchText, userRef.current, listRef.current);
+    };
+    trackEventWithList();
   }, [searchText, reset]);
 
   const hasResults = list.length > 0;
+
+  const handleResultClick = (item, index) => {
+    trackEvent(
+      {
+        eventCategory: "Metabase",
+        eventAction: "Frontend",
+        eventLabel: "SearchResultClick",
+      },
+      {
+        user_info: user,
+        click_index: index,
+        click_item: item,
+        input: searchText,
+      },
+    );
+
+    if (onEntitySelect) {
+      onEntitySelect(item);
+    } else {
+      onChangeLocation(item.getUrl());
+    }
+  };
 
   return (
     <ul data-testid="search-results-list">
@@ -48,7 +92,7 @@ const SearchResults = ({
               result={item}
               compact={true}
               isSelected={cursorIndex === index}
-              onClick={onEntitySelect}
+              onClick={() => handleResultClick(item, index)}
             />
           </li>
         ))

@@ -83,6 +83,7 @@ import CollectionLanding from "metabase/collections/components/CollectionLanding
 import ArchiveApp from "metabase/home/containers/ArchiveApp";
 import SearchApp from "metabase/home/containers/SearchApp";
 import { trackPageView } from "metabase/lib/analytics";
+import { trackJerryView } from "metabase/event/jerry-utils";
 import { getAdminPaths } from "metabase/admin/app/selectors";
 
 import ActionCreatorModal from "metabase/actions/containers/ActionCreatorModal";
@@ -174,10 +175,12 @@ export const getRoutes = store => (
       onEnter={async (nextState, replace, done) => {
         await store.dispatch(loadCurrentUser());
         trackPageView(nextState.location.pathname);
+        trackJerryView(store, null, nextState);
         done();
       }}
       onChange={(prevState, nextState) => {
         trackPageView(nextState.location.pathname);
+        trackJerryView(store, prevState, nextState);
       }}
     >
       {/* AUTH */}

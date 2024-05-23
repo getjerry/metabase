@@ -17,6 +17,7 @@
    [metabase.api.field :as api.field]
    [metabase.api.geojson :as api.geojson]
    [metabase.api.google :as api.google]
+   [metabase.api.jerry :as api.jerry]
    [metabase.api.ldap :as api.ldap]
    [metabase.api.login-history :as api.login-history]
    [metabase.api.metric :as api.metric]
@@ -80,6 +81,7 @@
   (context "/field"                [] (+auth api.field/routes))
   (context "/geojson"              [] api.geojson/routes)
   (context "/google"               [] (+auth api.google/routes))
+  (context "/jerry"                [] (+auth api.jerry/routes))
   (context "/ldap"                 [] (+auth api.ldap/routes))
   (context "/login-history"        [] (+auth api.login-history/routes))
   (context "/premium-features"     [] (+auth api.premium-features/routes))

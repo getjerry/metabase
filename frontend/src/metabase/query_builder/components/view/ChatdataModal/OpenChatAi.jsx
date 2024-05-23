@@ -134,7 +134,7 @@ export function OpenChatAi({ report, type, user, uuid }) {
       const md5Digest = md5Hash.digest("hex");
       const isDev = chatDataEnv();
       console.log("isDev", isDev);
-      let baseUrl = "https://chatdata-prod.ing.getjerry.com/";
+      let baseUrl = "https://chatdata.ing.getjerry.com/";
       if (isDev === true || isDev === "true") {
         baseUrl = Cookies.get("chatdata.dev.domain") + "/";
       }

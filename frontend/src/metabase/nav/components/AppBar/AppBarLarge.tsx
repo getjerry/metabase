@@ -70,7 +70,7 @@ const AppBarLarge = ({
       </AppBarLeftContainer>
       {(isSearchVisible || isNewButtonVisible || isProfileLinkVisible) && (
         <AppBarRightContainer>
-          {isSearchVisible && <SearchBar />}
+          {isSearchVisible && <SearchBar user={currentUser} />}
           {isSearchVisible && <RecentActivityButton />}
           {isNewButtonVisible && <NewItemButton collectionId={collectionId} />}
           {isProfileLinkVisible && (

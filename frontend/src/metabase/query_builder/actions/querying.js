@@ -148,14 +148,13 @@ export const runQuestionQuery = ({
           try {
             const userId = getState().currentUser.id;
             const fileName = "report_" + card_id + "_user_" + userId;
-            const ans = await axios.post(
+            await axios.post(
               "https://metabase-proxy.getjerry.com/chatdata/write",
               {
                 filename: fileName,
                 data: queryResults[0],
               },
             );
-            console.log(ans);
           } catch (e) {
             console.log(e);
           }

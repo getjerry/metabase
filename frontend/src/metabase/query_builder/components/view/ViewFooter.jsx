@@ -16,6 +16,7 @@ import QuestionEmbedWidget, {
 } from "metabase/query_builder/containers/QuestionEmbedWidget";
 import { getIconForVisualizationType } from "metabase/visualizations";
 import { SmartFreeze } from "metabase/query_builder/components/view/ViewFooter/SmartFreeze";
+import { copyData } from "metabase/query_builder/components/view/CopyTableData";
 import ViewButton from "./ViewButton";
 
 import QuestionAlertWidget from "./QuestionAlertWidget";
@@ -50,6 +51,7 @@ const ViewFooter = ({
   onOpenTimelines,
   onCloseTimelines,
   updateQuestion,
+  rawSeries,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
 
@@ -62,12 +64,6 @@ const ViewFooter = ({
   );
 
   const copyToClipboard = str => {
-    console.log(question);
-    console.log(result);
-    console.log(className);
-    console.log(isShowingRawTable);
-    console.log(setUIControls({ isShowingRawTable }));
-
     navigator.clipboard.writeText(str).then(
       () => {
         console.log("Data copied to clipboard successfully!");
@@ -80,17 +76,9 @@ const ViewFooter = ({
 
   const handleCopyDataIconClick = () => {
     // extract headers
-    const cols = { result }.result.data.cols;
-    const headers = cols.map(col => col.display_name);
-    const formattedHeaders = headers.join("\t");
-
-    // extract rows
-    const rows = { result }.result.data.rows;
-    const formattedRows = rows.map(row => row.join("\t")).join("\n");
-
-    // combine headers and rows
-    const formattedData = `${formattedHeaders}\n${formattedRows}`;
-    copyToClipboard(formattedData);
+    copyToClipboard(
+      copyData(isShowingRawTable, result, visualizationSettings, rawSeries),
+    );
     setIsCopied(true);
     setTimeout(() => {
       setIsCopied(false);

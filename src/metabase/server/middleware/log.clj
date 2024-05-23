@@ -14,6 +14,7 @@
    [metabase.util :as u]
    [metabase.util.i18n :refer [trs]]
    [metabase.util.log :as log]
+   [metabase.jerry.event :as jerry.e]
    [toucan.db :as db])
   (:import
    (clojure.core.async.impl.channels ManyToManyChannel)
@@ -134,9 +135,22 @@
     :log-fn         #(log/debug %)
     :include-stats? true}])
 
+(defn- log_track
+  [info]
+  (try
+    (let [{:keys [uri]} (:request info)
+          event {:eventCategory "Metabase",
+                 :eventAction "Backend",
+                 :eventLabel uri}]
+      (when (and uri (not= uri "/api/jerry/event"))
+            (jerry.e/track-event-async event info)))
+    (catch Throwable e
+      (log/error e (trs "track backend event error")))))
+
 (defn- log-info
   [{{:keys [status] :or {status -1}} :response, :as info}]
   (try
+    (log_track info)
     (let [{:keys [color log-fn]
            :or {color  :default-color
                 log-fn identity}
