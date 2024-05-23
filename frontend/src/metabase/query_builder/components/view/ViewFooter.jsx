@@ -17,6 +17,7 @@ import QuestionEmbedWidget, {
 import { getIconForVisualizationType } from "metabase/visualizations";
 import { SmartFreeze } from "metabase/query_builder/components/view/ViewFooter/SmartFreeze";
 import { copyData } from "metabase/query_builder/components/view/CopyTableData";
+import { trackEvent } from "metabase/event/jerry-utils";
 import ViewButton from "./ViewButton";
 
 import QuestionAlertWidget from "./QuestionAlertWidget";
@@ -52,6 +53,7 @@ const ViewFooter = ({
   onCloseTimelines,
   updateQuestion,
   rawSeries,
+  user,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
 
@@ -83,6 +85,18 @@ const ViewFooter = ({
     setTimeout(() => {
       setIsCopied(false);
     }, 2000);
+    console.log(question);
+    trackEvent(
+      {
+        eventCategory: "Metabase",
+        eventAction: "Frontend",
+        eventLabel: "Copied",
+      },
+      {
+        user_info: user,
+        question: question._card,
+      },
+    );
   };
 
   if (!result) {

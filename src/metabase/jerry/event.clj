@@ -68,5 +68,4 @@
 (defn track-event-async
   "Add track event async"
   [event meta]
-  (a/go
-   (track-event event meta)))
+   (a/go (track-event event meta)))
