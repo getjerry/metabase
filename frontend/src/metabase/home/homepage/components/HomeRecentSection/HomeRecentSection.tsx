@@ -41,7 +41,7 @@ const HomeRecentSection = ({
   return (
     <div>
       <div>
-        <HomeCaption>{t`Pick up where you left off`}</HomeCaption>
+        <HomeCaption>{t`Reports and Dashboards You Recently Used`}</HomeCaption>
         <SectionBody>
           {recentItems.map((item, index) => (
             <HomeModelCard
@@ -55,8 +55,8 @@ const HomeRecentSection = ({
           {hasHelpCard && <HomeHelpCard />}
         </SectionBody>
       </div>
-      <div style={{ marginTop: "40px" }}>
-        <HomeCaption>{t`Here are some updates items`}</HomeCaption>
+      <div style={{ marginTop: "50px" }}>
+        <HomeCaption>{t`Reports and Dashboards You Recently Modified or Created`}</HomeCaption>
         <SectionBody>
           {activityItems.map((item, index) => (
             <HomeModelCard
@@ -70,8 +70,8 @@ const HomeRecentSection = ({
           {hasHelpCard && <HomeHelpCard />}
         </SectionBody>
       </div>
-      <div style={{ marginTop: "40px" }}>
-        <HomeCaption>{t`Here are some frequent Dashboard/Question`}</HomeCaption>
+      <div style={{ marginTop: "50px" }}>
+        <HomeCaption>{t`Most Frequently Used Reports and Dashboards Company Wide`}</HomeCaption>
         <SectionBody>
           {frequentItems.map((item, index) => (
             <HomeModelCard

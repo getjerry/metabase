@@ -214,7 +214,7 @@
             ) AS recent_logs
             WHERE row_num = 1
             ORDER BY timestamp desc
-            LIMIT 10
+            LIMIT 5
           ) view_log
           LEFT JOIN report_card
           ON report_card.id = view_log.model_id AND view_log.model = 'card'
@@ -247,7 +247,7 @@
             ) AS activity_log
             WHERE row_num = 1
             ORDER BY timestamp desc
-            LIMIT 10
+            LIMIT 5
           ) activity_log
           LEFT JOIN report_card
           ON report_card.id = activity_log.model_id AND activity_log.model = 'card'
@@ -272,7 +272,7 @@
             and ((metadata::json->>'context')  = 'question' or (metadata::json->>'context') is null)
         group by model, model_id
         order by view_count desc
-        limit 10
+        limit 5
     )
     select
         views.model,
@@ -331,7 +331,7 @@
         where model in ('card', 'dashboard')
         group by model, model_id
         order by view_count desc
-        limit 10
+        limit 5
     ) as views
     left join report_card on report_card.id = views.model_id and views.model = 'card'
     left join report_dashboard on report_dashboard.id = views.model_id and views.model = 'dashboard'

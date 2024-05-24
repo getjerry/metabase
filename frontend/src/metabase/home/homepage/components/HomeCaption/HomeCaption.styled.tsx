@@ -12,6 +12,7 @@ export const CaptionRoot = styled.div<CaptionProps>`
   color: ${props =>
     props.primary ? color("text-dark") : color("text-medium")};
   font-weight: bold;
+  font-size: 18px;
   margin-bottom: 1.5rem;
 
   ${breakpointMinExtraLarge} {

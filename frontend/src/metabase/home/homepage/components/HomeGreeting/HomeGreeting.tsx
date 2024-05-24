@@ -1,5 +1,4 @@
-import React, { useMemo } from "react";
-import _ from "underscore";
+import React from "react";
 import { t } from "ttag";
 import Tooltip from "metabase/core/components/Tooltip";
 import { User } from "metabase-types/api";
@@ -18,7 +17,9 @@ const HomeGreeting = ({
   user: { first_name },
   showLogo,
 }: HomeGreetingProps): JSX.Element => {
-  const message = useMemo(() => getMessage(first_name), [first_name]);
+  // const message = useMemo(() => getMessage(first_name), [first_name]);
+  const message =
+    "You Recently Activities and Most Frequently Used Reports Company Wide";
 
   return (
     <GreetingRoot>
@@ -35,17 +36,17 @@ const HomeGreeting = ({
   );
 };
 
-const getMessage = (name: string | null): string => {
-  const namePart = name ? `, ${name}` : "";
-  const options = [
-    t`Hey there${namePart}`,
-    t`How's it going${namePart}?`,
-    t`Howdy${namePart}`,
-    t`Greetings${namePart}`,
-    t`Good to see you${namePart}`,
-  ];
-
-  return _.sample(options) ?? "";
-};
+// const getMessage = (name: string | null): string => {
+//   const namePart = name ? `, ${name}` : "";
+//   const options = [
+//     t`Hey there${namePart}`,
+//     t`How's it going${namePart}?`,
+//     t`Howdy${namePart}`,
+//     t`Greetings${namePart}`,
+//     t`Good to see you${namePart}`,
+//   ];
+//
+//   return _.sample(options) ?? "";
+// };
 
 export default HomeGreeting;
