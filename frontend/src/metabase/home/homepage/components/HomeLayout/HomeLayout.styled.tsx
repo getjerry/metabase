@@ -30,11 +30,11 @@ export const LayoutBody = styled.div`
   margin-top: 2.5rem;
 
   ${breakpointMinMedium} {
-    margin-top: 4rem;
+    margin-top: 2rem;
   }
 
   ${breakpointMinLarge} {
-    margin-top: 6rem;
+    margin-top: 3rem;
   }
 `;
 
