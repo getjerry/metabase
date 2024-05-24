@@ -268,13 +268,15 @@
             count(distinct user_id) as view_count
         from view_log
         where model in ('card', 'dashboard')
-            and  timestamp >= current_timestamp - (interval '90 days')
+            and  timestamp >= current_timestamp - (interval '30 days')
             and ((metadata::json->>'context')  = 'question' or (metadata::json->>'context') is null)
         group by model, model_id
         order by view_count desc
         limit 10
     )
     select
+        views.model,
+        views.model_id,
         case when views.model = 'card' then report_card.name
              when views.model = 'dashboard' then report_dashboard.name
         end as name,
