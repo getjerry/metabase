@@ -2,6 +2,8 @@ import { connect } from "react-redux";
 import _ from "underscore";
 import Databases from "metabase/entities/databases";
 import RecentItems from "metabase/entities/recent-items";
+import ActivityItems from "metabase/entities/activity-items";
+import FrequentItems from "metabase/entities/frequent-items";
 import PopularItems from "metabase/entities/popular-items";
 import { getUser } from "metabase/selectors/user";
 import { State } from "metabase-types/store";
@@ -16,6 +18,8 @@ const mapStateToProps = (state: State) => ({
 export default _.compose(
   Databases.loadList({ loadingAndErrorWrapper: false }),
   RecentItems.loadList({ reload: true, loadingAndErrorWrapper: false }),
+  ActivityItems.loadList({ reload: true, loadingAndErrorWrapper: false }),
+  FrequentItems.loadList({ reload: true, loadingAndErrorWrapper: false }),
   PopularItems.loadList({ reload: true, loadingAndErrorWrapper: false }),
   connect(mapStateToProps),
 )(HomeContent);
