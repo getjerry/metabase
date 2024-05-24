@@ -85,7 +85,6 @@ const ViewFooter = ({
     setTimeout(() => {
       setIsCopied(false);
     }, 2000);
-    console.log(question);
     trackEvent(
       {
         eventCategory: "Metabase",

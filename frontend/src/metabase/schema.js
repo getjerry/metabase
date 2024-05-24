@@ -133,6 +133,22 @@ export const RecentItemSchema = new schema.Entity("recentItems", undefined, {
   idAttribute: ({ model, model_id }) => `${model}:${model_id}`,
 });
 
+export const ActivityItemSchema = new schema.Entity(
+  "activityItems",
+  undefined,
+  {
+    idAttribute: ({ model, model_id }) => `${model}:${model_id}`,
+  },
+);
+
+export const FrequentItemSchema = new schema.Entity(
+  "frequentItems",
+  undefined,
+  {
+    idAttribute: ({ model, model_id }) => `${model}:${model_id}`,
+  },
+);
+
 export const PopularItemSchema = new schema.Entity("popularItems", undefined, {
   idAttribute: ({ model, model_id }) => `${model}:${model_id}`,
 });

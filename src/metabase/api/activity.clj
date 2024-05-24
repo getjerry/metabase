@@ -113,10 +113,21 @@
 (def ^:private card-runs-limit 8)
 
 (api/defendpoint-schema GET "/recent_views"
-  "Get a list of 50 things the current user has been viewing most recently."
+  "Get a list of 10 things the current user has been viewing most recently."
   []
   (let [user_id *current-user-id*]
     (view-log/execute-query-recent-views! user_id)))
+
+(api/defendpoint-schema GET "/recent_activity"
+  "Get a list of 10 things the current user has been changed most recently."
+  []
+  (let [user_id *current-user-id*]
+    (view-log/execute-query-recent-activity! user_id)))
+
+(api/defendpoint-schema GET "/frequently_view"
+  "Get a list of 10 frequently view report/dashboard"
+  []
+    (view-log/execute-query-frequent_view!))
 
 (defn- official?
   "Returns true if the item belongs to an official collection. False otherwise. Assumes that `:authority_level` exists

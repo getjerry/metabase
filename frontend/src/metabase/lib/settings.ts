@@ -241,6 +241,18 @@ class MetabaseSettings {
     return `https://www.metabase.com/learn/${path}`;
   }
 
+  showUrl(user: { id: any }, showType = "") {
+    if (showType === "recent_view") {
+      return `https://metabase.ing.getjerry.com/question/14588-metabase-recent-viewed?user_id=${user.id}`;
+    } else if (showType === "recent_activity") {
+      return `https://metabase.ing.getjerry.com/question/14692-metabase-recent-viewed?user_id=${user.id}`;
+    } else if (showType === "frequent_report") {
+      return "https://metabase.ing.getjerry.com/question/14691";
+    } else {
+      return "https://metabase.ing.getjerry.com/";
+    }
+  }
+
   storeUrl(path = "") {
     return `https://store.metabase.com/${path}`;
   }

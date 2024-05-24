@@ -1,7 +1,14 @@
 import React from "react";
 import { isSyncCompleted } from "metabase/lib/syncing";
 import LoadingAndErrorWrapper from "metabase/components/LoadingAndErrorWrapper";
-import { Database, PopularItem, RecentItem, User } from "metabase-types/api";
+import {
+  Database,
+  PopularItem,
+  RecentItem,
+  ActivityItem,
+  FrequentItem,
+  User,
+} from "metabase-types/api";
 import HomePopularSection from "../../containers/HomePopularSection";
 import HomeRecentSection from "../../containers/HomeRecentSection";
 import HomeXraySection from "../../containers/HomeXraySection";
@@ -11,6 +18,8 @@ export interface HomeContentProps {
   user: User;
   databases?: Database[];
   recentItems?: RecentItem[];
+  activiyItems?: ActivityItem[];
+  frequentItems?: FrequentItem[];
   popularItems?: PopularItem[];
   isXrayEnabled: boolean;
 }
@@ -39,6 +48,8 @@ const isLoading = ({
   user,
   databases,
   recentItems,
+  activiyItems,
+  frequentItems,
   popularItems,
 }: HomeContentProps): boolean => {
   if (!user.has_question_and_dashboard) {
@@ -46,7 +57,13 @@ const isLoading = ({
   } else if (user.is_installer || !isWithinWeeks(user.first_login, 1)) {
     return databases == null || recentItems == null;
   } else {
-    return databases == null || recentItems == null || popularItems == null;
+    return (
+      databases == null ||
+      recentItems == null ||
+      popularItems == null ||
+      activiyItems == null ||
+      frequentItems == null
+    );
   }
 };
 
