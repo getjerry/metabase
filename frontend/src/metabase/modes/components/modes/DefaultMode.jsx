@@ -1,3 +1,4 @@
+import ResultSortDrill from "metabase/modes/components/drill/ResultSortDrill";
 import SortDrill from "../drill/SortDrill";
 import ObjectDetailDrill from "../drill/ObjectDetailDrill";
 import QuickFilterDrill from "../drill/QuickFilterDrill";
@@ -15,6 +16,7 @@ const DefaultMode = {
   name: "default",
   drills: [
     ZoomDrill,
+    ResultSortDrill,
     SortDrill,
     ObjectDetailDrill,
     QuickFilterDrill,

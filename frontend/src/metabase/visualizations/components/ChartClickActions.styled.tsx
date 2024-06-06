@@ -14,6 +14,7 @@ export const ClickActionButton = styled.div<ClickActionButtonProps>`
       color: ${color("brand")};
       border: 1px solid ${alpha("brand", 0.35)};
       margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
 
       &:hover {
         background-color: ${color("brand")};

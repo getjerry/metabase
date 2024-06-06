@@ -35,6 +35,7 @@ import ExplicitSize from "metabase/components/ExplicitSize";
 import Ellipsified from "metabase/core/components/Ellipsified";
 import DimensionInfoPopover from "metabase/components/MetadataInfo/DimensionInfoPopover";
 // import { ChatAiSample } from "metabase/query_builder/components/view/ChatdataModal/ChatAiSample";
+import { trackEvent } from "metabase/event/jerry-utils";
 import { isID, isPK, isFK } from "metabase-lib/types/utils/isa";
 import { fieldRefForColumn } from "metabase-lib/queries/utils/dataset";
 import Dimension from "metabase-lib/Dimension";
@@ -298,6 +299,41 @@ class TableInteractive extends Component {
       parentProps.fixedColumn,
       settings,
       onUpdateVisualizationSettings,
+    );
+  }
+
+  sortTableResult(type, column) {
+    const index = this.parentProps.data.cols.findIndex(
+      item => item.name === column.name,
+    );
+    const data = this.parentProps.data.rows;
+    const collator = new Intl.Collator(undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+    data.sort((a, b) => {
+      const valueA = a[index];
+      const valueB = b[index];
+
+      if (type === "desc") {
+        return collator.compare(valueB, valueA);
+      } else {
+        return collator.compare(valueA, valueB);
+      }
+    });
+    this.parentProps.data.rows = data;
+    trackEvent(
+      {
+        eventCategory: "Metabase",
+        eventAction: "Frontend",
+        eventLabel: "sort table",
+      },
+      {
+        user_info: this.parentProps.user,
+        column_index: index,
+        column: column,
+        card: this.parentProps.card.id || 0,
+      },
     );
   }
 
@@ -841,6 +877,7 @@ class TableInteractive extends Component {
     );
     const isSorted = sortIndex >= 0;
     const isAscending = isSorted && sort[sortIndex][0] === "asc";
+    // console.log(sort, sortIndex, isSorted, isAscending);
     return (
       <Draggable
         /* needs to be index+name+counter so Draggable resets after each drag */
@@ -879,6 +916,7 @@ class TableInteractive extends Component {
             setTimeout(() => {
               clicked.fixedColumnClick = this.fixedColumnClick;
               clicked.changeFixedColumn = this.changeFixedColumn;
+              clicked.sortTableResult = this.sortTableResult;
               this.onVisualizationClick(clicked, this.headerRefs[columnIndex]);
             });
           }
@@ -921,6 +959,7 @@ class TableInteractive extends Component {
               ? e => {
                   clicked.fixedColumnClick = this.fixedColumnClick;
                   clicked.changeFixedColumn = this.changeFixedColumn;
+                  clicked.sortTableResult = this.sortTableResult;
                   this.onVisualizationClick(clicked, e.currentTarget);
                 }
               : undefined

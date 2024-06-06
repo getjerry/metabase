@@ -32,6 +32,7 @@ export type ClickObject = {
     column: DatasetColumn | undefined,
     clicked: ClickObject,
   ): any;
+  sortTableResult(type: string, column: DatasetColumn | undefined): any;
 };
 
 type Dispatcher = (dispatch: Dispatch) => void;

@@ -73,3 +73,6 @@ export const showChartSettings = createAction(SHOW_CHART_SETTINGS);
 
 export const FIX_COLUMN_SETTINGS = "metabase/query_builder/FIX_COLUMN_SETTINGS";
 export const fixColumnSettings = createAction(FIX_COLUMN_SETTINGS);
+
+export const RESULT_SORT = "metabase/query_builder/RESULT_SORT";
+export const resultSort = createAction(RESULT_SORT);

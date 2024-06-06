@@ -39,6 +39,7 @@ import {
   UPDATE_EMBEDDING_PARAMS,
   SHOW_CHART_SETTINGS,
   FIX_COLUMN_SETTINGS,
+  RESULT_SORT,
   SET_UI_CONTROLS,
   RESET_UI_CONTROLS,
   CANCEL_DATASET_CHANGES,
@@ -243,6 +244,14 @@ export const uiControls = handleActions(
       }),
     },
     [FIX_COLUMN_SETTINGS]: {
+      next: (state, { payload }) => ({
+        ...state,
+        ...UI_CONTROLS_SIDEBAR_DEFAULTS,
+        isShowingChartSettingsSidebar: false,
+        initialChartSetting: payload,
+      }),
+    },
+    [RESULT_SORT]: {
       next: (state, { payload }) => ({
         ...state,
         ...UI_CONTROLS_SIDEBAR_DEFAULTS,
