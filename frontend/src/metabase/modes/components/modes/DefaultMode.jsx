@@ -17,6 +17,7 @@ const DefaultMode = {
   drills: [
     ZoomDrill,
     ResultSortDrill,
+    FreezeColumnDrill,
     SortDrill,
     ObjectDetailDrill,
     QuickFilterDrill,
@@ -26,7 +27,6 @@ const DefaultMode = {
     AutomaticDashboardDrill,
     CompareToRestDrill,
     FormatDrill,
-    FreezeColumnDrill,
     DashboardClickDrill,
   ],
 };

@@ -16,7 +16,7 @@ const FreezeColumnDrill: Drill = ({ question, clicked = {} }) => {
   }
   const { column } = clicked;
   let tooltip = t`Freeze Left`;
-  let title = "Freeze Column";
+  let title = "Freeze column";
   const parentProps = clicked.parentProps;
   if (parentProps !== undefined) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -34,7 +34,7 @@ const FreezeColumnDrill: Drill = ({ question, clicked = {} }) => {
       title: title,
       section: "sort",
       buttonType: "setting",
-      icon: "gear",
+      icon: "pin",
       defaultAlways: false,
       tooltip: tooltip,
       action: () =>

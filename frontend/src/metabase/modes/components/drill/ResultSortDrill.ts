@@ -21,9 +21,9 @@ const ResultSortDrill: Drill = ({ question, clicked = {} }) => {
   return [
     {
       name: "sort",
-      title: "sort-ascending",
+      title: "Sort ascending",
       section: "sort",
-      buttonType: "sort",
+      buttonType: "setting",
       icon: "arrow_up",
       tooltip: t`Sort ascending`,
       defaultAlways: false,
@@ -37,9 +37,9 @@ const ResultSortDrill: Drill = ({ question, clicked = {} }) => {
     },
     {
       name: "sort",
-      title: "sort-descending",
+      title: "Sort descending",
       section: "sort",
-      buttonType: "sort",
+      buttonType: "setting",
       icon: "arrow_down",
       tooltip: t`Sort descending`,
       defaultAlways: false,
