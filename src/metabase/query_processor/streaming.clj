@@ -141,14 +141,14 @@
 
     (with-open [os ...]
       (qp/process-query query (qp.streaming/streaming-context :csv os canceled-chan)))"
-  ([export-format current-user os]
-   (let [results-writer (qp.si/streaming-results-writer export-format os current-user)]
+  ([export-format info current-user os]
+   (let [results-writer (qp.si/streaming-results-writer export-format os info current-user)]
      (merge (context.default/default-context)
             {:rff      (streaming-rff results-writer)
              :reducedf (streaming-reducedf results-writer os)})))
 
-  ([export-format current-user os canceled-chan]
-   (assoc (streaming-context export-format current-user os) :canceled-chan canceled-chan)))
+  ([export-format info current-user os canceled-chan]
+   (assoc (streaming-context export-format info current-user os) :canceled-chan canceled-chan)))
 
 (defn- await-async-result [out-chan canceled-chan]
   ;; if we get a cancel message, close `out-chan` so the query will be canceled
@@ -160,10 +160,10 @@
 
 (defn streaming-response*
   "Impl for `streaming-response`."
-  ^StreamingResponse [export-format filename-prefix current-user f]
+  ^StreamingResponse [export-format filename-prefix info current-user f]
   (streaming-response/streaming-response (qp.si/stream-options export-format filename-prefix) [os canceled-chan]
     (let [result (try
-                   (f (streaming-context export-format current-user os canceled-chan))
+                   (f (streaming-context export-format info current-user os canceled-chan))
                    (catch Throwable e
                      e))
           result (if (instance? ManyToManyChannel result)
@@ -187,8 +187,8 @@
   Handles either async or sync QP results, but you should prefer returning sync results so we can handle query
   cancelations properly."
   {:style/indent 1}
-  [[context-binding export-format filename-prefix current-user] & body]
-  `(streaming-response* ~export-format ~filename-prefix ~current-user (bound-fn [~context-binding] ~@body)))
+  [[context-binding export-format filename-prefix info current-user] & body]
+  `(streaming-response* ~export-format ~filename-prefix ~info ~current-user (bound-fn [~context-binding] ~@body)))
 
 (defn export-formats
   "Set of valid streaming response formats. Currently, `:json`, `:csv`, `:xlsx`, and `:api` (normal JSON API results

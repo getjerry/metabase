@@ -139,7 +139,7 @@
   [qp-runner export-format]
   (fn [query info current-user]
     (qp.streaming/streaming-response
-     [{:keys [reducedf], :as context} export-format (u/slugify (:card-name info)) current-user]
+     [{:keys [reducedf], :as context} export-format (u/slugify (:card-name info)) info current-user]
      (let [context  (assoc context :reducedf (public-reducedf reducedf))
            in-chan  (mw.session/as-admin
                      (qp-runner query info context))
