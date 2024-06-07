@@ -147,6 +147,40 @@ const CanAccessSettings = MetabaseIsSetup(
   UserIsAuthenticated(UserCanAccessSettings(({ children }) => children)),
 );
 
+const measurePageLoadTime = (
+  store,
+  prevState,
+  nextState,
+  startTime,
+  callback,
+) => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const loadTime = performance.now() - startTime;
+      callback(store, prevState, nextState, loadTime);
+    });
+  });
+};
+
+const onEnterHandler = async (nextState, replace, done, store) => {
+  const startTime = performance.now();
+  await store.dispatch(loadCurrentUser());
+  trackPageView(nextState.location.pathname);
+  done();
+  measurePageLoadTime(store, null, nextState, startTime, trackJerryView);
+};
+
+const onChangeHandler = (prevState, nextState, store) => {
+  measurePageLoadTime(
+    store,
+    prevState,
+    nextState,
+    performance.now(),
+    trackJerryView,
+  );
+  trackPageView(nextState.location.pathname);
+};
+
 export const getRoutes = store => (
   <Route title={t`Metabase`} component={App}>
     {/* SETUP */}
@@ -173,14 +207,10 @@ export const getRoutes = store => (
     {/* APP */}
     <Route
       onEnter={async (nextState, replace, done) => {
-        await store.dispatch(loadCurrentUser());
-        trackPageView(nextState.location.pathname);
-        trackJerryView(store, null, nextState);
-        done();
+        await onEnterHandler(nextState, replace, done, store);
       }}
       onChange={(prevState, nextState) => {
-        trackPageView(nextState.location.pathname);
-        trackJerryView(store, prevState, nextState);
+        onChangeHandler(prevState, nextState, store);
       }}
     >
       {/* AUTH */}

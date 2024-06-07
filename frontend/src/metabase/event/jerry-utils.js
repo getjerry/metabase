@@ -20,7 +20,7 @@ export function trackEvent(event, meta) {
   }
 }
 
-export const trackJerryView = (store, prevState, nextState) => {
+export const trackJerryView = (store, prevState, nextState, loadTime = 0) => {
   if (
     prevState == null ||
     prevState.location.pathname !== nextState.location.pathname
@@ -30,6 +30,7 @@ export const trackJerryView = (store, prevState, nextState) => {
       const data = {
         user_info: currentUser,
         route: nextState.location,
+        load_time: loadTime,
       };
       const event = {
         eventCategory: "Metabase",
