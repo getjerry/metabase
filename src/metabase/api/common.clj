@@ -21,7 +21,6 @@
    [metabase.util.i18n :as i18n :refer [deferred-tru tru trs]]
    [metabase.util.log :as log]
    [metabase.util.schema :as su]
-   [metabase.jerry.event :as jerry.e]
    [schema.core :as schema]
    [toucan.db :as db]))
 
@@ -219,23 +218,6 @@
 
 
 ;;; --------------------------------------- DEFENDPOINT AND RELATED FUNCTIONS ----------------------------------------
-(defn log_track
-  [request]
-  (try
-    (let [current-user @*current-user*
-          route (:compojure/route-context request)
-          event {:eventCategory "Metabase",
-               :eventAction "Backend",
-               :eventLabel route}
-          meta {"request" request "user_info" current-user}]
-      (when (and route
-                 (not= route "/api/jerry/event")
-                 (not (str/includes? route "autocomplete_suggestions"))
-                 (not= route "/api/session"))
-            (jerry.e/track-event-async event meta)))
-    (catch Throwable e
-      (log/error e (trs "track backend event error")))))
-
 (s/def ::defendpoint-args
   (s/cat
    :method      symbol?
@@ -324,7 +306,6 @@
         ~method-kw
         ~(prep-route route)
         (fn [request#]
-          (log_track request#)
           (validate-param-values request# (quote ~allowed-params))
           (compojure/let-request [~args request#]
             ~@body))))))

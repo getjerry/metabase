@@ -3,6 +3,9 @@
   (:require
    [clojure.core.async :as a]
    [clojure.string :as str]
+   [metabase.api.common
+    :as api
+    :refer [*current-user*]]
    [metabase.async.streaming-response :as streaming-response]
    [metabase.async.streaming-response.thread-pool :as thread-pool]
    [metabase.async.util :as async.u]
@@ -14,6 +17,7 @@
    [metabase.util :as u]
    [metabase.util.i18n :refer [trs]]
    [metabase.util.log :as log]
+   [metabase.jerry.event :as jerry.e]
    [toucan.db :as db])
   (:import
    (clojure.core.async.impl.channels ManyToManyChannel)
@@ -29,6 +33,29 @@
 ;;     {:request ..., :response ..., :start-time ..., :call-count-fn ...}
 ;;
 ;; This map is created in `log-api-call` at the bottom of this namespace.
+
+
+;;; +----------------------------------------------------------------------------------------------------------------+
+;;; |                                   Add Log Track Event                                                          |
+;;; +----------------------------------------------------------------------------------------------------------------+
+(defn log-track
+  [info current-user]
+  (try
+    (let [{:keys [request start-time]} info
+          {:keys [uri]} request
+          run-time (- (System/nanoTime) start-time)
+          elapsed-time (u/format-nanoseconds run-time)
+          event {:eventCategory "Metabase",
+                 :eventAction "Backend",
+                 :eventLabel uri}
+          log-info (assoc info :elapsed-time elapsed-time :run-time run-time)
+          meta {"info" log-info "user_info" current-user}]
+      (when (and uri
+                 (not= uri "/api/jerry/event")
+                 (not (str/includes? uri "autocomplete_suggestions")))
+            (jerry.e/track-event-async event meta)))
+    (catch Throwable e
+      (log/error e (trs "track backend event error")))))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                   Getting & Formatting Request/Response Info                                   |
@@ -93,6 +120,7 @@
     (str "\n" (u/pprint-to-str body))))
 
 (defn- format-info [info opts]
+  (log-track info @*current-user*)
   (str/join " " (filter some? [(format-status-info info)
                                (format-performance-info info)
                                (format-threads-info info opts)
