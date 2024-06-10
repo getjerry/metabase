@@ -2,6 +2,8 @@ import React from "react";
 import { t } from "ttag";
 import PropTypes from "prop-types";
 import { PLUGIN_MODERATION } from "metabase/plugins";
+import Tooltip from "metabase/core/components/Tooltip";
+import { LegendDescriptionIcon } from "metabase/visualizations/components/legend/LegendCaption.styled";
 import { HeaderRoot, HeaderTitle } from "./SavedQuestionHeaderButton.styled";
 
 SavedQuestionHeaderButton.propTypes = {
@@ -21,6 +23,12 @@ function SavedQuestionHeaderButton({ question, onSave }) {
         data-testid="saved-question-header-title"
       />
       <PLUGIN_MODERATION.QuestionModerationIcon question={question} />
+      {question.description() && (
+        <Tooltip tooltip={question.description()} maxWidth="40em">
+          <LegendDescriptionIcon className="hover-child hover-child--smooth" />
+        </Tooltip>
+      )}
+      ,
     </HeaderRoot>
   );
 }

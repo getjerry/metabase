@@ -15,6 +15,8 @@ import { Dashboard } from "metabase-types/api";
 
 import EditBar from "metabase/components/EditBar";
 import HeaderModal from "metabase/components/HeaderModal";
+import Tooltip from "metabase/core/components/Tooltip";
+import { LegendDescriptionIcon } from "metabase/visualizations/components/legend/LegendCaption.styled";
 import {
   EditWarning,
   HeaderRoot,
@@ -149,6 +151,17 @@ const DashboardHeader = ({
               data-testid="dashboard-name-heading"
               onChange={handleUpdateCaption}
             />
+            {dashboard.description && (
+              <div style={{ margin: "auto", marginTop: "9px" }}>
+                <Tooltip tooltip={dashboard.description} maxWidth="40em">
+                  <LegendDescriptionIcon
+                    className="hover-child hover-child--smooth"
+                    name={"info"}
+                  />
+                </Tooltip>
+              </div>
+            )}
+            ,
           </HeaderCaptionContainer>
           <HeaderBadges>
             {isLastEditInfoVisible && (
