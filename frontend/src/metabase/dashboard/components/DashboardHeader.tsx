@@ -161,7 +161,6 @@ const DashboardHeader = ({
                 </Tooltip>
               </div>
             )}
-            ,
           </HeaderCaptionContainer>
           <HeaderBadges>
             {isLastEditInfoVisible && (

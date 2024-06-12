@@ -28,7 +28,6 @@ function SavedQuestionHeaderButton({ question, onSave }) {
           <LegendDescriptionIcon className="hover-child hover-child--smooth" />
         </Tooltip>
       )}
-      ,
     </HeaderRoot>
   );
 }
