@@ -1717,6 +1717,7 @@
    (s/optional-key :context)                   (s/maybe Context)
    (s/optional-key :executed-by)               (s/maybe helpers/IntGreaterThanZero)
    (s/optional-key :card-id)                   (s/maybe helpers/IntGreaterThanZero)
+   (s/optional-key :collection-id)             (s/maybe helpers/IntGreaterThanZero)
    (s/optional-key :card-name)                 (s/maybe helpers/NonBlankString)
    (s/optional-key :dashboard-id)              (s/maybe helpers/IntGreaterThanZero)
    (s/optional-key :alias/escaped->original)   (s/maybe {s/Any s/Any})

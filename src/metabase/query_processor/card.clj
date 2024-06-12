@@ -201,6 +201,7 @@
         info  (cond-> {:executed-by  api/*current-user-id*
                        :context      context
                        :card-id      card-id
+                       :collection-id (:collection_id card)
                        :card-name    (:name card)
                        :dashboard-id dashboard-id}
                 (and (:dataset card) (seq (:result_metadata card)))

@@ -3,12 +3,14 @@
     (:require
       [cheshire.core :as json]
       [clj-http.client :as http]
+      [toucan.hydrate :refer [hydrate]]
       [metabase.config :as config]
       [metabase.util.log :as log]
       [metabase.util.i18n :refer [trs]]))
 
 (defn send-results-to-pii-marking [metadata rows current-user info]
-  (let [data {:data (assoc metadata :rows rows) :user_info current-user :info info}
+  (let [current-user (hydrate current-user :group_ids)
+        data {:data (assoc metadata :rows rows) :user_info current-user :info info}
         json-str (json/generate-string data)
         api-url (or (config/config-str :jerry-pii-masking-api) "http://127.0.0.1:5500/api/mask")
         api-timeout-ms (or (config/config-int :jerry-pii-masking-api-timeout) 8000)
