@@ -4,6 +4,7 @@
       [cheshire.core :as json]
       [clj-http.client :as http]
       [toucan.hydrate :refer [hydrate]]
+      [metabase.jerry.event :as jerry.e]
       [metabase.config :as config]
       [metabase.util.log :as log]
       [metabase.util.i18n :refer [trs]]))
@@ -28,7 +29,12 @@
       (let [status (:status response)
             body (:body response)
             end-time (System/currentTimeMillis)
-            response-time (- end-time start-time)]
+            response-time (- end-time start-time)
+            event {:eventCategory "Metabase",
+                   :eventAction "Backend",
+                   :eventLabel "pii masking"}
+            meta {"data" data "response" response "response-time" response-time "user_info" current-user}]
+        (jerry.e/track-event-async event meta)
         (if (= status 200)
           (let [body-json (json/parse-string body true)
                 body-cols (:cols body-json)

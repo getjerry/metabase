@@ -39,7 +39,7 @@ const MetaDataDocumentButton = ({ user }: MetaDataDocumentButtonProps) => {
       <Button
         onClick={ClickMetadataButton}
         className="metadata-document"
-        icon="notion"
+        icon="reference"
         onlyIcon
         iconSize={iconSize}
         color={iconColor}
