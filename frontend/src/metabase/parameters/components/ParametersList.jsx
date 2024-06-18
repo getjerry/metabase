@@ -82,11 +82,23 @@ function ParametersList({
 
   const parameterSize = visibleValuePopulatedParameters.length;
 
+  const [activeFiltersHistory, setActiveFiltersHistory] = useState([]);
+  const [previousParameters, setPreviousParameters] = useState([]);
+
   const activeFilters = useMemo(() => {
     return parameters.filter(p => !!p.value);
   }, [parameters]);
 
+  useEffect(() => {
+    setActiveFiltersHistory(prevHistory => {
+      return [...new Set([...activeFilters, ...prevHistory])];
+    });
+    setPreviousParameters(activeFilters);
+  }, [activeFilters, previousParameters]);
+
   const [isDisplay, setIsDisplay] = useState(false);
+
+  const filterElements = document.querySelectorAll(".field_set");
 
   const queryFilterElement = document.querySelector(".query_filters");
   const nativeQueryBar = document.getElementById("native-query-bar");
@@ -101,31 +113,45 @@ function ParametersList({
     nativeEditElement === null ? 0 : nativeEditElement.offsetWidth;
   const filterMaxWidth =
     nativeEditWidth - nativeQueryBarWidth - visibilityToggerWidth;
-  const lineMaxNum = parseInt((filterMaxWidth - 16) / 194);
-  let lineNum = parseInt((filterMaxWidth - 16) / 194) - 1;
+  const lineMaxNum = parseInt((filterMaxWidth - 20 - 150) / 200);
+  const lineNum = lineMaxNum - 1;
 
-  const filterElements = document.querySelectorAll(".field_set");
   const filterSize = Math.max(filterElements.length, 1000);
-  const displayList = Array(filterSize).fill("block");
-  if (queryFilterElement !== null && lineMaxNum < parameterSize) {
-    const activeName = activeFilters.map(one => one.name);
-    if (!isDisplay) {
-      filterElements.forEach((element, index) => {
-        if (activeName.includes(element.id)) {
-          lineNum--;
-        }
-      });
-      filterElements.forEach((element, index) => {
-        if (!activeName.includes(element.id) && lineNum > 0) {
-          lineNum--;
-        } else if (!activeName.includes(element.id)) {
-          displayList[index] = "none";
-        }
-      });
+  let displayList = Array(filterSize).fill("block");
+
+  function hideFilter() {
+    const hideList = Array(filterSize).fill("block");
+    if (queryFilterElement !== null && lineMaxNum < parameterSize) {
+      let cntFilter = 0;
+      const activeName = activeFiltersHistory.map(one => one.name);
+      // hide, need restore init filter
+      if (!isDisplay) {
+        filterElements.forEach((element, index) => {
+          if (
+            activeName.includes(element.id)
+            // || (visibleElements.includes(element.id))
+          ) {
+            cntFilter++;
+          }
+        });
+        filterElements.forEach((element, index) => {
+          if (!activeName.includes(element.id) && cntFilter < lineNum) {
+            cntFilter++;
+          } else if (!activeName.includes(element.id)) {
+            hideList[index] = "none";
+          }
+        });
+      }
     }
+    return hideList;
+  }
+
+  if (!isDisplay) {
+    displayList = hideFilter();
   }
 
   function handleActiveFilterButtonClick() {
+    setIsDisplay(!isDisplay);
     const filterElements = document.querySelectorAll(".field_set");
     if (isDisplay) {
       // need to display
@@ -134,11 +160,11 @@ function ParametersList({
       });
     } else {
       // need to hide
+      displayList = hideFilter();
       filterElements.forEach((element, index) => {
         element.style.display = displayList[index];
       });
     }
-    setIsDisplay(!isDisplay);
   }
 
   const [visible, setVisible] = useState(true);

@@ -17,9 +17,12 @@ export interface BaseUser {
   date_joined: string;
   last_login: string;
   first_login: string;
+
+  config: string | null;
 }
 
 export interface User extends BaseUser {
+  group_ids: any | [];
   google_auth: boolean;
   login_attributes: UserAttribute[] | null;
   is_installer: boolean;

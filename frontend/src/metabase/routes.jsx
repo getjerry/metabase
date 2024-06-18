@@ -88,6 +88,7 @@ import { getAdminPaths } from "metabase/admin/app/selectors";
 
 import ActionCreatorModal from "metabase/actions/containers/ActionCreatorModal";
 import ModelDetailPage from "metabase/models/containers/ModelDetailPage";
+import MetadataOptions from "metabase/nav/components/MetaDataButton/MetadataOptions";
 
 const MetabaseIsSetup = UserAuthWrapper({
   predicate: authData => authData.hasUserSetup,
@@ -241,6 +242,13 @@ export const getRoutes = store => (
             }
           }}
         />
+
+        <Route
+          path="metadata_document"
+          title={t`Metadata Document`}
+          component={MetadataOptions}
+        />
+
         {/* <Redirect from="/" to="/auto/dashboard/table/2" /> */}
 
         {/* Use a dashboard page to replace homepage. */}

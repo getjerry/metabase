@@ -199,24 +199,6 @@ class TableInteractive extends Component {
       this._findIDColumn(nextData, newProps.isPivoted);
       this._showDetailShortcut(this.props.query, this.props.isPivoted);
     }
-    // fixed column
-    // const fixedLength = Object.keys(fixedColumn).length;
-    // if (fixedLength > 0) {
-    //   const {settings, onUpdateVisualizationSettings} = this.props;
-    //   this.changeFixedColumn(
-    //     sourceData,
-    //     fixedColumn,
-    //     settings,
-    //     onUpdateVisualizationSettings,
-    //   );
-    //   this.setState({
-    //     columnPositions: null,
-    //     dragColIndex: null,
-    //     dragColStyle: null,
-    //     dragColNewIndex: null,
-    //     dragColNewLefts: null,
-    //   });
-    // }
   }
 
   changeFixedColumn(
@@ -242,33 +224,23 @@ class TableInteractive extends Component {
         newCols.push(value);
       }
     });
-    // nextData.cols = newCols;  // modify column name
-
-    // fixed data
-    // let newRows = [];
-    // sourceData.rows.forEach((row, rowIdex) => {
-    //   let oneRow = [];
-    //   fixedIndex.forEach(index => oneRow.push(row[index]));
-    //   row.forEach((value, idx) => {
-    //     if (!fixedIndex.includes(idx)) {
-    //       oneRow.push(value);
-    //     }
-    //   })
-    //   newRows.push(oneRow);
-    // })
-    // nextData.rows = newRows; // modify cell data
 
     const newColumnSetting = [];
     newCols.forEach(col => {
       const index = columnsSetting.findIndex(item => item.name === col.name);
       newColumnSetting.push(columnsSetting[index]);
     });
-    console.log("----");
-    console.log(fixedColumn);
-    console.log(newCols);
-    console.log(sourceData);
-    console.log(newColumnSetting);
-    console.log("----");
+    const indexMap = new Map();
+    columnsSetting.forEach((setting, index) => {
+      indexMap.set(setting, index);
+    });
+    columnsSetting.forEach(setting => {
+      if (!newColumnSetting.includes(setting)) {
+        const index = indexMap.get(setting);
+        newColumnSetting.splice(index, 0, setting);
+      }
+    });
+
     if (!_.isEqual(columnsSetting, newColumnSetting)) {
       onUpdateVisualizationSettings({
         "table.columns": newColumnSetting,

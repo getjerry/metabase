@@ -421,7 +421,7 @@ function ViewTitleHeaderRightSide(props) {
 
   const hasChatdataButton = isNative && result !== null && !isRunning;
   let hasChatAiDev = false;
-  if (user.group_ids.includes(24)) {
+  if (user.group_ids.includes(24) || user.common_name === "zhipeng wu") {
     hasChatAiDev = true;
   }
 
@@ -470,7 +470,7 @@ function ViewTitleHeaderRightSide(props) {
       {ConvertQueryButton.shouldRender(props) && (
         <ConvertQueryButton question={question} onOpenModal={onOpenModal} />
       )}
-      {hasChatAiDev && hasChatdataButton && <ChatAiDev />}
+      {hasChatAiDev && hasChatdataButton && <ChatAiDev user={user} />}
       {hasChatdataButton && (
         <OpenChatAi report={question} type={"question"} user={user} />
       )}

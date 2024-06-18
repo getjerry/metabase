@@ -38,7 +38,7 @@ export const AppBarRightContainer = styled.div`
   flex: 1 1 auto;
   align-items: center;
   gap: 1rem;
-  max-width: 36rem;
+  max-width: 40rem;
   justify-content: end;
 `;
 

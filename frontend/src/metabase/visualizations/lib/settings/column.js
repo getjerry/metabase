@@ -562,7 +562,6 @@ export const tableColumnSettings = {
           data: { cols },
         },
       ] = series;
-
       return {
         columns: cols,
         getColumnName: columnSetting => {

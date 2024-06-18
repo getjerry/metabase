@@ -9,6 +9,7 @@
    [metabase.api.bookmark :as api.bookmark]
    [metabase.api.card :as api.card]
    [metabase.api.collection :as api.collection]
+   [metabase.api.config :as api.config]
    [metabase.api.dashboard :as api.dashboard]
    [metabase.api.database :as api.database]
    [metabase.api.dataset :as api.dataset]
@@ -73,6 +74,7 @@
   (context "/card"                 [] (+auth api.card/routes))
   (context "/bookmark"             [] (+auth api.bookmark/routes))
   (context "/collection"           [] (+auth api.collection/routes))
+  (context "/config"               [] (+auth api.config/routes))
   (context "/dashboard"            [] (+auth api.dashboard/routes))
   (context "/database"             [] (+auth api.database/routes))
   (context "/dataset"              [] (+auth api.dataset/routes))

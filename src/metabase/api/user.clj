@@ -11,6 +11,7 @@
    [metabase.email.messages :as messages]
    [metabase.integrations.google :as google]
    [metabase.models.collection :as collection :refer [Collection]]
+   [metabase.models.config :as config :refer [Config]]
    [metabase.models.login-history :refer [LoginHistory]]
    [metabase.models.permissions-group :as perms-group]
    [metabase.models.user :as user :refer [User]]
@@ -194,6 +195,11 @@
     (assoc user :sso_source (db/select-one-field :sso_source User :id id))
     user))
 
+(defn- maybe-add-config
+  "Adds `metabase-config` key to the `notion_document`"
+  [{:keys [id] :as user}]
+  (assoc user :config (db/select-one-field :config Config :config_type "notion_document")))
+
 (defn- add-has-question-and-dashboard
   "True when the user has permissions for at least one un-archived question and one un-archived dashboard."
   [user]
@@ -224,7 +230,8 @@
       add-has-question-and-dashboard
       add-first-login
       maybe-add-advanced-permissions
-      maybe-add-sso-source))
+      maybe-add-sso-source
+      maybe-add-config))
 
 #_{:clj-kondo/ignore [:deprecated-var]}
 (api/defendpoint-schema GET "/:id"

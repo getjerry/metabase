@@ -1,5 +1,6 @@
 import React from "react";
 import { CollectionId, User } from "metabase-types/api";
+import MetaDataDocumentButton from "metabase/nav/components/MetaDataButton/MetaDataDocumentButton";
 import NewItemButton from "../NewItemButton";
 import ProfileLink from "../ProfileLink";
 import SearchBar from "../SearchBar";
@@ -46,6 +47,14 @@ const AppBarLarge = ({
 }: AppBarLargeProps): JSX.Element => {
   const isNavBarVisible = isNavBarOpen && isNavBarEnabled;
 
+  let hasMetadataDocumentButton = false;
+  if (
+    currentUser.group_ids.includes(24) ||
+    currentUser.common_name === "zhipeng wu"
+  ) {
+    hasMetadataDocumentButton = true;
+  }
+
   return (
     <AppBarRoot isNavBarOpen={isNavBarVisible}>
       <AppBarLeftContainer
@@ -70,6 +79,9 @@ const AppBarLarge = ({
       </AppBarLeftContainer>
       {(isSearchVisible || isNewButtonVisible || isProfileLinkVisible) && (
         <AppBarRightContainer>
+          {hasMetadataDocumentButton && (
+            <MetaDataDocumentButton user={currentUser} />
+          )}
           {isSearchVisible && <SearchBar user={currentUser} />}
           {isSearchVisible && <RecentActivityButton />}
           {isNewButtonVisible && <NewItemButton collectionId={collectionId} />}
