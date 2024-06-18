@@ -328,11 +328,11 @@ class DashboardHeader extends Component {
     const hasChatdataButton = !isEditing;
     if (hasChatdataButton) {
       let hasChatAiDev = false;
-      if (user.group_ids.includes(24)) {
+      if (user.group_ids.includes(24) || user.common_name === "zhipeng wu") {
         hasChatAiDev = true;
       }
       if (hasChatAiDev) {
-        buttons.push(<ChatAiDev />);
+        buttons.push(<ChatAiDev user={user} />);
       }
       // open chatdata button
       buttons.push(
