@@ -1,7 +1,9 @@
+import axios from "axios";
 import Utils from "metabase/lib/utils";
 
 import { b64hash_to_utf8, utf8_to_b64url } from "metabase/lib/encoding";
 import Questions from "metabase/entities/questions";
+import { insertOrUpdateData } from "metabase/lib/indexedDBUtils";
 import * as Q_DEPRECATED from "metabase-lib/queries/utils";
 
 export function createCard(name = null) {
@@ -24,12 +26,42 @@ export function startNewCard(type, databaseId, tableId) {
 
 // load a card either by ID or from a base64 serialization.  if both are present then they are merged, which the serialized version taking precedence
 // TODO: move to redux
+async function loadCardMetadata(cardId) {
+  console.log(`load ${cardId} metadata`);
+  try {
+    axios
+      .post("/api/jerry/extend", {
+        call: "get",
+        service_name: "metadata",
+        params: {
+          report_id: cardId,
+        },
+      })
+      .then(async res => {
+        if (res.status === 200) {
+          await insertOrUpdateData(`report_id_${cardId}`, {
+            metadata: res.data,
+          });
+          console.log("load success");
+        } else {
+          console.log("load card metadata failed.", res);
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  } catch (error) {
+    console.error("Error loading card metadata:", error);
+  }
+}
+
 export async function loadCard(cardId, { dispatch, getState }) {
   try {
     await dispatch(Questions.actions.fetch({ id: cardId }, { reload: true }));
     const card = Questions.selectors.getObject(getState(), {
       entityId: cardId,
     });
+    await loadCardMetadata(cardId);
     return card;
   } catch (error) {
     console.log("error loading card", error);

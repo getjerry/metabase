@@ -9,7 +9,7 @@ import { isReducedMotionPreferred } from "metabase/lib/dom";
 import EventSandbox from "metabase/components/EventSandbox";
 import { isCypressActive } from "metabase/env";
 import useSequencedContentCloseHandler from "metabase/hooks/use-sequenced-content-close-handler";
-
+import { Card, User } from "metabase-types/api";
 import { DEFAULT_Z_INDEX } from "./constants";
 import { sizeToFitModifierFn, SizeToFitOptions } from "./SizeToFitModifier";
 
@@ -23,6 +23,9 @@ export interface ITippyPopoverProps extends TippyProps {
   flip?: boolean;
   sizeToFit?: boolean | SizeToFitOptions;
   onClose?: () => void;
+  card?: Card;
+  user?: User;
+  metadata?: object;
 }
 
 const OFFSET: [number, number] = [0, 5];

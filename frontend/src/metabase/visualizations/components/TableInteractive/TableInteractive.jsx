@@ -35,6 +35,7 @@ import ExplicitSize from "metabase/components/ExplicitSize";
 import Ellipsified from "metabase/core/components/Ellipsified";
 import DimensionInfoPopover from "metabase/components/MetadataInfo/DimensionInfoPopover";
 // import { ChatAiSample } from "metabase/query_builder/components/view/ChatdataModal/ChatAiSample";
+import { getDataFromId } from "metabase/lib/indexedDBUtils";
 import { trackEvent } from "metabase/event/jerry-utils";
 import { isID, isPK, isFK } from "metabase-lib/types/utils/isa";
 import { fieldRefForColumn } from "metabase-lib/queries/utils/dataset";
@@ -97,6 +98,7 @@ class TableInteractive extends Component {
       tableWidth: 0,
       chatAiWidth: 0,
       chatAiStyle: "maximize",
+      metadata: {},
     };
     this.columnHasResized = {};
     this.headerRefs = [];
@@ -124,8 +126,17 @@ class TableInteractive extends Component {
     ),
   };
 
+  loadData = async () => {
+    try {
+      const metadata = await getDataFromId(`report_id_${this.props.card.id}`);
+      this.setState({ metadata: metadata.metadata });
+    } catch (error) {}
+  };
+
   componentDidMount() {
     this.smartFreezeColumn();
+
+    this.loadData();
   }
 
   smartFreezeColumn() {
@@ -945,6 +956,9 @@ class TableInteractive extends Component {
                 : null
             }
             disabled={this.props.clicked != null}
+            card={this.props.card}
+            user={this.props.user}
+            metadata={this.state.metadata}
           >
             {renderTableHeaderWrapper(
               <Ellipsified tooltip={columnTitle}>
