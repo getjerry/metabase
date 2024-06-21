@@ -120,7 +120,7 @@
     (str "\n" (u/pprint-to-str body))))
 
 (defn- format-info [info opts]
-  (log-track info @*current-user*)
+;  (log-track info @*current-user*)
   (str/join " " (filter some? [(format-status-info info)
                                (format-performance-info info)
                                (format-threads-info info opts)
