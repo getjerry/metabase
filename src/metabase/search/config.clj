@@ -52,8 +52,8 @@
 (def all-models
   "All valid models to search for. The order of this list also influences the order of the results: items earlier in the
   list will be ranked higher."
-;  ["dashboard" "metric" "segment" "card" "dataset" "collection" "table" "action" "database"])
-  ["dashboard", "card"])
+  ["dashboard" "metric" "segment" "card" "dataset" "collection" "table" "action" "database"])
+;  ["dashboard", "card"])
 
 (def ^:const displayed-columns
   "All of the result components that by default are displayed by the frontend."

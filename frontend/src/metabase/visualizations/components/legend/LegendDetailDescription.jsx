@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Modal, Tabs, Table, Descriptions, Collapse } from "antd";
+import { Modal, Tabs, Table, Descriptions, Collapse, Spin, Tag } from "antd";
 import styled from "styled-components";
 import ReactMarkdown from "react-markdown";
 import { getDataFromId } from "metabase/lib/indexedDBUtils";
@@ -43,36 +43,84 @@ export function LegendDetailDescription({
   isVisible,
   onClose,
 }) {
-  const report_id = `report_id_${question.id()}`;
-
   const [metadata, setMetadata] = useState({
     filter: [],
     field: [],
     description: "",
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getDataFromId(report_id);
-        const parameterNames = question
-          .parameters()
-          .map(o => [o.name.toLowerCase(), o.slug.toLowerCase()])
-          .flat();
-        data.metadata.filter = data.metadata.filter.filter(o =>
-          parameterNames.includes(o.Name.toLowerCase()),
-        );
-        setMetadata(data.metadata);
-      } catch (error) {
-        console.error("Error fetching data from IndexedDB:", error);
-      }
-    };
+  const [loading, setLoading] = useState(true);
 
-    fetchData();
-  }, [report_id, question]);
+  useEffect(() => {
+    if (isVisible) {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const report_id = `report_id_${question.id()}`;
+          const data = await getDataFromId(report_id);
+          const parameterNames = question
+            .parameters()
+            .map(o => [o.name.toLowerCase(), o.slug.toLowerCase()])
+            .flat();
+          data.metadata.filter = data.metadata.filter.filter(o =>
+            parameterNames.includes(o.Name.toLowerCase()),
+          );
+
+          const resultMetadata = question.getResultMetadata();
+          const resultMetadataNames = resultMetadata.map(o => o.name);
+
+          data.metadata.field = data.metadata.field
+            .filter(o => resultMetadataNames.includes(o.Name))
+            .sort(
+              (a, b) =>
+                resultMetadataNames.indexOf(a.Name) -
+                resultMetadataNames.indexOf(b.Name),
+            );
+
+          setMetadata(data.metadata);
+        } catch (error) {
+          console.error("Error fetching data from IndexedDB:", error);
+        }
+        setLoading(false);
+      };
+      fetchData();
+    }
+  }, [isVisible, question]);
+
+  const renderNameWithTag = name => <Tag color="blue">{name}</Tag>;
+
+  const renderImplementation = (text, fieldNames) => {
+    let renderedText = [text];
+    fieldNames.forEach(fieldName => {
+      renderedText = renderedText.flatMap(segment =>
+        typeof segment === "string" && segment.includes(fieldName)
+          ? segment.split(fieldName).reduce(
+              (acc, part, index, array) =>
+                index < array.length - 1
+                  ? [
+                      ...acc,
+                      part,
+                      <Tag color="red" key={`${fieldName}-${index}`}>
+                        {fieldName}
+                      </Tag>,
+                    ]
+                  : [...acc, part],
+              [],
+            )
+          : segment,
+      );
+    });
+
+    return <>{renderedText}</>;
+  };
 
   const filterDictionaryColumns = [
-    { title: "Name", dataIndex: "Name", key: "Name" },
+    {
+      title: "Name",
+      dataIndex: "Name",
+      key: "Name",
+      render: renderNameWithTag,
+    },
     {
       title: "Implementation",
       dataIndex: "Implementation",
@@ -86,14 +134,24 @@ export function LegendDetailDescription({
     { title: "Maintainer", dataIndex: "maintainer", key: "maintainer" },
   ];
 
+  const metadataSort = metadata.field
+    .map(item => item.Name)
+    .sort((a, b) => b.length - a.length);
+
   const dataDictionaryColumns = [
-    { title: "Name", dataIndex: "Name", key: "Name" },
+    {
+      title: "Name",
+      dataIndex: "Name",
+      key: "Name",
+      render: renderNameWithTag,
+    },
     // {title: 'Category', dataIndex: 'category', key: 'category'},
     { title: "Definition", dataIndex: "Definition", key: "Definition" },
     {
       title: "Implementation",
       dataIndex: "Implementation",
       key: "Implementation",
+      render: (text, record) => renderImplementation(text, metadataSort),
     },
     { title: "Maintainer", dataIndex: "maintainer", key: "maintainer" },
   ];
@@ -107,33 +165,39 @@ export function LegendDetailDescription({
       open={isVisible}
       bodyStyle={{ overflowY: "auto", maxHeight: "80vh", marginTop: "20px" }}
     >
-      <StyledCollapse defaultActiveKey={["1"]}>
-        <Collapse.Panel header="Report Description" key="1">
-          <StyledDescriptions bordered column={1}>
-            <Descriptions.Item label="Description">
-              <div style={{ maxHeight: "40vh", maxWidth: "100%" }}>
-                <ReactMarkdown>{question.description()}</ReactMarkdown>
-              </div>
-            </Descriptions.Item>
-          </StyledDescriptions>
-        </Collapse.Panel>
-      </StyledCollapse>
-      <StyledTabs defaultActiveKey="2">
-        <Tabs.TabPane tab="Filter Dictionary" key="1">
-          <Table
-            columns={filterDictionaryColumns}
-            dataSource={metadata.filter}
-            pagination={false}
-          />
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="Data Dictionary" key="2">
-          <Table
-            columns={dataDictionaryColumns}
-            dataSource={metadata.field}
-            pagination={false}
-          />
-        </Tabs.TabPane>
-      </StyledTabs>
+      {loading ? (
+        <Spin size="large" />
+      ) : (
+        <>
+          <StyledCollapse defaultActiveKey={["1"]}>
+            <Collapse.Panel header="Report Description" key="1">
+              <StyledDescriptions bordered column={1}>
+                <Descriptions.Item label="Description">
+                  <div style={{ maxHeight: "40vh", maxWidth: "100%" }}>
+                    <ReactMarkdown>{question.description()}</ReactMarkdown>
+                  </div>
+                </Descriptions.Item>
+              </StyledDescriptions>
+            </Collapse.Panel>
+          </StyledCollapse>
+          <StyledTabs defaultActiveKey="2">
+            <Tabs.TabPane tab="Filter Dictionary" key="1">
+              <Table
+                columns={filterDictionaryColumns}
+                dataSource={metadata.filter}
+                pagination={false}
+              />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Data Dictionary" key="2">
+              <Table
+                columns={dataDictionaryColumns}
+                dataSource={metadata.field}
+                pagination={false}
+              />
+            </Tabs.TabPane>
+          </StyledTabs>
+        </>
+      )}
     </Modal>
   );
 }

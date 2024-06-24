@@ -34,15 +34,14 @@ export function DimensionInfo({
       // eslint-disable-next-line react/prop-types
       const fields = metadata.field;
       // eslint-disable-next-line react/prop-types
-      const matchField = fields.find(item => item.name === field.name);
+      const matchField = fields.find(item => item.Name === field.name);
       if (matchField !== undefined) {
-        description = matchField.definition;
+        description = matchField.Definition;
       }
     }
   } catch (e) {
     // console.log(e);
   }
-
   return (
     <InfoContainer className={className}>
       {description ? (

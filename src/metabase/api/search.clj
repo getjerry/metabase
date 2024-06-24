@@ -197,9 +197,11 @@
           (for [column searchable-columns
                 token (search-util/tokenize (search-util/normalize query))]
             (if (and (= model "card") (= column (keyword (name (model->alias model)) "dataset_query")))
-              [:like
-               [:lower column]
-               (wildcard-match token)]
+              [:and
+               [:= (keyword (name (model->alias model)) "query_type") "native"]
+               [:like
+                [:lower column]
+                (wildcard-match token)]]
               [:like
                [:lower column]
                (wildcard-match token)])))))
