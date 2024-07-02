@@ -48,8 +48,9 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
       const report_id = `report_id_${question.id()}`;
       const data = await getDataFromId(report_id);
       if (
-        data.metadata.index.verify === true ||
-        data.metadata.index.verify === "True"
+        data?.metadata?.index?.verify !== undefined &&
+        (data.metadata.index.verify === true ||
+          data.metadata.index.verify === "True")
       ) {
         setMetadataVerify(true);
       }

@@ -227,7 +227,7 @@ export function LegendDetailDescription({
                   onClick={routePageClick}
                   className="metadata-document"
                   data-testid="metadata-route-page-link"
-                  disabled={!metadata.index.id}
+                  disabled={!metadata.index?.id}
                 >
                   Route Page
                 </Button>
