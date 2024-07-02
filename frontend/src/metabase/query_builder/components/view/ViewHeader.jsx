@@ -17,6 +17,7 @@ import { MODAL_TYPES } from "metabase/query_builder/constants";
 import SavedQuestionHeaderButton from "metabase/query_builder/components/SavedQuestionHeaderButton/SavedQuestionHeaderButton";
 
 import { ChatAiDev } from "metabase/query_builder/components/view/ChatdataModal/ChatAiDev";
+import { QuestionDescriptionShow } from "metabase/query_builder/components/SavedQuestionHeaderButton/QuestionDescriptionShow";
 import RunButtonWithTooltip from "../RunButtonWithTooltip";
 
 import QuestionActions from "../QuestionActions";
@@ -167,10 +168,12 @@ SavedQuestionLeftSide.propTypes = {
   isShowingQuestionDetailsSidebar: PropTypes.bool,
   onOpenQuestionInfo: PropTypes.func.isRequired,
   onSave: PropTypes.func,
+  user: PropTypes.object,
 };
 
 function SavedQuestionLeftSide(props) {
   const {
+    user,
     question,
     isObjectDetail,
     isAdditionalInfoVisible,
@@ -219,6 +222,7 @@ function SavedQuestionLeftSide(props) {
                 : []),
 
               <SavedQuestionHeaderButton
+                user={user}
                 key={question.displayName()}
                 question={question}
                 onSave={onHeaderChange}
@@ -471,6 +475,7 @@ function ViewTitleHeaderRightSide(props) {
         <ConvertQueryButton question={question} onOpenModal={onOpenModal} />
       )}
       {hasChatAiDev && hasChatdataButton && <ChatAiDev user={user} />}
+      {isSaved && <QuestionDescriptionShow user={user} question={question} />}
       {hasChatdataButton && (
         <OpenChatAi report={question} type={"question"} user={user} />
       )}

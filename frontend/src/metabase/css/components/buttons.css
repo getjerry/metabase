@@ -95,6 +95,12 @@
   border-color: var(--color-border);
 }
 
+.Button--grey {
+  background-color: #afafaf;
+  color: var(--color-text-white);
+  border-color: var(--color-border);
+}
+
 .Button--borderless {
   border-color: transparent;
   background: transparent;

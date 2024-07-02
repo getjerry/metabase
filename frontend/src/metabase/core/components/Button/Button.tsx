@@ -28,6 +28,7 @@ const BUTTON_VARIANTS = [
   "cancel",
   "success",
   "purple",
+  "grey",
   "white",
   "borderless",
   "onlyIcon",
@@ -60,6 +61,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   cancel?: boolean;
   white?: boolean;
   purple?: boolean;
+  grey?: boolean;
 
   disabled?: boolean;
   round?: boolean;

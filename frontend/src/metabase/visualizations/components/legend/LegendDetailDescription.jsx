@@ -4,6 +4,8 @@ import { Modal, Tabs, Table, Descriptions, Collapse, Spin, Tag } from "antd";
 import styled from "styled-components";
 import ReactMarkdown from "react-markdown";
 import { getDataFromId } from "metabase/lib/indexedDBUtils";
+import Button from "metabase/core/components/Button/Button";
+import { trackEvent } from "metabase/event/jerry-utils";
 import Question from "metabase-lib/Question";
 
 const StyledCollapse = styled(Collapse)`
@@ -47,6 +49,7 @@ export function LegendDetailDescription({
     filter: [],
     field: [],
     description: "",
+    index: {},
   });
 
   const [loading, setLoading] = useState(true);
@@ -89,30 +92,30 @@ export function LegendDetailDescription({
 
   const renderNameWithTag = name => <Tag color="blue">{name}</Tag>;
 
-  const renderImplementation = (text, fieldNames) => {
-    let renderedText = [text];
-    fieldNames.forEach(fieldName => {
-      renderedText = renderedText.flatMap(segment =>
-        typeof segment === "string" && segment.includes(fieldName)
-          ? segment.split(fieldName).reduce(
-              (acc, part, index, array) =>
-                index < array.length - 1
-                  ? [
-                      ...acc,
-                      part,
-                      <Tag color="red" key={`${fieldName}-${index}`}>
-                        {fieldName}
-                      </Tag>,
-                    ]
-                  : [...acc, part],
-              [],
-            )
-          : segment,
-      );
-    });
-
-    return <>{renderedText}</>;
-  };
+  // const renderImplementation = (text, fieldNames) => {
+  //   let renderedText = [text];
+  //   fieldNames.forEach(fieldName => {
+  //     renderedText = renderedText.flatMap(segment =>
+  //       typeof segment === "string" && segment.includes(fieldName)
+  //         ? segment.split(fieldName).reduce(
+  //           (acc, part, index, array) =>
+  //             index < array.length - 1
+  //               ? [
+  //                 ...acc,
+  //                 part,
+  //                 <Tag color="red" key={`${fieldName}-${index}`}>
+  //                   {fieldName}
+  //                 </Tag>,
+  //               ]
+  //               : [...acc, part],
+  //           [],
+  //         )
+  //         : segment,
+  //     );
+  //   });
+  //
+  //   return <>{renderedText}</>;
+  // };
 
   const filterDictionaryColumns = [
     {
@@ -126,17 +129,17 @@ export function LegendDetailDescription({
       dataIndex: "Implementation",
       key: "Implementation",
     },
-    {
-      title: "Possible Values",
-      dataIndex: "Possible Values",
-      key: "Possible Values",
-    },
-    { title: "Maintainer", dataIndex: "maintainer", key: "maintainer" },
+    // {
+    //   title: "Possible Values",
+    //   dataIndex: "Possible Values",
+    //   key: "Possible Values",
+    // },
+    // { title: "Maintainer", dataIndex: "maintainer", key: "maintainer" },
   ];
 
-  const metadataSort = metadata.field
-    .map(item => item.Name)
-    .sort((a, b) => b.length - a.length);
+  // const metadataSort = metadata.field
+  //   .map(item => item.Name)
+  //   .sort((a, b) => b.length - a.length);
 
   const dataDictionaryColumns = [
     {
@@ -147,14 +150,36 @@ export function LegendDetailDescription({
     },
     // {title: 'Category', dataIndex: 'category', key: 'category'},
     { title: "Definition", dataIndex: "Definition", key: "Definition" },
-    {
-      title: "Implementation",
-      dataIndex: "Implementation",
-      key: "Implementation",
-      render: (text, record) => renderImplementation(text, metadataSort),
-    },
-    { title: "Maintainer", dataIndex: "maintainer", key: "maintainer" },
+    // {
+    //   title: "Implementation",
+    //   dataIndex: "Implementation",
+    //   key: "Implementation",
+    //   render: (text, record) => renderImplementation(text, metadataSort),
+    // },
+    // { title: "Maintainer", dataIndex: "maintainer", key: "maintainer" },
   ];
+
+  const routePageClick = () => {
+    try {
+      window.open(
+        "https://www.notion.so/jerrydesign/" + metadata.index.id,
+        "_blank",
+      );
+      trackEvent(
+        {
+          eventCategory: "Metabase",
+          eventAction: "Frontend",
+          eventLabel: "Click_Metabase_Route_PAGE",
+        },
+        {
+          user_info: user,
+          href: "https://www.notion.so/jerrydesign/" + metadata.index.id,
+        },
+      );
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <Modal
@@ -195,6 +220,21 @@ export function LegendDetailDescription({
                 pagination={false}
               />
             </Tabs.TabPane>
+            <Tabs.TabPane
+              tab={
+                <Button
+                  primary
+                  onClick={routePageClick}
+                  className="metadata-document"
+                  data-testid="metadata-route-page-link"
+                  disabled={!metadata.index.id}
+                >
+                  Route Page
+                </Button>
+              }
+              key="3"
+              disabled
+            />
           </StyledTabs>
         </>
       )}
