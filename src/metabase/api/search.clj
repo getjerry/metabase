@@ -499,6 +499,10 @@
    models       (s/maybe models-schema)}
   (if models
     (search (search-context q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset*))
-    (js/jerry-search-func q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset* api/*current-user-id*)))
+    (let [jerry-search-result (js/jerry-search-func q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset* api/*current-user-id*)]
+      (if (or (= jerry-search-result {})
+               (= (count (:data jerry-search-result)) 0))
+        (search (search-context q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset*))
+        jerry-search-result))))
 
 (api/define-routes)
