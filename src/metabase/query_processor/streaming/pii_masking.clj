@@ -12,6 +12,7 @@
 (defn send-results-to-pii-marking [metadata rows current-user info]
   (let [current-user (hydrate current-user :group_ids)
         data {:data (assoc metadata :rows rows) :user_info current-user :info info}
+        upload-data {:data metadata :user_info current-user :info info}
         json-str (json/generate-string data)
         api-url (or (config/config-str :jerry-pii-masking-api) "http://127.0.0.1:5500/api/mask")
         api-timeout-ms (or (config/config-int :jerry-pii-masking-api-timeout) 8000)
@@ -33,7 +34,7 @@
             event {:eventCategory "Metabase",
                    :eventAction "Backend",
                    :eventLabel "pii masking"}
-            meta {"data" data "response" response "response-time" response-time "user_info" current-user}]
+            meta {"data" upload-data "response" response "response-time" response-time "user_info" current-user}]
         (jerry.e/track-event-async event meta)
         (if (= status 200)
           (let [body-json (json/parse-string body true)
