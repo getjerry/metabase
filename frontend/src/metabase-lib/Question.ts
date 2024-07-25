@@ -1126,30 +1126,56 @@ class QuestionInner {
         collection_preview: collectionPreview,
         parameters,
       };
-      return [
-        await maybeUsePivotEndpoint(
+
+      let queryResult;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        queryResult = await maybeUsePivotEndpoint(
           dashboardId ? DashboardApi.cardQuery : CardApi.query,
           this.card(),
           this.metadata(),
         )(queryParams, {
           cancelled: cancelDeferred.promise,
-        }),
-      ];
+        });
+        if (
+          queryResult.status !== "failed" ||
+          !queryResult.error.includes("filesystem_error")
+        ) {
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+      return [queryResult];
     } else {
-      const getDatasetQueryResult = datasetQuery => {
+      const getDatasetQueryResult = async datasetQuery => {
         const datasetQueryWithParameters = { ...datasetQuery, parameters };
-        return maybeUsePivotEndpoint(
+        const apiCall = maybeUsePivotEndpoint(
           MetabaseApi.dataset,
           this.card(),
           this.metadata(),
-        )(
-          datasetQueryWithParameters,
-          cancelDeferred
-            ? {
-                cancelled: cancelDeferred.promise,
-              }
-            : {},
         );
+        let queryResult;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          queryResult = await apiCall(
+            datasetQueryWithParameters,
+            cancelDeferred
+              ? {
+                  cancelled: cancelDeferred.promise,
+                }
+              : {},
+          );
+
+          if (
+            queryResult.status !== "failed" ||
+            !queryResult.error.includes("filesystem_error")
+          ) {
+            return queryResult;
+          }
+
+          // Sleep for 5 seconds before retrying
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+
+        return queryResult;
       };
 
       const datasetQueries = this.atomicQueries().map(query =>

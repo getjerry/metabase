@@ -366,19 +366,28 @@ export const fetchCardData = createThunkAction(
             ? CardApi.query
             : DashboardApi.cardQuery;
 
-        result = await fetchDataOrError(
-          maybeUsePivotEndpoint(endpoint, card)(
-            {
-              dashboardId: dashcard.dashboard_id,
-              dashcardId: dashcard.id,
-              cardId: card.id,
-              parameters: datasetQuery.parameters,
-              ignore_cache: ignoreCache,
-              dashboard_id: dashcard.dashboard_id,
-            },
-            queryOptions,
-          ),
-        );
+        for (let attempt = 0; attempt < 3; attempt++) {
+          result = await fetchDataOrError(
+            maybeUsePivotEndpoint(endpoint, card)(
+              {
+                dashboardId: dashcard.dashboard_id,
+                dashcardId: dashcard.id,
+                cardId: card.id,
+                parameters: datasetQuery.parameters,
+                ignore_cache: ignoreCache,
+                dashboard_id: dashcard.dashboard_id,
+              },
+              queryOptions,
+            ),
+          );
+          if (
+            result.status !== "failed" ||
+            !result.error.includes("filesystem_error")
+          ) {
+            break;
+          }
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
 
         // if endpoint is DashboardApi, need write data to jerry jfs
         if (endpoint === DashboardApi.cardQuery && result !== null) {
