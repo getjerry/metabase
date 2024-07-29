@@ -92,31 +92,6 @@ export function LegendDetailDescription({
 
   const renderNameWithTag = name => <Tag color="blue">{name}</Tag>;
 
-  // const renderImplementation = (text, fieldNames) => {
-  //   let renderedText = [text];
-  //   fieldNames.forEach(fieldName => {
-  //     renderedText = renderedText.flatMap(segment =>
-  //       typeof segment === "string" && segment.includes(fieldName)
-  //         ? segment.split(fieldName).reduce(
-  //           (acc, part, index, array) =>
-  //             index < array.length - 1
-  //               ? [
-  //                 ...acc,
-  //                 part,
-  //                 <Tag color="red" key={`${fieldName}-${index}`}>
-  //                   {fieldName}
-  //                 </Tag>,
-  //               ]
-  //               : [...acc, part],
-  //           [],
-  //         )
-  //         : segment,
-  //     );
-  //   });
-  //
-  //   return <>{renderedText}</>;
-  // };
-
   const filterDictionaryColumns = [
     {
       title: "Name",

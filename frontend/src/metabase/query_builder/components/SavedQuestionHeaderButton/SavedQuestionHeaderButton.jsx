@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { t } from "ttag";
 import { Tag } from "antd";
 import PropTypes from "prop-types";
@@ -6,6 +6,7 @@ import { PLUGIN_MODERATION } from "metabase/plugins";
 import Tooltip from "metabase/core/components/Tooltip";
 import { LegendDescriptionIcon } from "metabase/visualizations/components/legend/LegendCaption.styled";
 import { LegendDetailDescription } from "metabase/visualizations/components/legend/LegendDetailDescription";
+import { LegendMetadataTag } from "metabase/visualizations/components/legend/LegendMetadataTag";
 import { trackEvent } from "metabase/event/jerry-utils";
 import { getDataFromId } from "metabase/lib/indexedDBUtils";
 import { HeaderRoot, HeaderTitle } from "./SavedQuestionHeaderButton.styled";
@@ -42,23 +43,40 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
   };
 
   const [metadataVerify, setMetadataVerify] = useState(false);
+  const [metadata, setMetadata] = useState({});
 
-  const fetchData = async () => {
-    try {
+  useEffect(() => {
+    const maxAttempts = 10;
+    let attempts = 0;
+    const fetchData = async () => {
       const report_id = `report_id_${question.id()}`;
-      const data = await getDataFromId(report_id);
-      if (
-        data?.metadata?.index?.verify !== undefined &&
-        (data.metadata.index.verify === true ||
-          data.metadata.index.verify === "True")
-      ) {
-        setMetadataVerify(true);
+      let data;
+      try {
+        do {
+          try {
+            data = await getDataFromId(report_id);
+          } catch (e) {}
+          attempts += 1;
+          if (data && data?.metadata && data?.metadata?.index) {
+            if (
+              data.metadata.index.verify === true ||
+              data.metadata.index.verify === "True"
+            ) {
+              setMetadataVerify(true);
+            }
+            setMetadata(data);
+          }
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } while (attempts < maxAttempts);
+      } catch (error) {
+        console.error("Error fetching data from IndexedDB:", error);
       }
-    } catch (error) {
-      console.error("Error fetching data from IndexedDB:", error);
-    }
-  };
-  fetchData();
+    };
+    fetchData();
+    return () => {
+      true;
+    };
+  }, [question]);
 
   return (
     <HeaderRoot>
@@ -97,6 +115,7 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
           )}
         </>
       )}
+      <LegendMetadataTag metadata={metadata} />
     </HeaderRoot>
   );
 }
