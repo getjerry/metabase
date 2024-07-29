@@ -16,7 +16,6 @@ export function trackEvent(event, meta) {
     );
   } catch (error) {
     console.error("Error:", error);
-    throw error;
   }
 }
 
@@ -40,7 +39,23 @@ export const trackJerryView = (store, prevState, nextState, loadTime = 0) => {
       trackEvent(event, data);
     } catch (error) {
       console.error("Error:", error);
-      throw error;
     }
+  }
+};
+
+export const trackQuery = (queryResult, card) => {
+  try {
+    const event = {
+      eventCategory: "Metabase",
+      eventAction: "Frontend",
+      eventLabel: "Query",
+    };
+    const data = {
+      result: queryResult,
+      card: card,
+    };
+    trackEvent(event, data);
+  } catch (error) {
+    console.error("Error", error);
   }
 };

@@ -25,6 +25,7 @@ import {
 } from "metabase/services";
 
 import { getMetadata } from "metabase/selectors/metadata";
+import { trackQuery } from "metabase/event/jerry-utils";
 import { getParameterValuesBySlug } from "metabase-lib/parameters/utils/parameter-values";
 import { applyParameters } from "metabase-lib/queries/utils/card";
 import {
@@ -403,6 +404,9 @@ export const fetchCardData = createThunkAction(
           } catch (e) {
             console.log(e);
           }
+        }
+        if (result !== null && result.status === "failed") {
+          trackQuery(result, card);
         }
       }
       setFetchCardDataCancel(card.id, dashcard.id, null);

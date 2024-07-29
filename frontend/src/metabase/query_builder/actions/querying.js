@@ -10,6 +10,7 @@ import { createThunkAction } from "metabase/lib/redux";
 
 import { getMetadata } from "metabase/selectors/metadata";
 import { getSensibleDisplays } from "metabase/visualizations";
+import { trackQuery } from "metabase/event/jerry-utils";
 import { isSameField } from "metabase-lib/queries/utils/field-ref";
 
 import Question from "metabase-lib/Question";
@@ -158,6 +159,9 @@ export const runQuestionQuery = ({
           } catch (e) {
             console.log(e);
           }
+        }
+        if (queryResults.length > 0 && queryResults[0].status === "failed") {
+          trackQuery(queryResults, question.card());
         }
         return dispatch(queryCompleted(question, queryResults));
       })
