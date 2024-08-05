@@ -40,6 +40,7 @@ export function QuestionDescriptionShow({ user, question }) {
       <Button grey small onClick={() => showModal()}>{t`Definition`}</Button>
       <LegendDetailDescription
         isVisible={isModalVisible}
+        isLoad={true}
         onClose={closeModal}
         question={question}
       />

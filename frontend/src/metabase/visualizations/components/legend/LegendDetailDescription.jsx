@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Modal, Tabs, Table, Descriptions, Collapse, Spin, Tag } from "antd";
+import {
+  Modal,
+  Tabs,
+  Table,
+  Descriptions,
+  Collapse,
+  Spin,
+  Tag,
+  Tooltip,
+  message,
+} from "antd";
 import styled from "styled-components";
 import ReactMarkdown from "react-markdown";
 import { getDataFromId } from "metabase/lib/indexedDBUtils";
@@ -35,7 +45,9 @@ const StyledTabs = styled(Tabs)`
 LegendDetailDescription.propTypes = {
   user: PropTypes.object,
   question: Question,
+  metadataInfo: PropTypes.object,
   isVisible: PropTypes.bool.isRequired,
+  isLoad: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
 };
 
@@ -43,19 +55,23 @@ export function LegendDetailDescription({
   user,
   question,
   isVisible,
+  metadataInfo,
+  isLoad,
   onClose,
 }) {
-  const [metadata, setMetadata] = useState({
-    filter: [],
-    field: [],
-    description: "",
-    index: {},
-  });
+  const [metadata, setMetadata] = useState(
+    metadataInfo || {
+      filter: [],
+      field: [],
+      description: "",
+      index: {},
+    },
+  );
 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isVisible) {
+    if (isLoad) {
       const fetchData = async () => {
         setLoading(true);
         try {
@@ -82,13 +98,15 @@ export function LegendDetailDescription({
 
           setMetadata(data.metadata);
         } catch (error) {
-          console.error("Error fetching data from IndexedDB:", error);
+          console.error("Error fetching data from IndexedDB");
         }
         setLoading(false);
       };
       fetchData();
+    } else {
+      setLoading(false);
     }
-  }, [isVisible, question]);
+  }, [isVisible, isLoad, question]);
 
   const renderNameWithTag = name => <Tag color="blue">{name}</Tag>;
 
@@ -123,15 +141,7 @@ export function LegendDetailDescription({
       key: "Name",
       render: renderNameWithTag,
     },
-    // {title: 'Category', dataIndex: 'category', key: 'category'},
     { title: "Definition", dataIndex: "Definition", key: "Definition" },
-    // {
-    //   title: "Implementation",
-    //   dataIndex: "Implementation",
-    //   key: "Implementation",
-    //   render: (text, record) => renderImplementation(text, metadataSort),
-    // },
-    // { title: "Maintainer", dataIndex: "maintainer", key: "maintainer" },
   ];
 
   const routePageClick = () => {
@@ -156,6 +166,26 @@ export function LegendDetailDescription({
     }
   };
 
+  const aiGenereteClick = () => {
+    try {
+      // trackEvent(
+      //   {
+      //     eventCategory: "Metabase",
+      //     eventAction: "Frontend",
+      //     eventLabel: "Click_Metabase_Metadata_AI_Generate",
+      //   },
+      //   {
+      //     user_info: user,
+      //     href: "https://www.notion.so/jerrydesign/" + metadata.index.id,
+      //   },
+      // );
+    } catch (e) {
+      console.log(e);
+      message.error(e);
+    }
+  };
+
+  const description = question.description() || metadata.description;
   return (
     <Modal
       centered
@@ -174,7 +204,7 @@ export function LegendDetailDescription({
               <StyledDescriptions bordered column={1}>
                 <Descriptions.Item label="Description">
                   <div style={{ maxHeight: "40vh", maxWidth: "100%" }}>
-                    <ReactMarkdown>{question.description()}</ReactMarkdown>
+                    <ReactMarkdown>{description}</ReactMarkdown>
                   </div>
                 </Descriptions.Item>
               </StyledDescriptions>
@@ -208,6 +238,24 @@ export function LegendDetailDescription({
                 </Button>
               }
               key="3"
+              disabled
+            />
+            <Tabs.TabPane
+              tab={
+                <Tooltip
+                  placement="top"
+                  title="AI generates or updates metadata"
+                >
+                  <Button
+                    primary
+                    onClick={aiGenereteClick}
+                    data-testid="metadata-route-page-link"
+                  >
+                    AI Generate
+                  </Button>
+                </Tooltip>
+              }
+              key="4"
               disabled
             />
           </StyledTabs>

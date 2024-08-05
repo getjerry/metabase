@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { t } from "ttag";
 import { Tag } from "antd";
 import PropTypes from "prop-types";
@@ -20,6 +20,7 @@ SavedQuestionHeaderButton.propTypes = {
 
 function SavedQuestionHeaderButton({ question, user, onSave }) {
   const [isModalVisible, setModalVisible] = useState(false);
+  const isLatestRequest = useRef(true);
   const showModal = () => {
     setModalVisible(true);
     try {
@@ -43,12 +44,20 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
   };
 
   const [metadataVerify, setMetadataVerify] = useState(false);
-  const [metadata, setMetadata] = useState({});
+  const [questionInfo, setQuestionInfo] = useState({
+    description: question.description(),
+    metadata: {},
+  });
 
   useEffect(() => {
     const maxAttempts = 10;
     let attempts = 0;
     const fetchData = async () => {
+      isLatestRequest.current = true;
+      setQuestionInfo({
+        description: question.description(),
+        metadata: {},
+      });
       const report_id = `report_id_${question.id()}`;
       let data;
       try {
@@ -58,13 +67,19 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
           } catch (e) {}
           attempts += 1;
           if (data && data?.metadata && data?.metadata?.index) {
+            console.log(data);
             if (
               data.metadata.index.verify === true ||
               data.metadata.index.verify === "True"
             ) {
               setMetadataVerify(true);
             }
-            setMetadata(data);
+            console.log(question.description(), data?.metadata?.description);
+            setQuestionInfo({
+              description:
+                question.description() || data?.metadata?.description,
+              metadata: data,
+            });
           }
           await new Promise(resolve => setTimeout(resolve, 1000));
         } while (attempts < maxAttempts);
@@ -74,7 +89,9 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
     };
     fetchData();
     return () => {
-      true;
+      return () => {
+        isLatestRequest.current = false;
+      };
     };
   }, [question]);
 
@@ -88,8 +105,8 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
         data-testid="saved-question-header-title"
       />
       <PLUGIN_MODERATION.QuestionModerationIcon question={question} />
-      {question.description() && (
-        <Tooltip tooltip={question.description()} maxWidth="40em">
+      {questionInfo.description && (
+        <Tooltip tooltip={questionInfo.description} maxWidth="40em">
           <LegendDescriptionIcon
             className="hover-child hover-child--smooth cursor-pointer"
             style={{ marginTop: "6px" }}
@@ -97,12 +114,14 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
           />
           <LegendDetailDescription
             isVisible={isModalVisible}
+            isLoad={false}
             onClose={closeModal}
             question={question}
+            metadataInfo={questionInfo.metadata.metadata}
           />
         </Tooltip>
       )}
-      {question.description() && (
+      {
         <>
           {metadataVerify ? (
             <Tag bordered={false} color="success" style={{ marginTop: "2px" }}>
@@ -114,8 +133,8 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
             </Tag>
           )}
         </>
-      )}
-      <LegendMetadataTag metadata={metadata} />
+      }
+      <LegendMetadataTag metadata={questionInfo?.metadata} />
     </HeaderRoot>
   );
 }
