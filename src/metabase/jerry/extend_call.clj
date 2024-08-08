@@ -12,7 +12,6 @@
 (defn post-call
   "call jerry metabase extend post api"
   [params user_id]
-  (println "params" params)
   (let [start-time     (System/currentTimeMillis)
         api-url-base   (or (config/config-str :jerry-metabase-extend-api) "http://127.0.0.1:8000/api/metabase")
         api-token      (or (config/config-str :jerry-search-token) "")
@@ -25,7 +24,7 @@
         headers        {"accept"  "application/json"
                         "token"   api-token
                         "user_id" user_id}
-        api-timeout-ms 8000
+        api-timeout-ms (get params :timeout 8000)
         response       (try
                          (if (= call "get")
                            (http/get api-url

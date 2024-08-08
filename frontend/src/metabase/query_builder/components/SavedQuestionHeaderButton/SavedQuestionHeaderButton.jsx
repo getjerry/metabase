@@ -67,14 +67,12 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
           } catch (e) {}
           attempts += 1;
           if (data && data?.metadata && data?.metadata?.index) {
-            console.log(data);
             if (
               data.metadata.index.verify === true ||
               data.metadata.index.verify === "True"
             ) {
               setMetadataVerify(true);
             }
-            console.log(question.description(), data?.metadata?.description);
             setQuestionInfo({
               description:
                 question.description() || data?.metadata?.description,
@@ -114,7 +112,7 @@ function SavedQuestionHeaderButton({ question, user, onSave }) {
           />
           <LegendDetailDescription
             isVisible={isModalVisible}
-            isLoad={false}
+            isLoad={true}
             onClose={closeModal}
             question={question}
             metadataInfo={questionInfo.metadata.metadata}

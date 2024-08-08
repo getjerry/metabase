@@ -1,9 +1,9 @@
-import { Tooltip } from "antd";
 import React, { useState } from "react";
 import { t } from "ttag";
 import PropTypes from "prop-types";
 import { LegendDetailDescription } from "metabase/visualizations/components/legend/LegendDetailDescription";
 import Button from "metabase/core/components/Button/Button";
+import Tooltip from "metabase/core/components/Tooltip";
 import { trackEvent } from "metabase/event/jerry-utils";
 
 QuestionDescriptionShow.propTypes = {

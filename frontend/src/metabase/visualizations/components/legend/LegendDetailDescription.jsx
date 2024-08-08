@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import {
   Modal,
@@ -10,10 +10,12 @@ import {
   Tag,
   Tooltip,
   message,
+  Button as AntButton,
 } from "antd";
 import styled from "styled-components";
 import ReactMarkdown from "react-markdown";
-import { getDataFromId } from "metabase/lib/indexedDBUtils";
+import axios from "axios";
+import { getDataFromId, insertOrUpdateData } from "metabase/lib/indexedDBUtils";
 import Button from "metabase/core/components/Button/Button";
 import { trackEvent } from "metabase/event/jerry-utils";
 import Question from "metabase-lib/Question";
@@ -42,6 +44,10 @@ const StyledTabs = styled(Tabs)`
   }
 `;
 
+const StyledMessage = styled.p`
+  font-size: 18px;
+`;
+
 LegendDetailDescription.propTypes = {
   user: PropTypes.object,
   question: Question,
@@ -59,14 +65,13 @@ export function LegendDetailDescription({
   isLoad,
   onClose,
 }) {
-  const [metadata, setMetadata] = useState(
-    metadataInfo || {
-      filter: [],
-      field: [],
-      description: "",
-      index: {},
-    },
-  );
+  const metadataInit = {
+    filter: [],
+    field: [],
+    description: "",
+    index: {},
+  };
+  const [metadata, setMetadata] = useState(metadataInfo || metadataInit);
 
   const [loading, setLoading] = useState(true);
 
@@ -81,22 +86,23 @@ export function LegendDetailDescription({
             .parameters()
             .map(o => [o.name.toLowerCase(), o.slug.toLowerCase()])
             .flat();
-          data.metadata.filter = data.metadata.filter.filter(o =>
-            parameterNames.includes(o.Name.toLowerCase()),
-          );
-
-          const resultMetadata = question.getResultMetadata();
-          const resultMetadataNames = resultMetadata.map(o => o.name);
-
-          data.metadata.field = data.metadata.field
-            .filter(o => resultMetadataNames.includes(o.Name))
-            .sort(
-              (a, b) =>
-                resultMetadataNames.indexOf(a.Name) -
-                resultMetadataNames.indexOf(b.Name),
+          if (JSON.stringify(data.metadata) !== "{}") {
+            data.metadata.filter = data.metadata.filter.filter(o =>
+              parameterNames.includes(o.Name.toLowerCase()),
             );
 
-          setMetadata(data.metadata);
+            const resultMetadata = question.getResultMetadata();
+            const resultMetadataNames = resultMetadata.map(o => o.name);
+
+            data.metadata.field = data.metadata.field
+              .filter(o => resultMetadataNames.includes(o.Name))
+              .sort(
+                (a, b) =>
+                  resultMetadataNames.indexOf(a.Name) -
+                  resultMetadataNames.indexOf(b.Name),
+              );
+            setMetadata(data.metadata);
+          }
         } catch (error) {
           console.error("Error fetching data from IndexedDB");
         }
@@ -166,23 +172,78 @@ export function LegendDetailDescription({
     }
   };
 
-  const aiGenereteClick = () => {
+  const [generating, setGenerating] = useState(false);
+  const [count, setCount] = useState(0);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const cancelTokenSourceRef = useRef(null);
+
+  const aiGenereteClick = async () => {
+    setTooltipVisible(false);
+    setCount(0);
+    cancelTokenSourceRef.current = axios.CancelToken.source();
+    const timer = setInterval(() => {
+      setCount(prevCount => prevCount + 1);
+    }, 1000);
     try {
-      // trackEvent(
-      //   {
-      //     eventCategory: "Metabase",
-      //     eventAction: "Frontend",
-      //     eventLabel: "Click_Metabase_Metadata_AI_Generate",
-      //   },
-      //   {
-      //     user_info: user,
-      //     href: "https://www.notion.so/jerrydesign/" + metadata.index.id,
-      //   },
-      // );
+      setGenerating(true);
+      const res = await axios.post(
+        "/api/jerry/extend",
+        {
+          call: "post",
+          service_name: "ai_gen_metadata",
+          body: {
+            report_id: question.id(),
+            report_type: "question",
+            report_name: question.displayName(),
+            dataset_query: question.datasetQuery(),
+            result_metadata: question.getResultMetadata(),
+          },
+          timeout: 300000,
+        },
+        { cancelToken: cancelTokenSourceRef.current.token },
+      );
+      const pageId = res.data?.page_id;
+      if (res.status !== 200 || pageId === "") {
+        messageApi.error("Failed to generate metadata");
+      } else if (pageId !== "" && pageId !== undefined) {
+        await insertOrUpdateData(`report_id_${question.id()}`, {
+          metadata: res.data?.metadata || metadataInit,
+        });
+        setMetadata(res.data?.metadata || metadataInit);
+        messageApi.info("Generate successful");
+        window.open("https://www.notion.so/jerrydesign/" + pageId, "_blank");
+      } else if (pageId === "" || pageId === undefined) {
+        messageApi.error("Generate failed");
+      }
+      trackEvent(
+        {
+          eventCategory: "Metabase",
+          eventAction: "Frontend",
+          eventLabel: "Click_Metabase_Metadata_AI_Generate",
+        },
+        {
+          user_info: user,
+          status: pageId === "" ? "failed" : "success",
+          href: "https://www.notion.so/jerrydesign/" + pageId,
+        },
+      );
     } catch (e) {
-      console.log(e);
-      message.error(e);
+      if (!axios.isCancel(e)) {
+        message.error(e);
+      }
+    } finally {
+      clearInterval(timer);
+      setGenerating(false);
     }
+  };
+
+  const stopGenerate = () => {
+    setGenerating(false);
+    if (cancelTokenSourceRef.current) {
+      cancelTokenSourceRef.current.cancel("Generation stopped by user");
+    }
+    messageApi.warning("Generation stopped");
   };
 
   const description = question.description() || metadata.description;
@@ -234,7 +295,7 @@ export function LegendDetailDescription({
                   data-testid="metadata-route-page-link"
                   disabled={!metadata.index?.id}
                 >
-                  Route Page
+                  Notion Document
                 </Button>
               }
               key="3"
@@ -245,14 +306,28 @@ export function LegendDetailDescription({
                 <Tooltip
                   placement="top"
                   title="AI generates or updates metadata"
+                  open={tooltipVisible}
                 >
+                  {contextHolder}
                   <Button
                     primary
                     onClick={aiGenereteClick}
                     data-testid="metadata-route-page-link"
+                    onMouseEnter={() => setTooltipVisible(true)}
+                    onMouseLeave={() => setTooltipVisible(false)}
                   >
-                    AI Generate
+                    AI Definition Generation
                   </Button>
+                  <Modal open={generating} footer={null} closable={false}>
+                    <Spin size="large" />
+                    <StyledMessage>
+                      AI generating. Please wait 1-2 minutes...
+                    </StyledMessage>
+                    <StyledMessage>Time elapsed: {count}s</StyledMessage>
+                    <AntButton danger onClick={stopGenerate}>
+                      Stop Generate
+                    </AntButton>
+                  </Modal>
                 </Tooltip>
               }
               key="4"

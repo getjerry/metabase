@@ -1,9 +1,10 @@
 import { t } from "ttag";
 import React, { useState } from "react";
-import { Modal, Input, Switch, message, Tooltip } from "antd";
+import { Modal, Input, Switch, message } from "antd";
 import Cookies from "js-cookie";
 import PropTypes from "prop-types";
 import axios from "axios";
+import Tooltip from "metabase/core/components/Tooltip";
 import Button from "metabase/core/components/Button/Button";
 
 ChatAiDev.propTypes = {

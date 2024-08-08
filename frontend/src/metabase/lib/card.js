@@ -26,7 +26,7 @@ export function startNewCard(type, databaseId, tableId) {
 
 // load a card either by ID or from a base64 serialization.  if both are present then they are merged, which the serialized version taking precedence
 // TODO: move to redux
-async function loadCardMetadata(cardId) {
+async function loadCardMetadata(cardId, cardName) {
   console.log(`load ${cardId} metadata`);
   try {
     axios
@@ -35,7 +35,9 @@ async function loadCardMetadata(cardId) {
         service_name: "metadata",
         params: {
           report_id: cardId,
+          report_name: cardName,
         },
+        timeout: 30000,
       })
       .then(async res => {
         if (res.status === 200) {
@@ -61,7 +63,7 @@ export async function loadCard(cardId, { dispatch, getState }) {
     const card = Questions.selectors.getObject(getState(), {
       entityId: cardId,
     });
-    await loadCardMetadata(cardId);
+    await loadCardMetadata(cardId, card.name);
     return card;
   } catch (error) {
     console.log("error loading card", error);
