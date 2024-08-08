@@ -153,7 +153,8 @@ export function LegendDetailDescription({
   const routePageClick = () => {
     try {
       window.open(
-        "https://www.notion.so/jerrydesign/" + metadata.index.id,
+        "https://www.notion.so/jerrydesign/" +
+          metadata.index.id.replaceAll("-", ""),
         "_blank",
       );
       trackEvent(
@@ -211,8 +212,12 @@ export function LegendDetailDescription({
           metadata: res.data?.metadata || metadataInit,
         });
         setMetadata(res.data?.metadata || metadataInit);
+        window.open(
+          "https://www.notion.so/jerrydesign/" + pageId.replaceAll("-", ""),
+          "_blank",
+          "noopener,noreferrer",
+        );
         messageApi.info("Generate successful");
-        window.open("https://www.notion.so/jerrydesign/" + pageId, "_blank");
       } else if (pageId === "" || pageId === undefined) {
         messageApi.error("Generate failed");
       }
@@ -246,6 +251,13 @@ export function LegendDetailDescription({
     messageApi.warning("Generation stopped");
   };
 
+  const handleAfterClose = () => {
+    const modalElement = document.querySelector(".ant-modal");
+    if (modalElement) {
+      modalElement.setAttribute("aria-hidden", "true");
+    }
+  };
+
   const description = question.description() || metadata.description;
   return (
     <Modal
@@ -255,6 +267,7 @@ export function LegendDetailDescription({
       footer={[]}
       open={isVisible}
       bodyStyle={{ overflowY: "auto", maxHeight: "80vh", marginTop: "20px" }}
+      afterClose={handleAfterClose}
     >
       {loading ? (
         <Spin size="large" />
@@ -318,7 +331,12 @@ export function LegendDetailDescription({
                   >
                     AI Definition Generation
                   </Button>
-                  <Modal open={generating} footer={null} closable={false}>
+                  <Modal
+                    open={generating}
+                    footer={null}
+                    closable={false}
+                    afterClose={handleAfterClose}
+                  >
                     <Spin size="large" />
                     <StyledMessage>
                       AI generating. Please wait 1-2 minutes...
