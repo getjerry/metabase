@@ -449,7 +449,7 @@ class AlertEditFormInner extends Component {
   };
 
   render() {
-    const { alertType, alert, isAdmin, onAlertChange } = this.props;
+    const { alertType, alert, onAlertChange } = this.props;
 
     // the schedule should be same for all channels so we can use the first one
     const schedule = getScheduleFromChannel(alert.channels[0]);
@@ -466,9 +466,7 @@ class AlertEditFormInner extends Component {
           schedule={schedule}
           onScheduleChange={this.onScheduleChange}
         />
-        {isAdmin && (
-          <AlertEditChannels alert={alert} onAlertChange={onAlertChange} />
-        )}
+        {<AlertEditChannels alert={alert} onAlertChange={onAlertChange} />}
       </div>
     );
   }
