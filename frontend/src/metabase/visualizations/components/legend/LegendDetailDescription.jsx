@@ -15,6 +15,7 @@ import {
 import styled from "styled-components";
 import ReactMarkdown from "react-markdown";
 import axios from "axios";
+import { CommentOutlined } from "@ant-design/icons";
 import { getDataFromId, insertOrUpdateData } from "metabase/lib/indexedDBUtils";
 import Button from "metabase/core/components/Button/Button";
 import { trackEvent } from "metabase/event/jerry-utils";
@@ -116,6 +117,18 @@ export function LegendDetailDescription({
 
   const renderNameWithTag = name => <Tag color="blue">{name}</Tag>;
 
+  const renderOperation = (text, record) => (
+    <Button
+      white
+      icon={<CommentOutlined />}
+      onClick={() =>
+        window.open(`https://www.notion.so/jerrydesign/${record.id}`, "_blank")
+      }
+    >
+      Comment
+    </Button>
+  );
+
   const filterDictionaryColumns = [
     {
       title: "Name",
@@ -128,12 +141,6 @@ export function LegendDetailDescription({
       dataIndex: "Implementation",
       key: "Implementation",
     },
-    // {
-    //   title: "Possible Values",
-    //   dataIndex: "Possible Values",
-    //   key: "Possible Values",
-    // },
-    // { title: "Maintainer", dataIndex: "maintainer", key: "maintainer" },
   ];
 
   // const metadataSort = metadata.field
@@ -148,6 +155,11 @@ export function LegendDetailDescription({
       render: renderNameWithTag,
     },
     { title: "Definition", dataIndex: "Definition", key: "Definition" },
+    {
+      title: "",
+      key: "operation",
+      render: renderOperation,
+    },
   ];
 
   const routePageClick = () => {
