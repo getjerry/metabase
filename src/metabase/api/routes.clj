@@ -19,7 +19,8 @@
    [metabase.api.google :as api.google]
    [metabase.api.ldap :as api.ldap]
    [metabase.api.login-history :as api.login-history]
-   [metabase.api.metric :as api.metric]
+   [metabase.api.metric :as api.metric] 
+   [metabase.api.query-history :as api.query-history]
    [metabase.api.native-query-snippet :as api.native-query-snippet]
    [metabase.api.notify :as api.notify]
    [metabase.api.permissions :as api.permissions]
@@ -82,6 +83,7 @@
   (context "/google"               [] (+auth api.google/routes))
   (context "/ldap"                 [] (+auth api.ldap/routes))
   (context "/login-history"        [] (+auth api.login-history/routes))
+  (context "/query-history"        [] (+auth api.query-history/routes))
   (context "/premium-features"     [] (+auth api.premium-features/routes))
   (context "/metric"               [] (+auth api.metric/routes))
   (context "/native-query-snippet" [] (+auth api.native-query-snippet/routes))
