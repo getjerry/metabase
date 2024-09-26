@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { Space } from "antd";
 import { ClockCircleOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { ParsedQueryHistory } from "metabase/query_builder/components/view/QueryHistoryButton/hooks/useQueryHistory";
+import { formatSql } from "metabase/query_builder/components/view/QueryHistoryButton/utils/format";
 
 const StyledQueryHistoryMenuItem = styled.div`
   border-bottom: 1px solid #f0f0f0;
@@ -27,17 +28,7 @@ export const QueryHistoryMenuItem = ({
   record: ParsedQueryHistory;
 }) => {
   const query = useMemo(() => {
-    const sql = record.query.native?.query;
-
-    if (!sql) {
-      return "";
-    }
-
-    if (sql.length <= 50) {
-      return sql;
-    }
-
-    return sql.substring(0, 50) + "...";
+    return formatSql(record.query.native?.query);
   }, [record.query.native?.query]);
 
   return (

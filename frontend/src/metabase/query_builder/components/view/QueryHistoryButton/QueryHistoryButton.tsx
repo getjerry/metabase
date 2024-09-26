@@ -3,6 +3,7 @@ import { Dropdown, Space, Modal as AntdModal } from "antd";
 import { MenuProps } from "antd/lib";
 import { DownOutlined } from "@ant-design/icons";
 import compact from "lodash/compact";
+import noop from "lodash/noop";
 import { StyledLinkButton } from "metabase/query_builder/components/view/QueryHistoryButton/StyledLinkButton";
 import { QueryHistory } from "metabase/query_builder/components/view/QueryHistoryButton/components/QueryHistory";
 import Modal from "metabase/components/Modal";
@@ -28,11 +29,18 @@ export const QueryHistoryButton = ({
 
   const onClickQuery = useCallback(
     (query: ParsedQueryHistory) => {
-      AntdModal.warning({
+      AntdModal.confirm({
         title: "Warning",
+        closable: true,
+        okText: "Apply",
+        cancelText: "Cancel",
         content:
           "This will replace your current query with the selected query. Are you sure you want to continue?",
-        onOk: () => onSelectQuery(query),
+        onOk: () => {
+          onSelectQuery(query);
+          setIsOpen(false);
+        },
+        onCancel: noop,
       });
     },
     [onSelectQuery],
@@ -75,9 +83,12 @@ export const QueryHistoryButton = ({
           </Space>
         </StyledLinkButton>
       </Dropdown>
-      <Modal isOpen={isOpen}>
+      <Modal isOpen={isOpen} wide>
         <ModalContent title="Query History" onClose={() => setIsOpen(false)}>
-          <QueryHistory />
+          <QueryHistory
+            dataSource={queryHistory}
+            onSelectQuery={onClickQuery}
+          />
         </ModalContent>
       </Modal>
     </>
