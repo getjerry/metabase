@@ -25,7 +25,7 @@ export const QueryHistoryButton = ({
   onSelectQuery,
 }: QueryHistoryButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isLoading, queryHistory } = useQueryHistory();
+  const { isLoading, queryHistory, refresh } = useQueryHistory();
 
   const onClickQuery = useCallback(
     (query: ParsedQueryHistory) => {
@@ -75,7 +75,10 @@ export const QueryHistoryButton = ({
 
   return (
     <>
-      <Dropdown menu={{ items: records }}>
+      <Dropdown
+        menu={{ items: records }}
+        onOpenChange={isOpen => isOpen && refresh()}
+      >
         <StyledLinkButton to="/" onClick={e => e.preventDefault()}>
           <Space size={2}>
             History
