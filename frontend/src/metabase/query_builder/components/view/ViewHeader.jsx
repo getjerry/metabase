@@ -528,7 +528,9 @@ function ViewTitleHeaderRightSide(props) {
           onModelPersistenceChange={onModelPersistenceChange}
         />
       )}
-      {isNative && <QueryHistoryButton onSelectQuery={onSelectQuery} />}
+      {isNative && !isSaved && canEditQuery && (
+        <QueryHistoryButton onSelectQuery={onSelectQuery} />
+      )}
       {hasSaveButton && (
         <SaveButton
           disabled={!question.canRun() || !canEditQuery}
