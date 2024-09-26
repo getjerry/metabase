@@ -9,7 +9,7 @@ import { formatSql } from "metabase/query_builder/components/view/QueryHistoryBu
 const StyledQueryHistoryMenuItem = styled.div`
   border-bottom: 1px solid #f0f0f0;
   min-width: 500px;
-  padding: 10px 0;
+  padding: 5px 0;
 
   .timestamp {
     font-size: 12px;
@@ -17,7 +17,7 @@ const StyledQueryHistoryMenuItem = styled.div`
   }
 
   .sql {
-    margin-top: 10px;
+    margin-top: 5px;
     font-family: monospace;
   }
 `;
