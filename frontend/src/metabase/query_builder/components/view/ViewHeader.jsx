@@ -18,6 +18,7 @@ import SavedQuestionHeaderButton from "metabase/query_builder/components/SavedQu
 
 import { ChatAiDev } from "metabase/query_builder/components/view/ChatdataModal/ChatAiDev";
 import { QuestionDescriptionShow } from "metabase/query_builder/components/SavedQuestionHeaderButton/QuestionDescriptionShow";
+import { QueryHistoryButton } from "metabase/query_builder/components/view/QueryHistoryButton/QueryHistoryButton";
 import RunButtonWithTooltip from "../RunButtonWithTooltip";
 
 import QuestionActions from "../QuestionActions";
@@ -390,6 +391,7 @@ function ViewTitleHeaderRightSide(props) {
     onOpenQuestionInfo,
     onModelPersistenceChange,
     onQueryChange,
+    updateQuestion,
   } = props;
   const isShowingNotebook = queryBuilderMode === "notebook";
   const query = question.query();
@@ -424,6 +426,21 @@ function ViewTitleHeaderRightSide(props) {
   }, [isShowingQuestionInfoSidebar, onOpenQuestionInfo, onCloseQuestionInfo]);
 
   const hasChatdataButton = isNative && result !== null && !isRunning;
+
+  /**
+   * Will update the question with the selected query from the query history
+   * @type {(function(*): void)|*}
+   */
+  const onSelectQuery = useCallback(
+    record => {
+      const datasetQuery = question.datasetQuery();
+      datasetQuery.database = record.database_id;
+      datasetQuery.native = record.query.native;
+      updateQuestion(question.setDatasetQuery(question.datasetQuery()));
+    },
+    [question, updateQuestion],
+  );
+
   let hasChatAiDev = false;
   if (user.group_ids.includes(24) || user.common_name === "zhipeng wu") {
     hasChatAiDev = true;
@@ -511,6 +528,7 @@ function ViewTitleHeaderRightSide(props) {
           onModelPersistenceChange={onModelPersistenceChange}
         />
       )}
+      {isNative && <QueryHistoryButton onSelectQuery={onSelectQuery} />}
       {hasSaveButton && (
         <SaveButton
           disabled={!question.canRun() || !canEditQuery}
