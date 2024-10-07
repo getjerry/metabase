@@ -14,6 +14,8 @@ import {
 } from "metabase/query_builder/components/view/QueryHistoryButton/hooks/useQueryHistory";
 import { QueryHistoryMenuItem } from "metabase/query_builder/components/view/QueryHistoryButton/components/QueryHistoryMenuItem";
 
+const MAX_SHOWN_QUERIES = 10;
+
 interface QueryHistoryButtonProps {
   onSelectQuery: (query: ParsedQueryHistory) => void;
 }
@@ -47,17 +49,34 @@ export const QueryHistoryButton = ({
   );
 
   const records = useMemo<MenuProps["items"]>(() => {
-    const queries = queryHistory.slice(0, 10).map(record => {
-      if (!record.query.native?.query) {
-        return;
+    const queries: {
+      key: string;
+      label: React.ReactNode;
+      onClick: () => void;
+    }[] = [];
+
+    for (const record of queryHistory) {
+      const key =
+        (record?.query?.native?.query?.trim() ?? "") + record.database_id;
+
+      if (queries.length >= MAX_SHOWN_QUERIES) {
+        break;
       }
 
-      return {
-        key: record.hash + record.started_at,
+      if (!record.query.native?.query) {
+        continue;
+      }
+
+      if (queries.find(query => query.key === key)) {
+        continue;
+      }
+
+      queries.push({
+        key: key,
         label: <QueryHistoryMenuItem record={record} />,
         onClick: () => onClickQuery(record),
-      };
-    });
+      });
+    }
 
     return compact([
       ...queries,
