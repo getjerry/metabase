@@ -56,7 +56,7 @@ export const QueryHistoryButton = ({
     }[] = [];
 
     for (const record of queryHistory) {
-      const key = record?.query?.native?.query ?? "" + record.database_id;
+      const key = (record?.query?.native?.query ?? "") + record.database_id;
 
       if (queries.length >= MAX_SHOWN_QUERIES) {
         break;
@@ -71,7 +71,7 @@ export const QueryHistoryButton = ({
       }
 
       queries.push({
-        key: record.query.native.query + record.database_id,
+        key: key,
         label: <QueryHistoryMenuItem record={record} />,
         onClick: () => onClickQuery(record),
       });
