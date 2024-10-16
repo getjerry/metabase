@@ -10,7 +10,9 @@
       [metabase.util.i18n :refer [trs]]))
 
 (defn send-results-to-pii-marking [metadata rows current-user info]
-  (let [current-user (hydrate current-user :group_ids)
+  (let [current-user (if (empty? current-user)
+                       {}
+                       (hydrate current-user :group_ids))
         data {:data (assoc metadata :rows rows) :user_info current-user :info info}
         upload-data {:data metadata :user_info current-user :info info}
         json-str (json/generate-string data)
