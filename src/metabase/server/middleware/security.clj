@@ -77,6 +77,7 @@
                   :img-src      ["*"
                                  "'self' data:"]
                   :connect-src  ["'self'"
+                                 "metabase.ing.getjerry.com"
                                  ;; Google Identity Services
                                  "me.mydomain.com"
                                  "https://accounts.google.com"
