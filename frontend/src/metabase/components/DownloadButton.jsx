@@ -62,10 +62,13 @@ const handleSubmit = async (
     options.query = formData.toString();
   }
 
+  let secureUrl = url;
+  if (!url.includes("127.0.0.1")) {
+    secureUrl = url.replace("http://", "https://");
+  }
+
   fetch(
-    method === `POST`
-      ? url
-      : url.replace("http://", "https://") + "?" + options.query,
+    method === `POST` ? secureUrl : secureUrl + "?" + options.query,
     options,
   )
     .then(async res => {

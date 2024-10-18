@@ -50,7 +50,7 @@
   []
   {"Content-Security-Policy"
    (str/join
-    (for [[k vs] {:default-src  ["'none'" "http://metabase.ing.getjerry.com"]
+    (for [[k vs] {:default-src  ["'none'" "https://metabase.ing.getjerry.com"]
                   :script-src   (concat
                                   ["'self'"
                                    "'unsafe-eval'" ; TODO - we keep working towards removing this entirely
@@ -69,7 +69,7 @@
                                     (map (partial format "'sha256-%s'") inline-js-hashes)))
                   :child-src    ["'self'"
                                  ;; TODO - double check that we actually need this for Google Auth
-                                 "https://accounts.google.com http://metabase.ing.getjerry.com https://en.wikipedia.org https://streamlit.ing.getjerry.com https://chatdata.ing.getjerry.com https://chatdata-prod.ing.getjerry.com https://chatdata-dev.ing.getjerry.com http://me.mydomain.com http://dynamic-masking-service https://mb-search.ing.getjerry.com https://metabase-proxy.getjerry.com"]
+                                 "https://accounts.google.com https://metabase.ing.getjerry.com https://en.wikipedia.org https://streamlit.ing.getjerry.com https://chatdata.ing.getjerry.com https://chatdata-prod.ing.getjerry.com https://chatdata-dev.ing.getjerry.com http://me.mydomain.com http://dynamic-masking-service https://mb-search.ing.getjerry.com https://metabase-proxy.getjerry.com"]
                   :style-src    ["'self'"
                                  "'unsafe-inline'"
                                  "https://accounts.google.com"]
@@ -77,7 +77,7 @@
                   :img-src      ["*"
                                  "'self' data:"]
                   :connect-src  ["'self'"
-                                 "http://metabase.ing.getjerry.com"
+                                 "https://metabase.ing.getjerry.com"
                                  ;; Google Identity Services
                                  "me.mydomain.com"
                                  "https://accounts.google.com"
