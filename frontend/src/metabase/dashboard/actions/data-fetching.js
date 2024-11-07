@@ -367,7 +367,9 @@ export const fetchCardData = createThunkAction(
             ? CardApi.query
             : DashboardApi.cardQuery;
 
+        let waitTime = 0;
         for (let attempt = 0; attempt < 3; attempt++) {
+          waitTime += 10000;
           result = await fetchDataOrError(
             maybeUsePivotEndpoint(endpoint, card)(
               {
@@ -387,7 +389,7 @@ export const fetchCardData = createThunkAction(
           ) {
             break;
           }
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
 
         // if endpoint is DashboardApi, need write data to jerry jfs

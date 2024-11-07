@@ -62,15 +62,7 @@ const handleSubmit = async (
     options.query = formData.toString();
   }
 
-  let secureUrl = url;
-  if (!url.includes("127.0.0.1")) {
-    secureUrl = url.replace("http://", "https://");
-  }
-
-  fetch(
-    method === `POST` ? secureUrl : secureUrl + "?" + options.query,
-    options,
-  )
+  fetch(method === `POST` ? url : url + "?" + options.query, options)
     .then(async res => {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

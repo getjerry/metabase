@@ -1128,7 +1128,9 @@ class QuestionInner {
       };
 
       let queryResult;
+      let waitTime = 0;
       for (let attempt = 0; attempt < 3; attempt++) {
+        waitTime += 10000;
         queryResult = await maybeUsePivotEndpoint(
           dashboardId ? DashboardApi.cardQuery : CardApi.query,
           this.card(),
@@ -1142,7 +1144,7 @@ class QuestionInner {
         ) {
           break;
         }
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
       return [queryResult];
     } else {
@@ -1154,7 +1156,9 @@ class QuestionInner {
           this.metadata(),
         );
         let queryResult;
+        let waitTime = 0;
         for (let attempt = 0; attempt < 3; attempt++) {
+          waitTime += 10000;
           queryResult = await apiCall(
             datasetQueryWithParameters,
             cancelDeferred
@@ -1172,7 +1176,7 @@ class QuestionInner {
           }
 
           // Sleep for 5 seconds before retrying
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
 
         return queryResult;
