@@ -14,7 +14,7 @@
                        {}
                        (hydrate current-user :group_ids))
         data {:data (assoc metadata :rows rows) :user_info current-user :info info}
-        upload-data {:data metadata :user_info current-user :info info}
+        upload-data {:user_info current-user :info info}
         json-str (json/generate-string data)
         api-url (or (config/config-str :jerry-pii-masking-api) "http://127.0.0.1:5500/api/mask")
         api-timeout-ms (or (config/config-int :jerry-pii-masking-api-timeout) 8000)

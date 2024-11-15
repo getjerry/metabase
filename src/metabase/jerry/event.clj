@@ -36,7 +36,7 @@
   (let [start-time      (System/currentTimeMillis)
         api-url         (or (config/config-str :jerry-track-event-api) "http://127.0.0.1:5500/track")
         headers         {"Content-Type" "text/plain"}
-        api-timeout-ms  8000
+        api-timeout-ms  30000
         data            (build-event-body event meta)
         data-str        (json/generate-string data)
         response        (try
