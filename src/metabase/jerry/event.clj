@@ -21,7 +21,7 @@
       :referrer      ""
       :userAgent     ""
       :language      "en-US"
-      :sessionID     ""
+      :sessionID     (:trackId event)
       :eventCategory (:eventCategory event)
       :eventAction   (:eventAction event)
       :eventLabel    (:eventLabel event)

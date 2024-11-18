@@ -13,7 +13,8 @@
   (let [current-user (if (empty? current-user)
                        {}
                        (hydrate current-user :group_ids))
-        data {:data (assoc metadata :rows rows) :user_info current-user :info info}
+        track-id (str (java.util.UUID/randomUUID))
+        data {:track_id track-id :data (assoc metadata :rows rows) :user_info current-user :info info}
         upload-data {:user_info current-user :info info}
         json-str (json/generate-string data)
         api-url (or (config/config-str :jerry-pii-masking-api) "http://127.0.0.1:5500/api/mask")
@@ -35,7 +36,8 @@
             response-time (- end-time start-time)
             event {:eventCategory "Metabase",
                    :eventAction "Backend",
-                   :eventLabel "pii masking"}
+                   :eventLabel "pii masking"
+                   :trackId track-id}
             meta {"data" upload-data "response" response "response-time" response-time "user_info" current-user}]
         (jerry.e/track-event-async event meta)
         (if (= status 200)
