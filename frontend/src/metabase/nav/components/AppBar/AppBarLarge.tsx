@@ -1,5 +1,5 @@
 import React from "react";
-import { CollectionId, User } from "metabase-types/api";
+import { CollectionId, User, Card } from "metabase-types/api";
 import MetaDataDocumentButton from "metabase/nav/components/MetaDataButton/MetaDataDocumentButton";
 import NewItemButton from "../NewItemButton";
 import ProfileLink from "../ProfileLink";
@@ -7,6 +7,7 @@ import SearchBar from "../SearchBar";
 import CollectionBreadcrumbs from "../../containers/CollectionBreadcrumbs";
 import QuestionLineage from "../../containers/QuestionLineage";
 import RecentActivityButton from "../JerryCustomButton/RecentActivityButton";
+import PlaysmartButton from "../JerryCustomButton/PlaysmartButton";
 import AppBarLogo from "./AppBarLogo";
 import {
   AppBarLeftContainer,
@@ -18,6 +19,7 @@ import {
 
 export interface AppBarLargeProps {
   currentUser: User;
+  card?: Card;
   collectionId?: CollectionId;
   isNavBarOpen?: boolean;
   isNavBarEnabled?: boolean;
@@ -33,6 +35,7 @@ export interface AppBarLargeProps {
 
 const AppBarLarge = ({
   currentUser,
+  card,
   collectionId,
   isNavBarOpen,
   isNavBarEnabled,
@@ -47,7 +50,7 @@ const AppBarLarge = ({
 }: AppBarLargeProps): JSX.Element => {
   const isNavBarVisible = isNavBarOpen && isNavBarEnabled;
 
-  let hasMetadataDocumentButton = false;
+  let hasMetadataDocumentButton = true;
   if (
     currentUser.group_ids.includes(24) ||
     currentUser.common_name === "zhipeng wu"
@@ -79,6 +82,7 @@ const AppBarLarge = ({
       </AppBarLeftContainer>
       {(isSearchVisible || isNewButtonVisible || isProfileLinkVisible) && (
         <AppBarRightContainer>
+          <PlaysmartButton user={currentUser} card={card} />
           {hasMetadataDocumentButton && (
             <MetaDataDocumentButton user={currentUser} />
           )}

@@ -3,7 +3,9 @@ import { PLUGIN_APPLICATION_PERMISSIONS } from "metabase/plugins";
 
 import type { State } from "metabase-types/store";
 
-export const getUser = (state: State) => state.currentUser;
+export const getUser = (state: State) => {
+  return state.currentUser;
+};
 
 export const getUserId = createSelector([getUser], user => user?.id);
 

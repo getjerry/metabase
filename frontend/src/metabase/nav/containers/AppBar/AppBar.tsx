@@ -20,6 +20,7 @@ import AppBar from "../../components/AppBar";
 
 const mapStateToProps = (state: State, props: RouterProps) => ({
   currentUser: getUser(state),
+  card: state?.qb?.card,
   collectionId: Collections.selectors.getInitialCollectionId(state, props),
   isNavBarOpen: getIsNavbarOpen(state),
   isNavBarEnabled: getIsNavBarEnabled(state, props),

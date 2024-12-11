@@ -1,12 +1,13 @@
 import React from "react";
 import useIsSmallScreen from "metabase/hooks/use-is-small-screen";
-import { CollectionId, User } from "metabase-types/api";
+import { CollectionId, User, Card } from "metabase-types/api";
 import AppBarSmall from "./AppBarSmall";
 import AppBarLarge from "./AppBarLarge";
 import { AppBarRoot } from "./AppBar.styled";
 
 export interface AppBarProps {
   currentUser: User;
+  card?: Card;
   collectionId?: CollectionId;
   isNavBarOpen?: boolean;
   isNavBarEnabled?: boolean;
