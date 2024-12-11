@@ -28,6 +28,14 @@ const PlaysmartButton = ({ user, card }: PlaysmartButtonProps) => {
     }
   }, [card]);
 
+  const handleMouseEnter = () => {
+    setTooltipVisible(true); // Show tooltip when hovering over the button
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipVisible(false); // Hide tooltip when mouse leaves
+  };
+
   function ClickPlaysmartButton(event: { preventDefault: () => void }) {
     event.preventDefault();
 
@@ -69,6 +77,8 @@ const PlaysmartButton = ({ user, card }: PlaysmartButtonProps) => {
           alignItems: "center",
           justifyContent: "center",
         }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       />
     </Tooltip>
   );
