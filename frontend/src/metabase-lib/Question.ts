@@ -1139,11 +1139,16 @@ class QuestionInner {
           cancelled: cancelDeferred.promise,
         });
         if (
-          queryResult.status !== "failed" ||
-          !queryResult.error.includes("filesystem_error")
+          queryResult === null ||
+          queryResult?.status !== "failed" ||
+          !(
+            queryResult?.error.includes("filesystem_error") ||
+            queryResult?.error.includes("Broken pipe")
+          )
         ) {
           break;
         }
+        console.log(123, attempt, waitTime);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
       return [queryResult];
@@ -1169,8 +1174,12 @@ class QuestionInner {
           );
 
           if (
-            queryResult.status !== "failed" ||
-            !queryResult.error.includes("filesystem_error")
+            queryResult === null ||
+            queryResult?.status !== "failed" ||
+            !(
+              queryResult?.error.includes("filesystem_error") ||
+              queryResult?.error.includes("Broken pipe")
+            )
           ) {
             return queryResult;
           }

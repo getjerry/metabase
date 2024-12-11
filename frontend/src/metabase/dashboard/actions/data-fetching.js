@@ -312,64 +312,67 @@ export const fetchCardData = createThunkAction(
       };
 
       // make the actual request
-      if (datasetQuery.type === "endpoint") {
-        result = await fetchDataOrError(
-          MetabaseApi.datasetEndpoint(
-            {
-              endpoint: datasetQuery.endpoint,
-              parameters: datasetQuery.parameters,
-            },
-            queryOptions,
-          ),
-        );
-      } else if (dashboardType === "public") {
-        result = await fetchDataOrError(
-          maybeUsePivotEndpoint(PublicApi.dashboardCardQuery, card)(
-            {
-              uuid: dashcard.dashboard_id,
-              dashcardId: dashcard.id,
-              cardId: card.id,
-              parameters: datasetQuery.parameters
-                ? JSON.stringify(datasetQuery.parameters)
-                : undefined,
-              ignore_cache: ignoreCache,
-            },
-            queryOptions,
-          ),
-        );
-      } else if (dashboardType === "embed") {
-        result = await fetchDataOrError(
-          maybeUsePivotEndpoint(EmbedApi.dashboardCardQuery, card)(
-            {
-              token: dashcard.dashboard_id,
-              dashcardId: dashcard.id,
-              cardId: card.id,
-              ...getParameterValuesBySlug(
-                dashboard.parameters,
-                parameterValues,
-              ),
-              ignore_cache: ignoreCache,
-            },
-            queryOptions,
-          ),
-        );
-      } else if (dashboardType === "transient" || dashboardType === "inline") {
-        result = await fetchDataOrError(
-          maybeUsePivotEndpoint(MetabaseApi.dataset, card)(
-            { ...datasetQuery, ignore_cache: ignoreCache },
-            queryOptions,
-          ),
-        );
-      } else {
-        // new dashcards and new additional series cards aren't yet saved to the dashboard, so they need to be run using the card query endpoint
-        const endpoint =
-          isNewDashcard(dashcard) || isNewAdditionalSeriesCard(card, dashcard)
-            ? CardApi.query
-            : DashboardApi.cardQuery;
+      let waitTime = 0;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        waitTime += 10000;
+        if (datasetQuery.type === "endpoint") {
+          result = await fetchDataOrError(
+            MetabaseApi.datasetEndpoint(
+              {
+                endpoint: datasetQuery.endpoint,
+                parameters: datasetQuery.parameters,
+              },
+              queryOptions,
+            ),
+          );
+        } else if (dashboardType === "public") {
+          result = await fetchDataOrError(
+            maybeUsePivotEndpoint(PublicApi.dashboardCardQuery, card)(
+              {
+                uuid: dashcard.dashboard_id,
+                dashcardId: dashcard.id,
+                cardId: card.id,
+                parameters: datasetQuery.parameters
+                  ? JSON.stringify(datasetQuery.parameters)
+                  : undefined,
+                ignore_cache: ignoreCache,
+              },
+              queryOptions,
+            ),
+          );
+        } else if (dashboardType === "embed") {
+          result = await fetchDataOrError(
+            maybeUsePivotEndpoint(EmbedApi.dashboardCardQuery, card)(
+              {
+                token: dashcard.dashboard_id,
+                dashcardId: dashcard.id,
+                cardId: card.id,
+                ...getParameterValuesBySlug(
+                  dashboard.parameters,
+                  parameterValues,
+                ),
+                ignore_cache: ignoreCache,
+              },
+              queryOptions,
+            ),
+          );
+        } else if (
+          dashboardType === "transient" ||
+          dashboardType === "inline"
+        ) {
+          result = await fetchDataOrError(
+            maybeUsePivotEndpoint(MetabaseApi.dataset, card)(
+              { ...datasetQuery, ignore_cache: ignoreCache },
+              queryOptions,
+            ),
+          );
+        } else {
+          // new dashcards and new additional series cards aren't yet saved to the dashboard, so they need to be run using the card query endpoint
+          const endpoint =
+            isNewDashcard(dashcard) || isNewAdditionalSeriesCard(card, dashcard)
+              ? CardApi.query
+              : DashboardApi.cardQuery;
 
-        let waitTime = 0;
-        for (let attempt = 0; attempt < 3; attempt++) {
-          waitTime += 10000;
           result = await fetchDataOrError(
             maybeUsePivotEndpoint(endpoint, card)(
               {
@@ -383,34 +386,43 @@ export const fetchCardData = createThunkAction(
               queryOptions,
             ),
           );
-          if (
-            result.status !== "failed" ||
-            !result.error.includes("filesystem_error")
-          ) {
-            break;
-          }
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
 
-        // if endpoint is DashboardApi, need write data to jerry jfs
-        if (endpoint === DashboardApi.cardQuery && result !== null) {
-          try {
-            const fileName = "report_" + card.id;
-            // console.log("report", getState().dashboard.queryUuid);
-            axios.post("https://metabase-proxy.getjerry.com/chatdata/write", {
-              id: getState().dashboard.queryUuid,
-              type: "metabase_dashboard",
-              filename: fileName,
-              data: result,
-            });
-          } catch (e) {
-            console.log(e);
+          // if endpoint is DashboardApi, need write data to jerry jfs
+          if (
+            endpoint === DashboardApi.cardQuery &&
+            result !== null &&
+            result.status !== "failed"
+          ) {
+            try {
+              const fileName = "report_" + card.id;
+              // console.log("report", getState().dashboard.queryUuid);
+              axios.post("https://metabase-proxy.getjerry.com/chatdata/write", {
+                id: getState().dashboard.queryUuid,
+                type: "metabase_dashboard",
+                filename: fileName,
+                data: result,
+              });
+            } catch (e) {
+              console.log(e);
+            }
           }
         }
-        if (result !== null && result.status === "failed") {
+        if (
+          result === null ||
+          result?.status !== "failed" ||
+          !(
+            result?.error.includes("filesystem_error") ||
+            result?.error.includes("Broken pipe")
+          )
+        ) {
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        if (result.status === "failed") {
           trackQuery(result, card);
         }
       }
+
       setFetchCardDataCancel(card.id, dashcard.id, null);
       clearTimeout(slowCardTimer);
 
