@@ -34,6 +34,7 @@ import QuestionFilters, {
 } from "./QuestionFilters";
 import { QuestionSummarizeWidget } from "./QuestionSummaries";
 import { OpenChatAi } from "./ChatdataModal/OpenChatAi";
+import { OpenPlaysmart } from "./PlaysmartModal/OpenPlaysmart";
 
 import {
   AdHocViewHeading,
@@ -426,7 +427,6 @@ function ViewTitleHeaderRightSide(props) {
   }, [isShowingQuestionInfoSidebar, onOpenQuestionInfo, onCloseQuestionInfo]);
 
   const hasChatdataButton = isNative && result !== null && !isRunning;
-
   /**
    * Will update the question with the selected query from the query history
    * @type {(function(*): void)|*}
@@ -496,6 +496,7 @@ function ViewTitleHeaderRightSide(props) {
       {hasChatdataButton && (
         <OpenChatAi report={question} type={"question"} user={user} />
       )}
+      <OpenPlaysmart report={question} type={"question"} user={user} />
       {hasExploreResultsLink && <ExploreResultsLink question={question} />}
       {hasRunButton && !isShowingNotebook && (
         <ViewHeaderIconButtonContainer>
