@@ -37,9 +37,22 @@ function get_report_id(report, type) {
   }
 }
 
+function get_report_name(report, type) {
+  if (type === "question") {
+    if (report._card.name !== undefined) {
+      return report._card.name;
+    } else {
+      return report._card.original_card_name;
+    }
+  } else {
+    return report.name;
+  }
+}
+
 // eslint-disable-next-line react/prop-types
 export function OpenPlaysmart({ report, type, user, uuid }) {
   const reportId = get_report_id(report, type);
+  const reportName = get_report_name(report, type);
 
   const [loadIframe, setLoadIframe] = useState({
     open: true,
@@ -68,37 +81,43 @@ export function OpenPlaysmart({ report, type, user, uuid }) {
     return `https://playsmart.ing.getjerry.com?token=${token}&sidebar=collapsed`;
   }
 
-  if (reportId !== 14932 && reportId !== 11) {
+  if (
+    reportId > 0 &&
+    reportName.toLowerCase().includes("ab") &&
+    reportName.toLowerCase().includes("test") &&
+    reportId !== 17465 &&
+    reportId !== 17024
+  ) {
+    return (
+      <Modal
+        title={"ABTest Analysis Platform - Playsmart"}
+        centered
+        open={loadIframe.open}
+        onCancel={() => close()}
+        width="80%"
+        footer={[]}
+        bodyStyle={{ height: "80vh", overflowY: "auto" }}
+      >
+        {loadIframe.isLoading && (
+          <div style={loadingOverlayStyle}>
+            <div style={loadingSpinnerStyle}></div>
+          </div>
+        )}
+        <div style={{ height: "100%" }}>
+          <iframe
+            key={loadIframe.iframeKey}
+            width="98%"
+            style={{ height: "98.5%" }}
+            scrolling="true"
+            onLoad={() => handleIframeLoad()}
+            src={getUrl()}
+            frameBorder="0"
+            allow="clipboard-read; clipboard-write"
+          ></iframe>
+        </div>
+      </Modal>
+    );
+  } else {
     return null;
   }
-
-  return (
-    <Modal
-      title={"ABTest Analysis Platform - Playsmart"}
-      centered
-      open={loadIframe.open}
-      onCancel={() => close()}
-      width="80%"
-      footer={[]}
-      bodyStyle={{ height: "80vh", overflowY: "auto" }}
-    >
-      {loadIframe.isLoading && (
-        <div style={loadingOverlayStyle}>
-          <div style={loadingSpinnerStyle}></div>
-        </div>
-      )}
-      <div style={{ height: "100%" }}>
-        <iframe
-          key={loadIframe.iframeKey}
-          width="98%"
-          style={{ height: "98.5%" }}
-          scrolling="true"
-          onLoad={() => handleIframeLoad()}
-          src={getUrl()}
-          frameBorder="0"
-          allow="clipboard-read; clipboard-write"
-        ></iframe>
-      </div>
-    </Modal>
-  );
 }
