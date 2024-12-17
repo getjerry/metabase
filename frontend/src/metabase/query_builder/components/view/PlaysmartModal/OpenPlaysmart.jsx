@@ -75,7 +75,6 @@ export function OpenPlaysmart({ report, type, user, uuid }) {
       isLoading: false,
       iframeKey: prevState.iframeKey,
     }));
-
     trackEvent(
       {
         eventCategory: "System/Monitoring/Playsmart",
@@ -84,7 +83,10 @@ export function OpenPlaysmart({ report, type, user, uuid }) {
       },
       {
         user_info: user,
-        report_info: report,
+        report_info: {
+          report_id: reportId,
+          report_name: reportName,
+        },
       },
     );
   };
