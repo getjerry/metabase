@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Modal } from "antd";
+import { trackEvent } from "metabase/event/jerry-utils";
 
 OpenPlaysmart.propTypes = {};
 
@@ -74,6 +75,18 @@ export function OpenPlaysmart({ report, type, user, uuid }) {
       isLoading: false,
       iframeKey: prevState.iframeKey,
     }));
+
+    trackEvent(
+      {
+        eventCategory: "System/Monitoring/Playsmart",
+        eventAction: "pop_up",
+        eventLabel: "playsmart",
+      },
+      {
+        user_info: user,
+        report_info: report,
+      },
+    );
   };
 
   function getUrl() {
