@@ -52,8 +52,8 @@ function get_report_name(report, type) {
 
 // eslint-disable-next-line react/prop-types
 export function OpenPlaysmart({ report, type, user, uuid }) {
-  const reportId = get_report_id(report, type);
-  const reportName = get_report_name(report, type);
+  let reportId = get_report_id(report, type);
+  let reportName = get_report_name(report, type);
 
   const [loadIframe, setLoadIframe] = useState({
     open: true,
@@ -96,8 +96,10 @@ export function OpenPlaysmart({ report, type, user, uuid }) {
     return `https://playsmart.ing.getjerry.com?token=${token}&sidebar=collapsed`;
   }
 
+  reportId = Number.isInteger(reportId) ? reportId : 0;
+  reportName = typeof reportName === "string" ? reportName : "";
+
   if (
-    reportId > 0 &&
     reportName.toLowerCase().includes("ab") &&
     reportName.toLowerCase().includes("test") &&
     reportId !== 17465 &&
