@@ -3,6 +3,9 @@
   (:require
    [clojure.string :as str]
    [metabase.async.streaming-response]
+   [metabase.api.common
+    :as api
+    :refer [*current-card-id*]]
    [metabase.db :as mdb]
    [metabase.public-settings :as public-settings]
    [metabase.server.request.util :as request.u]
@@ -87,9 +90,29 @@
   "The Ring request currently being handled by this thread, if any."
   nil)
 
+;(defn bind-request
+;  "Ring middleware that binds `*request*` for the duration of this Ring request."
+;  [handler]
+;  (fn [request respond raise]
+;    (binding [*request* request]
+;      (handler request respond raise))))
+
+(defn extract-card-id
+  "Extracts the `card-id` from the URL path. Specifically, it looks for `/card/` in the path and returns the numeric segment after it."
+  [path]
+  (let [pattern #"\/card\/(\d+)"]
+    (some-> (re-find pattern path)
+            second
+            Integer/parseInt)))
+
+
 (defn bind-request
-  "Ring middleware that binds `*request*` for the duration of this Ring request."
+  "Ring middleware that binds `*request*` and `*current-card-id*` for the duration of this Ring request.
+   Extracts and binds the `card-id` if the path contains `:card-id`."
   [handler]
   (fn [request respond raise]
-    (binding [*request* request]
-      (handler request respond raise))))
+    (let [path (:uri request)
+          card-id (extract-card-id path)]
+      (binding [*request* request
+                *current-card-id* card-id]
+               (handler request respond raise)))))
