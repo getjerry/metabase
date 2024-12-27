@@ -51,6 +51,10 @@
   more information about the Metabase permissions system."
   (atom #{}))
 
+(def ^:dynamic ^Integer *current-card-id*
+  "Int ID or `nil` of card associated with current API call."
+  nil)
+
 
 ;;; ---------------------------------------- Precondition checking helper fns ----------------------------------------
 
@@ -268,14 +272,16 @@
 (defn validate-param-values
   "Log a warning if the request body contains any parameters not included in `expected-params` (which is presumably
   populated by the defendpoint schema)"
-  [{route :compojure/route body :body} expected-params]
+  [{route :compojure/route body :body route-params :route-params} expected-params]
   (when (and (not config/is-prod?)
              (map? body))
     (let [extraneous-params (set/difference (set (keys body))
-                                            (set expected-params))]
-      (when (seq extraneous-params)
+                                            (set expected-params))
+          card-id (some-> route-params :card-id)]
+      (binding [*current-card-id* card-id]
+        (when (seq extraneous-params)
         (log/warnf "Unexpected parameters at %s: %s\nPlease add them to the schema or remove them from the API client"
-                   route (vec extraneous-params))))))
+                   route (vec extraneous-params)))))))
 
 
 (defn method-symbol->keyword
