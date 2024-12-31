@@ -24,7 +24,7 @@ RUN INTERACTIVE=false CI=true MB_EDITION=$MB_EDITION bin/build.sh
 ## jar from the previous stage rather than the local build
 ## we're not yet there to provide an ARM runner till https://github.com/adoptium/adoptium/issues/96 is ready
 
-FROM adoptopenjdk/openjdk11:x86_64-alpine-jdk-11.0.13_8 as runner
+FROM adoptopenjdk/openjdk11:x86_64-alpine-jdk-11.0.25_9 as runner
 
 ENV FC_LANG en-US LC_CTYPE en_US.UTF-8
 
