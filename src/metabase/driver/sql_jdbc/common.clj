@@ -1,7 +1,6 @@
 (ns metabase.driver.sql-jdbc.common
   (:require
    [clojure.string :as str]
-   [metabase.api.common :as api :refer [*current-user-id* *current-card-id*]]
    [metabase.util :as u]))
 
 (def ^:private valid-separator-styles #{:url :comma :semicolon})
@@ -18,20 +17,14 @@
   {:pre [(string? connection-string)
          (or (nil? additional-opts) (string? additional-opts))
          (contains? valid-separator-styles separator-style)]}
-  (let [user-id *current-user-id*
-        card-id *current-card-id*
-        updated-conn-str (str connection-string (when-not (str/blank? additional-opts)
-                                                          (str (case separator-style
-                                                                     :comma     ","
-                                                                     :semicolon ";"
-                                                                     :url       (if (str/includes? connection-string "?")
-                                                                                  "&"
-                                                                                  "?"))
-                                                               additional-opts)))
-        conn-replace-user (str/replace updated-conn-str "#userId#" (str user-id))
-        conn-str (str/replace conn-replace-user "#cardId#" (str card-id))]
-    conn-str
-    ))
+  (str connection-string (when-not (str/blank? additional-opts)
+                                   (str (case separator-style
+                                              :comma     ","
+                                              :semicolon ";"
+                                              :url       (if (str/includes? connection-string "?")
+                                                           "&"
+                                                           "?"))
+                                        additional-opts))))
 
 (defn additional-opts->string
   "Turns a map of `additional-opts` into a single string, based on the `separator-style`."

@@ -8,6 +8,7 @@
    [clojure.core.async :as a]
    [clojure.string :as str]
    [java-time :as t]
+   [metabase.api.common :as api :refer [*current-user-id* *current-card-id*]]
    [metabase.db.query :as mdb.query]
    [metabase.driver :as driver]
    [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
@@ -486,19 +487,53 @@
   (let [row-thunk (row-thunk driver rs rsmeta)]
     (qp.reducible/reducible-rows row-thunk canceled-chan)))
 
-(defn execute-reducible-query
-  "Default impl of `execute-reducible-query` for sql-jdbc drivers."
-  {:added "0.35.0", :arglists '([driver query context respond] [driver sql params max-rows context respond])}
-  ([driver {{sql :query, params :params} :native, :as outer-query} context respond]
-   {:pre [(string? sql) (seq sql)]}
-   (let [remark   (qp.util/query->remark driver outer-query)
-         sql      (str "-- " remark "\n" sql)
-         max-rows (limit/determine-query-max-rows outer-query)]
-     (execute-reducible-query driver sql params max-rows context respond)))
+;(defn execute-reducible-query
+;  "Default impl of `execute-reducible-query` for sql-jdbc drivers."
+;  {:added "0.35.0", :arglists '([driver query context respond] [driver sql params max-rows context respond])}
+;  ([driver {{sql :query, params :params} :native, :as outer-query} context respond]
+;   {:pre [(string? sql) (seq sql)]}
+;   (let [remark   (qp.util/query->remark driver outer-query)
+;         sql      (str "-- " remark "\n" sql)
+;         max-rows (limit/determine-query-max-rows outer-query)]
+;     (execute-reducible-query driver sql params max-rows context respond)))
+;
+;  ([driver sql params max-rows context respond]
+;   (with-open [conn          (connection-with-timezone driver (qp.store/database) (qp.timezone/report-timezone-id-if-supported))
+;               stmt          (statement-or-prepared-statement driver conn sql params (qp.context/canceled-chan context))
+;               ^ResultSet rs (try
+;                               (execute-statement-or-prepared-statement! driver stmt max-rows params sql)
+;                               (catch Throwable e
+;                                 (throw (ex-info (tru "Error executing query: {0}" (ex-message e))
+;                                                 {:driver driver
+;                                                  :sql    (str/split-lines (mdb.query/format-sql sql driver))
+;                                                  :params params
+;                                                  :type   qp.error-type/invalid-query}
+;                                                 e))))]
+;     (let [rsmeta           (.getMetaData rs)
+;           results-metadata {:cols (column-metadata driver rsmeta)}]
+;       (respond results-metadata (reducible-rows driver rs rsmeta (qp.context/canceled-chan context)))))))
 
-  ([driver sql params max-rows context respond]
-   (with-open [conn          (connection-with-timezone driver (qp.store/database) (qp.timezone/report-timezone-id-if-supported))
-               stmt          (statement-or-prepared-statement driver conn sql params (qp.context/canceled-chan context))
+(defn execute-reducible-query
+      "Default impl of `execute-reducible-query` for sql-jdbc drivers."
+      {:added "0.35.0", :arglists '([driver query context respond] [driver sql params max-rows context respond])}
+      ([driver {{sql :query, params :params} :native, :as outer-query} context respond]
+       {:pre [(string? sql) (seq sql)]}
+       (let [remark   (qp.util/query->remark driver outer-query)
+             sql      (str "-- " remark "\n" sql)
+             max-rows (limit/determine-query-max-rows outer-query)]
+;         (println "SQL Query: " sql)
+;         (println "Context: " context)
+;         (println "Driver: " driver)
+         (execute-reducible-query driver sql params max-rows context respond)))
+
+      ([driver sql params max-rows context respond]
+       (with-open [conn          (connection-with-timezone driver (qp.store/database) (qp.timezone/report-timezone-id-if-supported))]
+         (when (= driver :clickhouse)
+               (let [card-id  (str *current-card-id*)
+                     user-id  (str *current-user-id*)
+                     custom-http-params (format "X-Metabase-Card-Id=%s,X-Metabase-User-Id=%s" card-id user-id)]
+                 (.setClientInfo conn "CustomHttpHeaders" custom-http-params)))
+         (let [stmt          (statement-or-prepared-statement driver conn sql params (qp.context/canceled-chan context))
                ^ResultSet rs (try
                                (execute-statement-or-prepared-statement! driver stmt max-rows params sql)
                                (catch Throwable e
@@ -508,9 +543,9 @@
                                                   :params params
                                                   :type   qp.error-type/invalid-query}
                                                  e))))]
-     (let [rsmeta           (.getMetaData rs)
-           results-metadata {:cols (column-metadata driver rsmeta)}]
-       (respond results-metadata (reducible-rows driver rs rsmeta (qp.context/canceled-chan context)))))))
+           (let [rsmeta           (.getMetaData rs)
+                 results-metadata {:cols (column-metadata driver rsmeta)}]
+             (respond results-metadata (reducible-rows driver rs rsmeta (qp.context/canceled-chan context))))))))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
