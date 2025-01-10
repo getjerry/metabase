@@ -6,7 +6,7 @@ import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { t } from "ttag";
 import _ from "underscore";
 import { isProduction } from "metabase/env";
-import RecipientPicker from "metabase/pulse/components/RecipientPicker";
+// import RecipientPicker from "metabase/pulse/components/RecipientPicker";
 
 import Form, { FormField, FormFooter } from "metabase/containers/FormikForm";
 import ModalContent from "metabase/components/ModalContent";
@@ -154,8 +154,8 @@ class SaveQuestionModalInner extends Component {
       originalCard,
       initialCollectionId,
       tableMetadata,
-      user,
-      users,
+      // user,
+      // users,
     } = this.props;
 
     const isStructured = Q_DEPRECATED.isStructured(card.dataset_query);
@@ -203,7 +203,7 @@ class SaveQuestionModalInner extends Component {
       return <div>Loading...</div>;
     }
 
-    const sendUser = users.filter(u => u.id !== user.id);
+    // const sendUser = users.filter(u => u.id !== user.id);
     return (
       <ModalContent
         id="SaveQuestionModal"
@@ -229,7 +229,6 @@ class SaveQuestionModalInner extends Component {
               isCoreReport && values.saveType === "overwrite"
                 ? t`Send Review`
                 : t`Save`;
-            console.log(values);
 
             return (
               <Form>
@@ -242,38 +241,38 @@ class SaveQuestionModalInner extends Component {
                   isCoreReport={isCoreReport}
                 />
                 <TransitionGroup>
-                  {values.saveType === "overwrite" && isCoreReport && (
-                    <CSSTransition
-                      classNames="reviewQuestionModalFields"
-                      timeout={{
-                        enter: 500,
-                        exit: 500,
-                      }}
-                    >
-                      <div>
-                        <p>
-                          <strong>This is a core report.</strong> Any changes
-                          need to be reviewed. A copy of the report will be
-                          saved in the
-                          <strong> Core Report Review</strong> collection.
-                        </p>
-                        <div className="mb4">
-                          <div className="text-bold mb1">{t`Reviewers:`}</div>
-                          <RecipientPicker
-                            isNewPulse={true}
-                            autoFocus={false}
-                            recipients={this.state.recipients}
-                            recipientTypes={["user", "email"]}
-                            users={sendUser}
-                            onRecipientsChange={this.handleRecipientsChange}
-                            invalidRecipientText={domains =>
-                              t`You're only allowed to email subscriptions to addresses ending in ${domains}`
-                            }
-                          />
-                        </div>
-                      </div>
-                    </CSSTransition>
-                  )}
+                  {/*{values.saveType === "overwrite" && isCoreReport && (*/}
+                  {/*  <CSSTransition*/}
+                  {/*    classNames="reviewQuestionModalFields"*/}
+                  {/*    timeout={{*/}
+                  {/*      enter: 500,*/}
+                  {/*      exit: 500,*/}
+                  {/*    }}*/}
+                  {/*  >*/}
+                  {/*    <div>*/}
+                  {/*      <p>*/}
+                  {/*        <strong>This is a core report.</strong> Any changes*/}
+                  {/*        need to be reviewed. A copy of the report will be*/}
+                  {/*        saved in the*/}
+                  {/*        <strong> Core Report Review</strong> collection.*/}
+                  {/*      </p>*/}
+                  {/*      <div className="mb4">*/}
+                  {/*        <div className="text-bold mb1">{t`Reviewers:`}</div>*/}
+                  {/*        <RecipientPicker*/}
+                  {/*          isNewPulse={true}*/}
+                  {/*          autoFocus={false}*/}
+                  {/*          recipients={this.state.recipients}*/}
+                  {/*          recipientTypes={["user", "email"]}*/}
+                  {/*          users={sendUser}*/}
+                  {/*          onRecipientsChange={this.handleRecipientsChange}*/}
+                  {/*          invalidRecipientText={domains =>*/}
+                  {/*            t`You're only allowed to email subscriptions to addresses ending in ${domains}`*/}
+                  {/*          }*/}
+                  {/*        />*/}
+                  {/*      </div>*/}
+                  {/*    </div>*/}
+                  {/*  </CSSTransition>*/}
+                  {/*)}*/}
                   {values.saveType === "create" && (
                     <CSSTransition
                       classNames="saveQuestionModalFields"
