@@ -21,6 +21,7 @@ import {
   SOFT_RELOAD_CARD,
   RELOAD_CARD,
   API_CREATE_QUESTION,
+  API_REVIEW_QUESTION,
   API_UPDATE_QUESTION,
   SET_CARD_AND_RUN,
   SET_PARAMETER_VALUE,
@@ -372,6 +373,7 @@ export const card = handleActions(
     [RELOAD_CARD]: { next: (state, { payload }) => payload },
     [SET_CARD_AND_RUN]: { next: (state, { payload }) => payload.card },
     [API_CREATE_QUESTION]: { next: (state, { payload }) => payload },
+    [API_REVIEW_QUESTION]: { next: (state, { payload }) => payload },
     [API_UPDATE_QUESTION]: { next: (state, { payload }) => payload },
 
     [CANCEL_DATASET_CHANGES]: { next: (state, { payload }) => payload.card },
@@ -429,6 +431,9 @@ export const originalCard = handleActions(
         payload.originalCard ? Utils.copy(payload.originalCard) : null,
     },
     [API_CREATE_QUESTION]: {
+      next: (state, { payload }) => Utils.copy(payload),
+    },
+    [API_REVIEW_QUESTION]: {
       next: (state, { payload }) => Utils.copy(payload),
     },
     [API_UPDATE_QUESTION]: {

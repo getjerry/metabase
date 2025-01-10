@@ -206,6 +206,7 @@ function QueryBuilder(props) {
     closeNavbar,
     initializeQB,
     apiCreateQuestion,
+    apiReviewQuestion,
     apiUpdateQuestion,
     updateUrl,
     locationChanged,
@@ -274,11 +275,31 @@ function QueryBuilder(props) {
         .setCard(card)
         .setPinned(shouldBePinned);
 
-      await apiCreateQuestion(questionWithUpdatedCard);
-
+      const createResult = await apiCreateQuestion(questionWithUpdatedCard);
+      console.log("create result", createResult);
       setRecentlySaved("created");
+      return createResult;
     },
     [question, apiCreateQuestion, setRecentlySaved],
+  );
+
+  const handleReview = useCallback(
+    async (card, originalCard, recipients) => {
+      console.log(card, originalCard, recipients);
+      const shouldBePinned = Boolean(card.dataset);
+
+      const questionWithUpdatedCard = question
+        .setCard(card)
+        .setPinned(shouldBePinned);
+
+      await apiReviewQuestion(
+        questionWithUpdatedCard,
+        originalCard,
+        recipients,
+      );
+      setRecentlySaved("created");
+    },
+    [question, apiReviewQuestion, setRecentlySaved],
   );
 
   const handleSave = useCallback(
@@ -416,6 +437,7 @@ function QueryBuilder(props) {
       onSetRecentlySaved={setRecentlySaved}
       onSave={handleSave}
       onCreate={handleCreate}
+      onReview={handleReview}
       handleResize={forceUpdateDebounced}
       toggleBookmark={onClickBookmark}
       onDismissToast={onDismissToast}

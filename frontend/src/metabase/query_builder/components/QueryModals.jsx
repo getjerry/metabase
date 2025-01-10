@@ -84,6 +84,10 @@ class QueryModals extends React.Component {
             await this.props.onSave(card);
             onCloseModal();
           }}
+          onReview={async (card, originalCard, recipients) => {
+            await this.props.onReview(card, originalCard, recipients);
+            onCloseModal();
+          }}
           onCreate={async card => {
             await this.props.onCreate(card);
             if (question.isDataset()) {
@@ -115,6 +119,10 @@ class QueryModals extends React.Component {
           onSave={async card => {
             await this.props.onSave(card);
             onOpenModal(MODAL_TYPES.ADD_TO_DASHBOARD);
+          }}
+          onReview={async (card, originalCard, recipients) => {
+            await this.props.onReview(card, originalCard, recipients);
+            onCloseModal();
           }}
           onCreate={async card => {
             await this.props.onCreate(card);
@@ -149,6 +157,10 @@ class QueryModals extends React.Component {
             await this.props.onSave(card, false);
             this.showAlertsAfterQuestionSaved();
           }}
+          onReview={async (card, originalCard, recipients) => {
+            await this.props.onReview(card, originalCard, recipients);
+            onCloseModal();
+          }}
           onCreate={async card => {
             await this.props.onCreate(card, false);
             this.showAlertsAfterQuestionSaved();
@@ -167,6 +179,10 @@ class QueryModals extends React.Component {
           onSave={async card => {
             await this.props.onSave(card, false);
             onOpenModal(MODAL_TYPES.EMBED);
+          }}
+          onReview={async (card, originalCard, recipients) => {
+            await this.props.onReview(card, originalCard, recipients);
+            onCloseModal();
           }}
           onCreate={async card => {
             await this.props.onCreate(card, false);

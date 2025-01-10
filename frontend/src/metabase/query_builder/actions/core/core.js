@@ -1,6 +1,9 @@
 import { createAction } from "redux-actions";
+// eslint-disable-next-line import/default
+import { message } from "antd";
 
 import _ from "underscore";
+import axios from "axios";
 import * as MetabaseAnalytics from "metabase/lib/analytics";
 import { loadCard } from "metabase/lib/card";
 import { shouldOpenInBlankWindow } from "metabase/lib/dom";
@@ -210,6 +213,73 @@ export const apiCreateQuestion = question => {
 
     // Saving a card, locks in the current display as though it had been
     // selected in the UI.
+    const card = createdQuestion.lockDisplay().card();
+
+    dispatch.action(API_CREATE_QUESTION, card);
+
+    const metadataOptions = { reload: createdQuestion.isDataset() };
+    await dispatch(loadMetadataForCard(card, metadataOptions));
+  };
+};
+
+export const API_REVIEW_QUESTION = "metabase/qb/API_REVIEW_QUESTION";
+export const apiReviewQuestion = (question, originalCard, recipients) => {
+  return async (dispatch, getState) => {
+    console.log("apiReviewQuestion", question, originalCard, recipients);
+    if (!Array.isArray(recipients) || recipients.length === 0) {
+      console.log("need reviewer");
+      throw new Error(
+        "At least one reviewer is required to review the question.",
+      );
+    }
+    const series = getTransformedSeries(getState());
+    const questionWithVizSettings = series
+      ? getQuestionWithDefaultVisualizationSettings(question, series)
+      : question;
+
+    const resultsMetadata = getResultsMetadata(getState());
+    const isResultDirty = getIsResultDirty(getState());
+    const questionToCreate = questionWithVizSettings
+      .setQuery(question.query().clean())
+      .setResultsMetadata(isResultDirty ? null : resultsMetadata);
+
+    const createdQuestion = await reduxCreateQuestion(
+      questionToCreate,
+      dispatch,
+    );
+
+    try {
+      await axios.post("/api/jerry/extend", {
+        call: "post",
+        service_name: "core_report_review",
+        body: {
+          new_card: createdQuestion.card(),
+          original_card: originalCard,
+          recipients: recipients,
+        },
+        timeout: 30000,
+      });
+    } catch (error) {
+      throw new Error(`${error}, Please contact the data team`);
+    }
+
+    message.config({
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+    });
+    message.info(
+      "Your review request has been successfully sent to the reviewers! Please keep an eye on your Slack for updates once the review is completed.",
+      3,
+    );
+
+    const databases = Databases.selectors.getList(getState());
+    if (databases && !databases.some(d => d.is_saved_questions)) {
+      dispatch({ type: Databases.actionTypes.INVALIDATE_LISTS_ACTION });
+    }
+
+    dispatch(updateUrl(createdQuestion.card(), { dirty: false }));
+
     const card = createdQuestion.lockDisplay().card();
 
     dispatch.action(API_CREATE_QUESTION, card);

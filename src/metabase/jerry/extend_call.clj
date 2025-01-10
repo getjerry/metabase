@@ -53,7 +53,8 @@
             (log/error
              (trs "Jerry metabase extend returned non-2xx status: {0}, body: {1}, Response Time: {2}"
                   status body response-time))
-            {})))
+            {:status 500 :body body})))
       (catch Exception e
-        (log/error e (trs "Error while calling Jerry metabase extend API"))
-        {}))))
+        (let [error-message (.getMessage e)]
+          (log/error e (trs "Error while calling Jerry metabase extend API"))
+          {:status 400 :body error-message})))))
