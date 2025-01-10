@@ -229,6 +229,7 @@ class SaveQuestionModalInner extends Component {
               isCoreReport && values.saveType === "overwrite"
                 ? t`Send Review`
                 : t`Save`;
+            console.log(values);
 
             return (
               <Form>

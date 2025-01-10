@@ -225,7 +225,7 @@ export const apiCreateQuestion = question => {
 export const API_REVIEW_QUESTION = "metabase/qb/API_REVIEW_QUESTION";
 export const apiReviewQuestion = (question, originalCard, recipients) => {
   return async (dispatch, getState) => {
-    console.log("apiReviewQuestion", question, originalCard, recipients);
+    // console.log("apiReviewQuestion", question, originalCard, recipients);
     if (!Array.isArray(recipients) || recipients.length === 0) {
       console.log("need reviewer");
       throw new Error(

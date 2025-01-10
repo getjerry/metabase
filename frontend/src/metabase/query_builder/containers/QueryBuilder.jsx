@@ -285,7 +285,7 @@ function QueryBuilder(props) {
 
   const handleReview = useCallback(
     async (card, originalCard, recipients) => {
-      console.log(card, originalCard, recipients);
+      // console.log(card, originalCard, recipients);
       const shouldBePinned = Boolean(card.dataset);
 
       const questionWithUpdatedCard = question
