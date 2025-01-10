@@ -39,12 +39,6 @@ async function isCoreReport(question, user) {
   try {
     data = await getDataFromId(report_id);
     const tags = data?.metadata?.index?.tags || [];
-    console.log(tags, isProduction);
-    console.log(
-      isProduction
-        ? tags.some(tag => tag.name === "Core") & user.group_ids.includes(6)
-        : question.id === 10,
-    );
     return isProduction
       ? tags.some(tag => tag.name === "Core") & user.group_ids.includes(6)
       : question.id === 10;
@@ -235,7 +229,7 @@ class SaveQuestionModalInner extends Component {
               isCoreReport && values.saveType === "overwrite"
                 ? t`Send Review`
                 : t`Save`;
-            console.log(values, isCoreReport);
+            // console.log(values, isCoreReport);
 
             return (
               <Form>
