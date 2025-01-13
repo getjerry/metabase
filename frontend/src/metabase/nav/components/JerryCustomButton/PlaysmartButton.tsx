@@ -40,7 +40,7 @@ const PlaysmartButton = ({ user, card }: PlaysmartButtonProps) => {
     event.preventDefault();
 
     const token = encodeURIComponent(btoa(JSON.stringify(user)));
-    const newHref = `https://playsmart.ing.getjerry.com?token=${token}`;
+    const newHref = `https://playsmart.ing.getjerry.com?token=${token}&finish=true&tips=true`;
     // const newHref = `http://localhost:8501?token=${token}`;
 
     if (newHref) {
