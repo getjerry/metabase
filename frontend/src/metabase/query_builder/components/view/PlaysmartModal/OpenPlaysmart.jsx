@@ -93,7 +93,7 @@ export function OpenPlaysmart({ report, type, user, uuid }) {
 
   function getUrl() {
     const token = encodeURIComponent(btoa(JSON.stringify(user)));
-    return `https://playsmart.ing.getjerry.com?token=${token}&sidebar=collapsed`;
+    return `https://playsmart.ing.getjerry.com?token=${token}&sidebar=collapsed&finish=true&tips=true`;
   }
 
   reportId = Number.isInteger(reportId) ? reportId : 0;
