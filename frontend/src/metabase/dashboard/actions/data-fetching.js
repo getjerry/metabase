@@ -412,7 +412,9 @@ export const fetchCardData = createThunkAction(
           result?.status !== "failed" ||
           !(
             result?.error.includes("filesystem_error") ||
-            result?.error.includes("Broken pipe")
+            result?.error.includes("Broken pipe") ||
+            result?.error.includes("Bad Gateway") ||
+            result?.error.includes("Stream closed")
           )
         ) {
           break;

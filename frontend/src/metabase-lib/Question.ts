@@ -1143,7 +1143,9 @@ class QuestionInner {
           queryResult?.status !== "failed" ||
           !(
             queryResult?.error.includes("filesystem_error") ||
-            queryResult?.error.includes("Broken pipe")
+            queryResult?.error.includes("Broken pipe") ||
+            queryResult?.error.includes("Bad Gateway") ||
+            queryResult?.error.includes("Stream closed")
           )
         ) {
           break;
@@ -1178,7 +1180,9 @@ class QuestionInner {
             queryResult?.status !== "failed" ||
             !(
               queryResult?.error.includes("filesystem_error") ||
-              queryResult?.error.includes("Broken pipe")
+              queryResult?.error.includes("Broken pipe") ||
+              queryResult?.error.includes("Bad Gateway") ||
+              queryResult?.error.includes("Stream closed")
             )
           ) {
             return queryResult;
