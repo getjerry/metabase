@@ -27,7 +27,7 @@
     "@visx/shape": "2.12.2",
     "@visx/text": "1.7.0",
     "@visx/tooltip": "^2.10.0",
-    "antd": "^5.6.2",
+    "antd": "^5.24.4",
     "ace-builds": "^1.4.7",
     "classlist-polyfill": "^1.2.0",
     "classnames": "^2.1.3",

@@ -4,6 +4,7 @@ import MetaDataDocumentButton from "metabase/nav/components/MetaDataButton/MetaD
 import NewItemButton from "../NewItemButton";
 import ProfileLink from "../ProfileLink";
 import SearchBar from "../SearchBar";
+import AISearchBar from "../AISearchBar";
 import CollectionBreadcrumbs from "../../containers/CollectionBreadcrumbs";
 import QuestionLineage from "../../containers/QuestionLineage";
 import RecentActivityButton from "../JerryCustomButton/RecentActivityButton";
@@ -50,12 +51,13 @@ const AppBarLarge = ({
 }: AppBarLargeProps): JSX.Element => {
   const isNavBarVisible = isNavBarOpen && isNavBarEnabled;
 
-  let hasMetadataDocumentButton = true;
+  const hasMetadataDocumentButton = true;
+  let hasAiSearchBar = false;
   if (
-    currentUser.group_ids.includes(24) ||
+    currentUser.group_ids.includes(6) ||
     currentUser.common_name === "zhipeng wu"
   ) {
-    hasMetadataDocumentButton = true;
+    hasAiSearchBar = true;
   }
 
   return (
@@ -86,7 +88,12 @@ const AppBarLarge = ({
           {hasMetadataDocumentButton && (
             <MetaDataDocumentButton user={currentUser} />
           )}
-          {isSearchVisible && <SearchBar user={currentUser} />}
+          {isSearchVisible &&
+            (hasAiSearchBar ? (
+              <AISearchBar user={currentUser} />
+            ) : (
+              <SearchBar user={currentUser} />
+            ))}
           {isSearchVisible && <RecentActivityButton />}
           {isNewButtonVisible && <NewItemButton collectionId={collectionId} />}
           {isProfileLinkVisible && (
