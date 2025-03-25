@@ -353,7 +353,11 @@ function AISearchBar({
       </style>
 
       <SearchBarRoot data-custom="search bar" ref={container}>
-        <SearchInputContainer isActive={isActive} onClick={handleInputClick}>
+        <SearchInputContainer
+          isActive={isActive}
+          onClick={handleInputClick}
+          style={{ maxWidth: "80em" }}
+        >
           <SearchIcon name="search" isActive={isActive} />
           <SearchInput
             isActive={isActive}
@@ -381,6 +385,7 @@ function AISearchBar({
           className="ai-modal"
         >
           <SearchInputContainer
+            style={{ maxWidth: "80em" }}
             isActive={isActive}
             onClick={onInputContainerClick}
           >
@@ -389,7 +394,7 @@ function AISearchBar({
               isActive={isActive}
               value={searchText}
               placeholder={searchInputTip}
-              maxLength={200}
+              maxLength={500}
               onChange={onTextChange}
               onKeyPress={handleInputKeyPress}
               ref={searchInput}
