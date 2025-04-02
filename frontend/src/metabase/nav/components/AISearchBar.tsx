@@ -278,7 +278,25 @@ function AISearchBar({
       case "text":
         return <Typography.Text>{item.content}</Typography.Text>;
       case "markdown":
-        return <ReactMarkdown>{item.content || ""}</ReactMarkdown>;
+        return (
+          <ReactMarkdown
+            components={{
+              // eslint-disable-next-line react/prop-types,react/display-name
+              a: ({ href, children }) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "blue", textDecoration: "underline" }}
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {item.content || ""}
+          </ReactMarkdown>
+        );
       case "link":
         return (
           <a href={item.href} target="_blank" rel="noopener noreferrer">
