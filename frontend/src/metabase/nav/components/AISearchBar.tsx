@@ -139,7 +139,12 @@ function AISearchBar({
       }
       onSearchInactive?.();
     }
-  }, [wasActive, isActive, onSearchActive, onSearchInactive]);
+    if (isModalVisible) {
+      setTimeout(() => {
+        searchInput.current?.focus();
+      }, 100);
+    }
+  }, [wasActive, isActive, isModalVisible, onSearchActive, onSearchInactive]);
 
   useEffect(() => {
     function focusOnForwardSlashPress(e: KeyboardEvent) {
@@ -401,6 +406,10 @@ function AISearchBar({
           destroyOnClose={true}
           closable={false}
           className="ai-modal"
+          bodyStyle={{
+            maxHeight: "80vh",
+            overflowY: "auto",
+          }}
         >
           <SearchInputContainer
             style={{ maxWidth: "80em" }}
@@ -576,6 +585,7 @@ function AISearchBar({
                       <SearchResults
                         searchText={searchText.trim()}
                         user={user}
+                        version={2}
                       />
                     </SearchResultsContainer>
                   </div>

@@ -1,35 +1,36 @@
 (ns metabase.search.jerry-search
-    "Jerry searching api"
-    (:require
-      [cheshire.core :as json]
-      [clj-http.client :as http]
-      [metabase.config :as config]
-      [metabase.util.log :as log]
-      [metabase.util.i18n :refer [trs]]))
+  "Jerry searching api"
+  (:require
+    [cheshire.core :as json]
+    [clj-http.client :as http]
+    [metabase.config :as config]
+    [metabase.util.log :as log]
+    [metabase.util.i18n :refer [trs]]))
 
 (defn build-api-url
   "Build API URL based on search context"
-  [api-host q archived table_db_id models limit offset]
+  [api-host q archived table_db_id models limit offset version]
   (let [params    (->>
                    [{:key "q" :val q}
                     {:key "archived" :val archived}
                     {:key "table_db_id" :val table_db_id}
                     {:key "models" :val models}
                     {:key "limit" :val limit}
-                    {:key "offset" :val offset}]
+                    {:key "offset" :val offset}
+                    {:key "version" :val version}]
                    (filter #(some? (:val %)))
                    (map #(str (:key %) "=" (:val %))))
         query-str (clojure.string/join "&" params)]
     (str api-host "?" query-str)))
 
 (defn jerry-search-func
-  [q archived table_db_id models limit offset user_id]
+  [q archived table_db_id models limit offset user_id version]
   (let [start-time     (System/currentTimeMillis)
         api-host       (or (config/config-str :jerry-search-api) "http://127.0.0.1:5500/api/search")
-        api-url        (build-api-url api-host q archived table_db_id models limit offset)
+        api-url        (build-api-url api-host q archived table_db_id models limit offset version)
         api-token      (or (config/config-str :jerry-search-token) "")
-        headers        {"accept" "application/json"
-                        "token" api-token
+        headers        {"accept"  "application/json"
+                        "token"   api-token
                         "user_id" user_id}
         api-timeout-ms 8000
         response       (try

@@ -119,6 +119,7 @@ export default _.compose(
       q: props.searchText,
       limit: DEFAULT_SEARCH_LIMIT,
       models: props.models,
+      version: props.version ?? 1,
     }),
   }),
 )(SearchResults);

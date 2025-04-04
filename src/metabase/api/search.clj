@@ -492,14 +492,15 @@
   to `table_db_id`.
   To specify a list of models, pass in an array to `models`.
   "
-  [q archived table_db_id models]
+  [q archived table_db_id models version]
   {q            (s/maybe su/NonBlankString)
    archived     (s/maybe su/BooleanString)
    table_db_id  (s/maybe su/IntGreaterThanZero)
-   models       (s/maybe models-schema)}
+   models       (s/maybe models-schema)
+   version      (s/maybe su/IntString)}
   (if models
     (search (search-context q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset*))
-    (let [jerry-search-result (js/jerry-search-func q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset* api/*current-user-id*)]
+    (let [jerry-search-result (js/jerry-search-func q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset* api/*current-user-id* version)]
       (if (or (= jerry-search-result {})
                (= (count (:data jerry-search-result)) 0))
         (search (search-context q archived table_db_id models mw.offset-paging/*limit* mw.offset-paging/*offset*))
