@@ -580,7 +580,6 @@ function AISearchBar({
                         borderBottomLeftRadius: "8px",
                         borderBottomRightRadius: "8px",
                       }}
-                      onClick={handleModalClose}
                     >
                       <SearchResults
                         searchText={searchText.trim()}

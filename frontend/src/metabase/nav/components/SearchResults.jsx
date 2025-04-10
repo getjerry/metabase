@@ -11,6 +11,7 @@ import SearchResult from "metabase/search/components/SearchResult";
 import EmptyState from "metabase/components/EmptyState";
 import { useListKeyboardNavigation } from "metabase/hooks/use-list-keyboard-navigation";
 import { trackEvent } from "metabase/event/jerry-utils";
+import { openInBlankWindow } from "metabase/lib/dom";
 import { EmptyStateContainer } from "./SearchResults.styled";
 
 const propTypes = {
@@ -79,7 +80,8 @@ const SearchResults = ({
     if (onEntitySelect) {
       onEntitySelect(item);
     } else {
-      onChangeLocation(item.getUrl());
+      // onChangeLocation(item.getUrl());
+      openInBlankWindow(item.getUrl());
     }
   };
 

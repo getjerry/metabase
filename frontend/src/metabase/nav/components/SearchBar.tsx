@@ -192,7 +192,11 @@ function SearchBar({
         <SearchResultsFloatingContainer>
           {hasSearchText ? (
             <SearchResultsContainer>
-              <SearchResults searchText={searchText.trim()} user={user} />
+              <SearchResults
+                searchText={searchText.trim()}
+                user={user}
+                version={2}
+              />
             </SearchResultsContainer>
           ) : (
             <RecentsList />
