@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import React from "react";
+import styled from "@emotion/styled";
 
 import { color } from "metabase/lib/colors";
 import { isSyncCompleted } from "metabase/lib/syncing";
@@ -24,6 +25,15 @@ import {
 import { InfoText } from "./InfoText";
 
 const DEFAULT_ICON_SIZE = 20;
+
+const HighlightedWrapper = styled("div")`
+  .search-highlight {
+    background-color: yellow;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+`;
 
 function TableIcon() {
   return <Icon name="database" />;
@@ -124,9 +134,13 @@ export default function SearchResult({
         <ItemIcon item={result} type={result.model} active={active} />
         <div>
           <TitleWrapper>
-            <Title active={active} data-testid="search-result-item-name">
-              {result.name}
-            </Title>
+            <HighlightedWrapper>
+              <Title
+                active={active}
+                data-testid="search-result-item-name"
+                dangerouslySetInnerHTML={{ __html: result.name }}
+              />
+            </HighlightedWrapper>
             <PLUGIN_MODERATION.ModerationStatusIcon
               status={result.moderated_status}
               size={12}

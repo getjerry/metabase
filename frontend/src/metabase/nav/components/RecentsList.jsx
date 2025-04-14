@@ -84,10 +84,6 @@ function RecentsList({ list, loading, onChangeLocation, onClick, className }) {
       style={{
         maxHeight: "500px",
         overflowY: "auto",
-        border: "0px",
-        boxShadow: "none",
-        borderBottomLeftRadius: "8px",
-        borderBottomRightRadius: "8px",
       }}
     >
       <Header>{t`Recently viewed`}</Header>

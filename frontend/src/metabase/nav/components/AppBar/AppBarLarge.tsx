@@ -57,7 +57,7 @@ const AppBarLarge = ({
     currentUser.group_ids.includes(6) ||
     currentUser.common_name === "zhipeng wu"
   ) {
-    hasAiSearchBar = true;
+    hasAiSearchBar = false;
   }
 
   return (
