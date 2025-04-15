@@ -83,13 +83,13 @@ export default function ReportDiff({ location }) {
   let oldValue = report1Data?.dataset_query?.native?.query;
   let newValue = report2Data?.dataset_query?.native?.query;
   if (reportType === "report_history_version") {
-    oldValue = report1Data?.diff.after?.dataset_query?.native?.query;
-    newValue = report2Data?.diff.after?.dataset_query?.native?.query;
+    oldValue = report2Data?.diff.after?.dataset_query?.native?.query;
+    newValue = report1Data?.diff.after?.dataset_query?.native?.query;
     reportConfig = {
       report_id1: reportId,
-      report_name1: reportData?.name + " - Now",
+      report_name1: reportData?.name + ` - ${report2Data?.timestamp}`,
       report_id2: reportId,
-      report_name2: reportData?.name + ` - ${report2Data?.timestamp};`,
+      report_name2: reportData?.name + " - Now",
     };
   }
   return (
