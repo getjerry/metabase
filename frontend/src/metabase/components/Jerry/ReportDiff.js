@@ -89,7 +89,7 @@ export default function ReportDiff({ location }) {
       report_id1: reportId,
       report_name1: reportData?.name + " - Now",
       report_id2: reportId,
-      report_name2: reportData?.name + ` - ${report2Data.timestamp};`,
+      report_name2: reportData?.name + ` - ${report2Data?.timestamp};`,
     };
   }
   return (

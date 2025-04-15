@@ -57,7 +57,7 @@ function Timeline({
   }, [items]);
 
   const jumpToShowDiffUrl = (revision_index, revision) => {
-    const url = `/report_diff?type=report_history_version&report=${revision.id}&revision=${revision_index}`;
+    const url = `/report_diff?type=report_history_version&report=${revision.model_id}&revision=${revision_index}`;
     window.open(url, "_blank");
   };
 
