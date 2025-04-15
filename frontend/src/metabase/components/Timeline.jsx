@@ -56,6 +56,11 @@ function Timeline({
       });
   }, [items]);
 
+  const jumpToShowDiffUrl = (revision_index, revision) => {
+    const url = `/report_diff?type=report_history_version&report=${revision.id}&revision=${revision_index}`;
+    window.open(url, "_blank");
+  };
+
   return (
     <TimelineContainer
       leftShift={halfIconSize}
@@ -89,15 +94,27 @@ function Timeline({
               <ItemHeader>
                 {title}
                 {isRevertable && revertFn && (
-                  <Tooltip tooltip={t`Revert to this version`}>
-                    <Button
-                      icon="revert"
-                      onlyIcon
-                      borderless
-                      onClick={() => revertFn(revision)}
-                      data-testid="question-revert-button"
-                    />
-                  </Tooltip>
+                  <div>
+                    <Tooltip tooltip={t`View SQL differences`}>
+                      <Button
+                        icon="eye"
+                        onlyIcon
+                        borderless
+                        onClick={() => jumpToShowDiffUrl(key, revision)}
+                        data-testid="question-revert-button"
+                        style={{ marginRight: "6px" }}
+                      />
+                    </Tooltip>
+                    <Tooltip tooltip={t`Revert to this version`}>
+                      <Button
+                        icon="revert"
+                        onlyIcon
+                        borderless
+                        onClick={() => revertFn(revision)}
+                        data-testid="question-revert-button"
+                      />
+                    </Tooltip>
+                  </div>
                 )}
               </ItemHeader>
               <Timestamp datetime={timestamp}>{formattedTimestamp}</Timestamp>

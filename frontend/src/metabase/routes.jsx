@@ -90,6 +90,9 @@ import ActionCreatorModal from "metabase/actions/containers/ActionCreatorModal";
 import ModelDetailPage from "metabase/models/containers/ModelDetailPage";
 import MetadataOptions from "metabase/nav/components/MetaDataButton/MetadataOptions";
 
+// Jerry page
+import ReportDiff from "metabase/components/Jerry/ReportDiff";
+
 const MetabaseIsSetup = UserAuthWrapper({
   predicate: authData => authData.hasUserSetup,
   failureRedirectPath: "/setup",
@@ -254,6 +257,13 @@ export const getRoutes = store => (
         {/* Use a dashboard page to replace homepage. */}
         {/* eslint-disable-next-line no-undef */}
         <Redirect from="/" to={`/dashboard/331`} />
+
+        {/*jerry page*/}
+        <Route
+          path="report_diff"
+          title={t`Report Diff`}
+          component={ReportDiff}
+        />
 
         <Route path="search" title={t`Search`} component={SearchApp} />
         <Route path="archive" title={t`Archive`} component={ArchiveApp} />
