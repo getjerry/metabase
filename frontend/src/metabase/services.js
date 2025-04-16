@@ -53,6 +53,7 @@ export function maybeUsePivotEndpoint(api, card, metadata) {
       return api({ ...params, pivot_rows, pivot_cols }, ...rest);
     };
   }
+
   if (
     question.display() !== "pivot" ||
     !question.isStructured() ||
@@ -346,6 +347,7 @@ export const MetricApi = {
 };
 
 export const RevisionApi = {
+  get: GET("/api/revision/card/:cardId/:revisionId"),
   list: GET("/api/revision"),
   revert: POST("/api/revision/revert"),
 };
@@ -441,14 +443,17 @@ export const TaskApi = {
 export function setPublicQuestionEndpoints(uuid) {
   setCardEndpoints("/api/public/card/:uuid", { uuid });
 }
+
 export function setPublicDashboardEndpoints() {
   setDashboardEndpoints("/api/public");
 }
+
 export function setEmbedQuestionEndpoints(token) {
   if (!IS_EMBED_PREVIEW) {
     setCardEndpoints("/api/embed/card/:token", { token });
   }
 }
+
 export function setEmbedDashboardEndpoints() {
   if (!IS_EMBED_PREVIEW) {
     setDashboardEndpoints("/api/embed");

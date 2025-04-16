@@ -10,7 +10,6 @@ export default function ReportDiff({ location }) {
   const reportId = location.query.report;
   const revision = location.query.revision;
   const [loading, setLoading] = useState(true);
-  const [reportData, setReportData] = useState(null);
   const [report1Data, setReport1Data] = useState(null);
   const [report2Data, setReport2Data] = useState(null);
 
@@ -34,14 +33,14 @@ export default function ReportDiff({ location }) {
     async function fetchRevision() {
       setLoading(true);
       try {
-        const res = await RevisionApi.list({ entity: "card", id: reportId });
-        const res1 = res[0];
-        const res2 = res[revision];
-        setReport1Data(res1);
-        setReport2Data(res2);
-
-        const cardData = await CardApi.get({ cardId: reportId });
-        setReportData(cardData);
+        const res = await RevisionApi.get({
+          cardId: reportId,
+          revisionId: revision,
+        });
+        const cardData = res.card;
+        const revisionData = res.revision;
+        setReport1Data(revisionData);
+        setReport2Data(cardData);
       } catch (error) {
         console.error("Failed to load reports", error);
       } finally {
@@ -83,13 +82,13 @@ export default function ReportDiff({ location }) {
   let oldValue = report1Data?.dataset_query?.native?.query;
   let newValue = report2Data?.dataset_query?.native?.query;
   if (reportType === "report_history_version") {
-    oldValue = report2Data?.diff.after?.dataset_query?.native?.query;
-    newValue = report1Data?.diff.after?.dataset_query?.native?.query;
+    oldValue = report1Data?.object?.dataset_query?.native?.query;
+    newValue = report2Data?.dataset_query?.native?.query;
     reportConfig = {
       report_id1: reportId,
-      report_name1: reportData?.name + ` - ${report2Data?.timestamp}`,
+      report_name1: report1Data?.name + ` - ${report1Data?.timestamp}`,
       report_id2: reportId,
-      report_name2: reportData?.name + " - Now",
+      report_name2: report2Data?.name + " - Now",
     };
   }
   return (

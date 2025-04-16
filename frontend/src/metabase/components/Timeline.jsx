@@ -57,7 +57,7 @@ function Timeline({
   }, [items]);
 
   const jumpToShowDiffUrl = (revision_index, revision) => {
-    const url = `/report_diff?type=report_history_version&report=${revision.model_id}&revision=${revision_index}`;
+    const url = `/report_diff?type=report_history_version&report=${revision.model_id}&revision=${revision.id}`;
     window.open(url, "_blank");
   };
 
@@ -85,6 +85,8 @@ function Timeline({
           : {
               name: icon,
             };
+        const titleMessage = title?.props?.message ?? "";
+        const canShowDiff = /create|edit|reverted/i.test(titleMessage);
 
         return (
           <TimelineItem key={key} leftShift={halfIconSize}>
@@ -95,16 +97,18 @@ function Timeline({
                 {title}
                 {isRevertable && revertFn && (
                   <div>
-                    <Tooltip tooltip={t`View SQL differences`}>
-                      <Button
-                        icon="eye"
-                        onlyIcon
-                        borderless
-                        onClick={() => jumpToShowDiffUrl(key, revision)}
-                        data-testid="question-revert-button"
-                        style={{ marginRight: "6px" }}
-                      />
-                    </Tooltip>
+                    {canShowDiff && (
+                      <Tooltip tooltip={t`View SQL differences`}>
+                        <Button
+                          icon="eye"
+                          onlyIcon
+                          borderless
+                          onClick={() => jumpToShowDiffUrl(key, revision)}
+                          data-testid="question-revert-button"
+                          style={{ marginRight: "6px" }}
+                        />
+                      </Tooltip>
+                    )}
                     <Tooltip tooltip={t`Revert to this version`}>
                       <Button
                         icon="revert"

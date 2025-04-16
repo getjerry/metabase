@@ -48,4 +48,16 @@
       :user-id     api/*current-user-id*
       :revision-id revision_id)))
 
+;; Assuming Card, Revision, db/select-one, model-and-instance,
+;; and api/defendpoint-schema are defined and available.
+
+#_{:clj-kondo/ignore [:deprecated-var]}
+(api/defendpoint-schema GET "/card/:id/:revision-id"
+  "Get instance data for a Card and its corresponding Revision." ; Updated docstring
+  [id, revision-id]
+  (let [card-instance (db/select-one Card :id id)
+        revision-instance (db/select-one Revision :id revision-id)]
+    {:card card-instance
+     :revision revision-instance}))
+
 (api/define-routes)
