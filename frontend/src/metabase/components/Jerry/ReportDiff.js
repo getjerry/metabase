@@ -86,7 +86,7 @@ export default function ReportDiff({ location }) {
     newValue = report2Data?.dataset_query?.native?.query;
     reportConfig = {
       report_id1: reportId,
-      report_name1: report1Data?.name + ` - ${report1Data?.timestamp}`,
+      report_name1: report2Data?.name + ` - ${report1Data?.timestamp}`,
       report_id2: reportId,
       report_name2: report2Data?.name + " - Now",
     };
