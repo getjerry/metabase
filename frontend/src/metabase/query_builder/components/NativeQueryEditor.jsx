@@ -286,7 +286,7 @@ export class NativeQueryEditor extends Component {
       enableLiveAutocompletion: true,
       showPrintMargin: false,
       highlightActiveLine: true,
-      highlightGutterLine: false,
+      highlightGutterLine: true,
       showLineNumbers: true,
     });
 
