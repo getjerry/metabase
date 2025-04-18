@@ -9,6 +9,7 @@ import NativeVariablesButton from "metabase/query_builder/components/view/Native
 import SnippetSidebarButton from "metabase/query_builder/components/view/SnippetSidebarButton";
 import PreviewQueryButton from "metabase/query_builder/components/view/PreviewQueryButton";
 
+import SQLFormat from "metabase/components/Jerry/SQLFormat";
 import {
   Container,
   RunButtonWithTooltipStyled,
@@ -22,6 +23,7 @@ const propTypes = {
   isRunning: PropTypes.bool,
   nativeEditorSelectedText: PropTypes.string,
   runQuery: PropTypes.func,
+  editor: PropTypes.object,
   snippetCollections: PropTypes.array,
   snippets: PropTypes.array,
 };
@@ -37,6 +39,7 @@ const NativeQueryEditorSidebar = props => {
     isRunning,
     nativeEditorSelectedText,
     runQuery,
+    editor,
     snippetCollections,
     snippets,
   } = props;
@@ -71,6 +74,7 @@ const NativeQueryEditorSidebar = props => {
       {PreviewQueryButton.shouldRender({ question }) && (
         <PreviewQueryButton {...props} />
       )}
+      <SQLFormat editor={editor} {...props} size={ICON_SIZE} className="mt3" />
       {!!canRunQuery && (
         <RunButtonWithTooltipStyled
           disabled={!isRunnable}

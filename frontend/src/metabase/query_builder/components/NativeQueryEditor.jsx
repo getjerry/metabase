@@ -240,6 +240,12 @@ export class NativeQueryEditor extends Component {
     }
   };
 
+  setEditorSql = newSql => {
+    if (this._editor) {
+      this._editor.setValue(newSql, 1);
+    }
+  };
+
   loadAceEditor() {
     const { query } = this.props;
 
@@ -450,7 +456,7 @@ export class NativeQueryEditor extends Component {
 
   _retriggerAutocomplete = _.debounce(() => {
     if (this._editor.completer?.popup?.isOpen) {
-      this._editor.execCommand("startAutocomplete");
+      // this._editor.execCommand("startAutocomplete");
     }
   }, AUTOCOMPLETE_DEBOUNCE_DURATION);
 
@@ -627,6 +633,7 @@ export class NativeQueryEditor extends Component {
           {hasEditingSidebar && !readOnly && (
             <NativeQueryEditorSidebar
               runQuery={this.runQuery}
+              editor={this._editor}
               {...this.props}
             />
           )}
