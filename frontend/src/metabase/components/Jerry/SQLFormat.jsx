@@ -17,7 +17,7 @@ const SQLFormat = ({ editor, datasetQuery, databases, className, size }) => {
       let language = "sql";
       if (selectedDatabase) {
         if (selectedDatabase.engine === "postgres") {
-          language = "postgres";
+          language = "postgresql";
         } else if (selectedDatabase.engine === "mysql") {
           language = "mysql";
         } else {
