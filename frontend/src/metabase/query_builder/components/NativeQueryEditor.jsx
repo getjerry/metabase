@@ -55,7 +55,7 @@ import "./NativeQueryEditor.css";
 import { NativeQueryEditorRoot } from "./NativeQueryEditor.styled";
 
 const AUTOCOMPLETE_DEBOUNCE_DURATION = 700;
-const AUTOCOMPLETE_CACHE_DURATION = AUTOCOMPLETE_DEBOUNCE_DURATION * 1.2; // tolerate 20%
+// const AUTOCOMPLETE_CACHE_DURATION = AUTOCOMPLETE_DEBOUNCE_DURATION * 1.2; // tolerate 20%
 
 export class NativeQueryEditor extends Component {
   _localUpdate = false;
@@ -285,9 +285,9 @@ export class NativeQueryEditor extends Component {
       this._editor.focus();
     }
 
-    const aceLanguageTools = ace.require("ace/ext/language_tools");
+    // const aceLanguageTools = ace.require("ace/ext/language_tools");
     this._editor.setOptions({
-      enableBasicAutocompletion: true,
+      enableBasicAutocompletion: false,
       enableSnippets: false,
       enableLiveAutocompletion: true,
       showPrintMargin: false,
@@ -296,74 +296,77 @@ export class NativeQueryEditor extends Component {
       showLineNumbers: true,
     });
 
-    this._lastAutoComplete = { timestamp: 0, prefix: null, results: [] };
+    // this._lastAutoComplete = { timestamp: 0, prefix: null, results: [] };
 
-    aceLanguageTools.addCompleter({
-      getCompletions: async (_editor, _session, _pos, prefix, callback) => {
-        if (!this.props.autocompleteResultsFn) {
-          return callback(null, []);
-        }
+    // const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-        try {
-          let { results, timestamp } = this._lastAutoComplete;
-          const cacheHit =
-            Date.now() - timestamp < AUTOCOMPLETE_CACHE_DURATION &&
-            this._lastAutoComplete.prefix === prefix;
-          if (!cacheHit) {
-            // Get models and fields from tables
-            // HACK: call this.props.autocompleteResultsFn rather than caching the prop since it might change
-            const apiResults = await this.props.autocompleteResultsFn(prefix);
-            this._lastAutoComplete = {
-              timestamp: Date.now(),
-              prefix,
-              results,
-            };
-
-            // Get referenced questions
-            const referencedQuestionIds =
-              this.props.query.referencedQuestionIds();
-            // The results of the API call are cached by ID
-            const referencedQuestions = await Promise.all(
-              referencedQuestionIds.map(id => this.props.fetchQuestion(id)),
-            );
-
-            // Get columns from referenced questions that match the prefix
-            const lowerCasePrefix = prefix.toLowerCase();
-            const isMatchForPrefix = name =>
-              name.toLowerCase().includes(lowerCasePrefix);
-            const questionColumns = referencedQuestions
-              .filter(Boolean)
-              .flatMap(question =>
-                question.result_metadata
-                  .filter(columnMetadata =>
-                    isMatchForPrefix(columnMetadata.name),
-                  )
-                  .map(columnMetadata => [
-                    columnMetadata.name,
-                    `${question.name} :${columnMetadata.base_type}`,
-                  ]),
-              );
-
-            // Concat the results from tables, fields, and referenced questions.
-            // The ace editor will deduplicate results based on name, keeping results
-            // that come first. In case of a name conflict, prioritise referenced
-            // questions' columns over tables and fields.
-            results = questionColumns.concat(apiResults);
-          }
-
-          // transform results into what ACE expects
-          const resultsForAce = results.map(([name, meta]) => ({
-            name: name,
-            value: name,
-            meta: meta,
-          }));
-          callback(null, resultsForAce);
-        } catch (error) {
-          console.log("error getting autocompletion data", error);
-          callback(null, []);
-        }
-      },
-    });
+    // aceLanguageTools.addCompleter({
+    //   getCompletions: async (_editor, _session, _pos, prefix, callback) => {
+    //     if (!this.props.autocompleteResultsFn) {
+    //       return callback(null, []);
+    //     }
+    //
+    //     try {
+    //       let { results, timestamp } = this._lastAutoComplete;
+    //       const cacheHit =
+    //         Date.now() - timestamp < AUTOCOMPLETE_CACHE_DURATION &&
+    //         this._lastAutoComplete.prefix === prefix;
+    //       if (!cacheHit) {
+    //         // Get models and fields from tables
+    //         // HACK: call this.props.autocompleteResultsFn rather than caching the prop since it might change
+    //         const apiResults = await this.props.autocompleteResultsFn(prefix);
+    //         await delay(2000);
+    //         this._lastAutoComplete = {
+    //           timestamp: Date.now(),
+    //           prefix,
+    //           results,
+    //         };
+    //
+    //         // Get referenced questions
+    //         const referencedQuestionIds =
+    //           this.props.query.referencedQuestionIds();
+    //         // The results of the API call are cached by ID
+    //         const referencedQuestions = await Promise.all(
+    //           referencedQuestionIds.map(id => this.props.fetchQuestion(id)),
+    //         );
+    //
+    //         // Get columns from referenced questions that match the prefix
+    //         const lowerCasePrefix = prefix.toLowerCase();
+    //         const isMatchForPrefix = name =>
+    //           name.toLowerCase().includes(lowerCasePrefix);
+    //         const questionColumns = referencedQuestions
+    //           .filter(Boolean)
+    //           .flatMap(question =>
+    //             question.result_metadata
+    //               .filter(columnMetadata =>
+    //                 isMatchForPrefix(columnMetadata.name),
+    //               )
+    //               .map(columnMetadata => [
+    //                 columnMetadata.name,
+    //                 `${question.name} :${columnMetadata.base_type}`,
+    //               ]),
+    //           );
+    //
+    //         // Concat the results from tables, fields, and referenced questions.
+    //         // The ace editor will deduplicate results based on name, keeping results
+    //         // that come first. In case of a name conflict, prioritise referenced
+    //         // questions' columns over tables and fields.
+    //         results = questionColumns.concat(apiResults);
+    //       }
+    //
+    //       // transform results into what ACE expects
+    //       const resultsForAce = results.map(([name, meta]) => ({
+    //         name: name,
+    //         value: name,
+    //         meta: meta,
+    //       }));
+    //       callback(null, resultsForAce);
+    //     } catch (error) {
+    //       console.log("error getting autocompletion data", error);
+    //       callback(null, []);
+    //     }
+    //   },
+    // });
 
     // the completers when the editor mounts are the standard ones
     const standardCompleters = [...this._editor.completers];
@@ -456,7 +459,7 @@ export class NativeQueryEditor extends Component {
 
   _retriggerAutocomplete = _.debounce(() => {
     if (this._editor.completer?.popup?.isOpen) {
-      // this._editor.execCommand("startAutocomplete");
+      this._editor.execCommand("startAutocomplete");
     }
   }, AUTOCOMPLETE_DEBOUNCE_DURATION);
 
