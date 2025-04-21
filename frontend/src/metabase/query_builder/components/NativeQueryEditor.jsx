@@ -18,6 +18,7 @@ import "ace/snippets/pgsql";
 import "ace/snippets/sqlserver";
 import "ace/snippets/json";
 import "ace-builds/src-noconflict/ext-searchbox";
+import "metabase/components/Jerry/custom-sql-mode";
 import _ from "underscore";
 import { ResizableBox } from "react-resizable";
 import { connect } from "react-redux";
@@ -152,8 +153,8 @@ export class NativeQueryEditor extends Component {
     }
 
     const aceMode = getEngineNativeAceMode(query.engine());
+    // const aceMode = 'ace/mode/custom-sql';
     const session = this._editor.getSession();
-
     if (session.$modeId !== aceMode) {
       session.setMode(aceMode);
       if (aceMode.indexOf("sql") >= 0) {
@@ -289,6 +290,7 @@ export class NativeQueryEditor extends Component {
     this._editor.setOptions({
       enableBasicAutocompletion: false,
       enableSnippets: false,
+      showFoldWidgets: true,
       enableLiveAutocompletion: true,
       showPrintMargin: false,
       highlightActiveLine: true,

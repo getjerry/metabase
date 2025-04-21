@@ -9,6 +9,7 @@ import NativeVariablesButton from "metabase/query_builder/components/view/Native
 import SnippetSidebarButton from "metabase/query_builder/components/view/SnippetSidebarButton";
 import PreviewQueryButton from "metabase/query_builder/components/view/PreviewQueryButton";
 
+import AISQL from "metabase/components/Jerry/AISQL";
 import SQLFormat from "metabase/components/Jerry/SQLFormat";
 import {
   Container,
@@ -26,6 +27,7 @@ const propTypes = {
   editor: PropTypes.object,
   snippetCollections: PropTypes.array,
   snippets: PropTypes.array,
+  user: PropTypes.object,
 };
 
 const ICON_SIZE = 18;
@@ -42,6 +44,7 @@ const NativeQueryEditorSidebar = props => {
     editor,
     snippetCollections,
     snippets,
+    user,
   } = props;
 
   // hide the snippet sidebar if there aren't any visible snippets/collections
@@ -64,6 +67,11 @@ const NativeQueryEditorSidebar = props => {
 
   const canRunQuery = runQuery && cancelQuery;
 
+  let hasAISQL = false;
+  if (user.group_ids.includes(6) || user.common_name === "zhipeng wu") {
+    hasAISQL = true;
+  }
+
   return (
     <Container data-testid="native-query-editor-sidebar">
       <DataReferenceButton {...props} size={ICON_SIZE} className="mt3" />
@@ -75,6 +83,9 @@ const NativeQueryEditorSidebar = props => {
         <PreviewQueryButton {...props} />
       )}
       <SQLFormat editor={editor} {...props} size={ICON_SIZE} className="mt3" />
+      {hasAISQL && (
+        <AISQL editor={editor} {...props} size={ICON_SIZE} className="mt3" />
+      )}
       {!!canRunQuery && (
         <RunButtonWithTooltipStyled
           disabled={!isRunnable}
