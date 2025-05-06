@@ -72,7 +72,11 @@ const NativeQueryEditorSidebar = props => {
   const canRunQuery = runQuery && cancelQuery;
 
   let hasAISQL = false;
-  if (user.group_ids.includes(6) || user.common_name === "zhipeng wu") {
+  if (
+    (user.group_ids.includes(6) || user.common_name === "zhipeng wu") &&
+    databases &&
+    datasetQuery
+  ) {
     const selectedDatabase = databases.find(
       db => db.id === datasetQuery.database,
     );
