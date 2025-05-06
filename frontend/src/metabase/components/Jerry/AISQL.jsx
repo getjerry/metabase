@@ -57,8 +57,16 @@ const AISQL = ({ editor, className, size }) => {
         body: JSON.stringify({
           call: "post",
           service_name: "ai_sql",
+          // body: {
+          //   prompt: trimmedInput,
+          // },
           body: {
-            prompt: trimmedInput,
+            message: [
+              {
+                role: "user",
+                content: trimmedInput,
+              },
+            ],
           },
           timeout: 60000,
         }),
@@ -78,7 +86,13 @@ const AISQL = ({ editor, className, size }) => {
 
       const result = await response.json();
 
-      const newSql = result.sql || (typeof result === "string" ? result : ""); // Extract SQL safely
+      if (result?.error) {
+        console.error("AI returned an error:", result.error);
+        throw new Error(t`AI response error: ${result.error}`);
+      }
+
+      const newSql =
+        result.new_sql || (typeof result === "string" ? result : ""); // Extract SQL safely
       if (typeof newSql !== "string") {
         console.error(
           "API response did not contain a valid SQL string:",

@@ -28,6 +28,8 @@ const propTypes = {
   snippetCollections: PropTypes.array,
   snippets: PropTypes.array,
   user: PropTypes.object,
+  databases: PropTypes.array,
+  datasetQuery: PropTypes.object,
 };
 
 const ICON_SIZE = 18;
@@ -45,6 +47,8 @@ const NativeQueryEditorSidebar = props => {
     snippetCollections,
     snippets,
     user,
+    databases,
+    datasetQuery,
   } = props;
 
   // hide the snippet sidebar if there aren't any visible snippets/collections
@@ -69,7 +73,12 @@ const NativeQueryEditorSidebar = props => {
 
   let hasAISQL = false;
   if (user.group_ids.includes(6) || user.common_name === "zhipeng wu") {
-    hasAISQL = true;
+    const selectedDatabase = databases.find(
+      db => db.id === datasetQuery.database,
+    );
+    if (selectedDatabase && selectedDatabase.engine === "clickhouse") {
+      hasAISQL = true;
+    }
   }
 
   return (
