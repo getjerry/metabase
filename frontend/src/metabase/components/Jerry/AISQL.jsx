@@ -47,6 +47,16 @@ const AISQL = ({ editor, className, size }) => {
     // setGeneratedSql(null); // Reset previous results if needed
 
     try {
+      const currentEditorSql = editor?.getValue?.() || "";
+      const requestBody = {
+        message: [
+          {
+            role: "user",
+            content: trimmedInput,
+          },
+        ],
+        ...(currentEditorSql.trim() && { query: currentEditorSql }),
+      };
       const response = await fetch(`/api/jerry/extend`, {
         // Replace with your actual API endpoint
         method: "POST",
@@ -57,17 +67,7 @@ const AISQL = ({ editor, className, size }) => {
         body: JSON.stringify({
           call: "post",
           service_name: "ai_sql",
-          // body: {
-          //   prompt: trimmedInput,
-          // },
-          body: {
-            message: [
-              {
-                role: "user",
-                content: trimmedInput,
-              },
-            ],
-          },
+          body: requestBody,
           timeout: 60000,
         }),
       });
@@ -113,7 +113,7 @@ const AISQL = ({ editor, className, size }) => {
     } finally {
       setIsLoading(false); // Ensure loading state is turned off
     }
-  }, [inputValue]);
+  }, [editor, inputValue]);
 
   // const handleKeyPress = useCallback((e) => {
   //   // Check if Enter is pressed (without Shift for multiline input)
